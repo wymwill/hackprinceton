@@ -39,6 +39,21 @@ export type Receipt = {
 
 export type BetStatus = "open" | "closed" | "settled";
 
+/**
+ * The AI Bookie's opening line on a bet. Advisory only: payouts still come from
+ * the pool, so this never moves points. `chances` lines up with `outcomes`.
+ */
+export type BookieLine = {
+  status: "thinking" | "ready";
+  /** "ai" when the agent answered, "formula" when it fell back to track records alone. */
+  source?: "ai" | "formula";
+  chances?: number[];
+  take?: string;
+  roast?: string;
+  model?: string;
+  at: string;
+};
+
 export type BetView = {
   id: string;
   groupId: string;
@@ -56,6 +71,7 @@ export type BetView = {
   /** Implied chance of each outcome after every entry, oldest first. */
   history: number[][];
   receipt?: Receipt;
+  bookie?: BookieLine;
 };
 
 export type UserStats = {
