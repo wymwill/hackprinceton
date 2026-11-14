@@ -1,28 +1,34 @@
-/* Betting with Friends
- * Colors: Rosy Copper (#CE4C3B) on Shadow Grey (#27242F).
+/* Alea
+ * Colors: bright orange (#FF5F1F) on dark grey (#1C1B1F), matching the main app.
  * Layout language from Scarlet Market: framed panels with label tags, tracked
- * uppercase captions, serif display numbers, mono figures, YES teal / NO violet.
+ * uppercase captions, rounded display type, mono figures, YES teal / NO violet.
  * No retro effects (no scanlines, grain, grid, flicker or corner brackets). */
 
 :root {
-  --bg: #27242f;
-  --side: #1f1c26;
-  --panel: #2d2a36;
-  --panel-a: rgba(45, 42, 54, 0.86);
-  --hover: #36323f;
-  --border: #34303d;
-  --line: #433e4f;
-  --line-hi: #5c5569;
+  --bg: #1c1b1f;
+  --side: #18171b;
+  --panel: #28272d;
+  --panel-a: rgba(40, 39, 45, 0.86);
+  --hover: #313036;
+  --border: #333238;
+  --line: #45434b;
+  --line-hi: #5a5862;
 
-  --fg: #d8d1d8;
-  --bright: #f5eff1;
-  --dim: #9d95a6;
-  --mute: #5c5569;
+  --fg: #ddd9de;
+  --bright: #faf6f6;
+  --dim: #a3a0a8;
+  --mute: #5a5862;
+  --side-glass: rgba(24, 23, 27, 0.92);
+  --top-a: rgba(24, 23, 27, 0.97);
+  --top-b: rgba(24, 23, 27, 0.86);
+  --btn-bg: rgba(24, 23, 27, 0.7);
+  --row-hover: rgba(49, 48, 54, 0.5);
+  --scrim: rgba(10, 10, 12, 0.72);
 
-  --red: #ce4c3b;
-  --red-hi: #e2685a;
-  --red-soft: rgba(206, 76, 59, 0.14);
-  --red-glow: rgba(206, 76, 59, 0.42);
+  --red: #ff5f1f;
+  --red-hi: #ff7a45;
+  --red-soft: rgba(255, 95, 31, 0.14);
+  --red-glow: rgba(255, 95, 31, 0.42);
   --yes: #7fdbca;
   --yes-soft: rgba(127, 219, 202, 0.1);
   --no: #c792ea;
@@ -31,13 +37,50 @@
   --link: #9fb4ff;
   --pink: #f07178;
 
-  --display: "Instrument Serif", Georgia, "Times New Roman", serif;
-  --ui: "Saira Condensed", "Helvetica Neue", system-ui, sans-serif;
+  --display: "Fredoka", "Nunito", system-ui, sans-serif;
+  --ui: "Nunito", "Helvetica Neue", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   --sidebar: 268px;
   --top: 56px;
   color-scheme: dark;
+}
+
+/* Light mode: same layout, light surfaces, darker accents so text stays readable.
+ * Set by data-theme on <html> (see index.html and src/lib/theme.ts). */
+html[data-theme="light"] {
+  --bg: #ece4d6;
+  --side: #e3d9c8;
+  --panel: #f4eee3;
+  --panel-a: rgba(244, 238, 227, 0.94);
+  --hover: #e9e0d1;
+  --border: #dcd1be;
+  --line: #d2c6b2;
+  --line-hi: #b3a68f;
+
+  --fg: #3d362d;
+  --bright: #1d1913;
+  --dim: #6d6252;
+  --mute: #a1947f;
+  --side-glass: rgba(227, 217, 200, 0.95);
+  --top-a: rgba(236, 228, 214, 0.97);
+  --top-b: rgba(236, 228, 214, 0.88);
+  --btn-bg: #f4eee3;
+  --row-hover: rgba(80, 60, 30, 0.05);
+  --scrim: rgba(24, 22, 20, 0.35);
+
+  --red: #ff5f1f;
+  --red-hi: #dc4e10;
+  --red-soft: rgba(255, 95, 31, 0.12);
+  --red-glow: rgba(255, 95, 31, 0.3);
+  --yes: #0b8571;
+  --yes-soft: rgba(11, 133, 113, 0.1);
+  --no: #8547bd;
+  --no-soft: rgba(133, 71, 189, 0.1);
+  --amber: #a86400;
+  --link: #3253cc;
+  --pink: #cf2f63;
+  color-scheme: light;
 }
 
 * {
@@ -48,7 +91,7 @@
 html,
 body {
   background:
-    radial-gradient(60% 45% at 95% -10%, rgba(206, 76, 59, 0.1), transparent 70%),
+    radial-gradient(60% 45% at 95% -10%, rgba(255, 95, 31, 0.1), transparent 70%),
     var(--bg);
   background-attachment: fixed;
   color: var(--fg);
@@ -128,7 +171,7 @@ button {
   flex-direction: column;
   gap: 18px;
   padding: 18px 16px;
-  background: rgba(31, 28, 38, 0.92);
+  background: var(--side-glass);
   border-right: 1px solid var(--line);
   overflow-y: auto;
   z-index: 20;
@@ -146,13 +189,11 @@ button {
   border: 1px solid var(--red);
   color: var(--red-hi);
   font-family: var(--display);
-  font-style: italic;
   font-size: 20px;
   line-height: 1;
 }
 .brand-name {
   font-family: var(--display);
-  font-style: italic;
   font-size: 23px;
   line-height: 1;
   color: var(--bright);
@@ -249,7 +290,7 @@ button {
   padding: 8px 10px;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
   border-left: 2px solid transparent;
@@ -302,7 +343,7 @@ button {
   align-items: center;
   gap: 16px;
   padding: 0 32px;
-  background: linear-gradient(180deg, rgba(31, 28, 38, 0.97), rgba(31, 28, 38, 0.86));
+  background: linear-gradient(180deg, var(--top-a), var(--top-b));
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(6px);
 }
@@ -312,7 +353,7 @@ button {
   gap: 8px;
   min-width: 0;
   font-size: 12px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -333,7 +374,7 @@ button {
 }
 .topbar .op {
   font-size: 12px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
   white-space: nowrap;
@@ -349,6 +390,7 @@ button {
   padding: 30px 32px 56px;
   max-width: 1320px;
   width: 100%;
+  margin: 0 auto;
 }
 
 /* ── panels with label tags ─────────────────────────────────────────────── */
@@ -395,7 +437,7 @@ button {
   gap: 7px;
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   line-height: 1;
   text-transform: uppercase;
   color: var(--red-hi);
@@ -410,7 +452,7 @@ button {
   right: 14px;
   z-index: 3;
   font-size: 10.5px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   background: var(--bg);
   padding: 2px 6px;
@@ -419,7 +461,7 @@ button {
 
 .cap {
   font-size: 11px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -430,7 +472,7 @@ button {
   gap: 12px;
   padding: 5px 0;
   font-size: 12.5px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -477,11 +519,11 @@ button {
   gap: 7px;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1;
   color: var(--fg);
-  background: rgba(31, 28, 38, 0.7);
+  background: var(--btn-bg);
   border: 1px solid var(--line-hi);
   padding: 9px 14px;
   white-space: nowrap;
@@ -492,10 +534,10 @@ button {
     box-shadow 0.18s;
 }
 .btn:hover:not(:disabled) {
-  color: #fff;
+  color: var(--bright);
   border-color: var(--red);
   background: var(--red-soft);
-  box-shadow: 0 0 14px rgba(206, 76, 59, 0.22);
+  box-shadow: 0 0 14px rgba(255, 95, 31, 0.22);
 }
 .btn:disabled {
   opacity: 0.45;
@@ -535,7 +577,7 @@ button {
 }
 .field > span {
   font-size: 11px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -600,7 +642,7 @@ textarea.input {
   padding: 9px 10px;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
   transition:
@@ -674,7 +716,6 @@ textarea.input {
 }
 .choice .letter {
   font-family: var(--display);
-  font-style: italic;
   font-size: 30px;
   line-height: 0.9;
   color: var(--red-hi);
@@ -698,7 +739,7 @@ textarea.input {
   gap: 6px;
   font-size: 10.5px;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   padding: 3px 8px;
   border: 1px solid currentColor;
@@ -773,8 +814,7 @@ textarea.input {
 }
 .hero h1 {
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 400;
+  font-weight: 600;
   font-size: clamp(40px, 5vw, 60px);
   line-height: 0.95;
   color: var(--bright);
@@ -845,13 +885,12 @@ textarea.input {
 }
 .scard:hover {
   border-color: var(--red);
-  box-shadow: 0 0 24px rgba(206, 76, 59, 0.14);
+  box-shadow: 0 0 24px rgba(255, 95, 31, 0.14);
   transform: translateY(-2px);
 }
 .scard h3 {
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 400;
+  font-weight: 600;
   font-size: 30px;
   line-height: 1;
   color: var(--bright);
@@ -889,7 +928,7 @@ textarea.input {
   border: 1px dashed var(--line-hi);
   font-family: var(--mono);
   font-size: 18px;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.05em;
   color: var(--bright);
 }
 
@@ -903,7 +942,7 @@ textarea.input {
   padding: 10px 16px 9px;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
   border-bottom: 2px solid transparent;
@@ -940,7 +979,7 @@ textarea.input {
 }
 .bcard:hover {
   border-color: var(--line-hi);
-  box-shadow: 0 0 22px rgba(206, 76, 59, 0.08);
+  box-shadow: 0 0 22px rgba(255, 95, 31, 0.08);
 }
 .bcard .head {
   display: flex;
@@ -955,7 +994,7 @@ textarea.input {
   color: var(--bright);
 }
 .bcard h3 a:hover {
-  color: #fff;
+  color: var(--bright);
 }
 .chance {
   text-align: right;
@@ -963,7 +1002,6 @@ textarea.input {
 }
 .chance .v {
   font-family: var(--display);
-  font-style: italic;
   font-size: 40px;
   line-height: 0.85;
   color: var(--bright);
@@ -980,7 +1018,7 @@ textarea.input {
   justify-content: space-between;
   gap: 10px;
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -1003,7 +1041,7 @@ textarea.input {
   padding: 10px 12px;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   border: 1px solid;
   transition:
@@ -1037,13 +1075,13 @@ textarea.input {
   padding: 10px 12px;
   border: 1px solid var(--line);
   font-size: 12px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
 .settled b {
   font-size: 15px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
 }
 
 /* leaderboard / tables */
@@ -1055,7 +1093,7 @@ textarea.input {
   text-align: left;
   font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
   padding: 8px 10px;
@@ -1067,14 +1105,13 @@ textarea.input {
   font-size: 14.5px;
 }
 .table tr:hover td {
-  background: rgba(54, 50, 63, 0.5);
+  background: var(--row-hover);
 }
 .table .r {
   text-align: right;
 }
 .table .rank {
   font-family: var(--display);
-  font-style: italic;
   font-size: 24px;
   color: var(--dim);
   width: 48px;
@@ -1176,7 +1213,7 @@ textarea.input {
   gap: 10px 18px;
   align-items: center;
   font-size: 12px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -1189,7 +1226,6 @@ textarea.input {
 }
 .readout .v {
   font-family: var(--display);
-  font-style: italic;
   font-size: clamp(64px, 8vw, 104px);
   line-height: 0.8;
   color: var(--bright);
@@ -1208,7 +1244,7 @@ textarea.input {
   justify-content: space-between;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--line);
@@ -1296,7 +1332,7 @@ textarea.input {
   padding: 13px;
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   border: 1px solid;
   transition: filter 0.15s;
@@ -1327,7 +1363,7 @@ textarea.input {
   padding: 12px 6px;
   border: 1px solid var(--line-hi);
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   font-size: 13px;
 }
@@ -1349,7 +1385,6 @@ textarea.input {
 }
 .outcome-banner .o {
   font-family: var(--display);
-  font-style: italic;
   font-size: 54px;
   line-height: 0.9;
 }
@@ -1367,7 +1402,6 @@ textarea.input {
 }
 .podium .spot .place {
   font-family: var(--display);
-  font-style: italic;
   font-size: 46px;
   line-height: 0.9;
   color: var(--red-hi);
@@ -1430,8 +1464,7 @@ textarea.input {
   display: block;
   margin-bottom: 6px;
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 400;
+  font-weight: 600;
   font-size: 26px;
   color: var(--bright);
 }
@@ -1442,7 +1475,7 @@ textarea.input {
   position: fixed;
   inset: 0;
   z-index: 70;
-  background: rgba(14, 12, 18, 0.72);
+  background: var(--scrim);
   backdrop-filter: blur(3px);
   animation: fade 0.2s ease;
 }
@@ -1470,15 +1503,14 @@ textarea.input {
 }
 .modal .kicker {
   font-size: 11px;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--red-hi);
 }
 .modal h3 {
   margin-top: 4px;
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 400;
+  font-weight: 600;
   font-size: 32px;
   line-height: 1;
   color: var(--bright);
@@ -1604,4 +1636,141 @@ textarea.input {
   color: var(--bright);
   font-size: 13.5px;
   text-align: center;
+}
+
+/* /new: roomier than the other screens, since it's one long form. */
+.create {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.create .col {
+  gap: 32px;
+}
+.create .pbody {
+  padding: 28px 26px 24px;
+}
+.create .stack {
+  gap: 22px;
+}
+.create .field {
+  gap: 8px;
+}
+.create .field > span {
+  font-size: 12px;
+}
+.create .two-col {
+  gap: 24px;
+}
+.create .input {
+  padding: 12px 14px;
+  font-size: 15px;
+}
+.create .choice-grid {
+  gap: 14px;
+}
+.create .choice {
+  padding: 18px 16px 16px;
+  gap: 8px;
+}
+.create .choice p,
+.create .hint {
+  font-size: 14px;
+}
+.create .kv {
+  padding: 9px 0;
+  font-size: 13px;
+}
+
+/* Pictures: the same square frame as initials. */
+img.avatar {
+  padding: 0;
+  object-fit: cover;
+}
+.avatar.lg {
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+}
+.avatar.xl {
+  width: 112px;
+  height: 112px;
+  font-size: 34px;
+  border-width: 2px;
+}
+.whoami-link:hover b {
+  color: var(--red-hi);
+}
+
+/* /profile */
+.profile {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.profile .col {
+  gap: 28px;
+}
+.profile .pbody {
+  padding: 28px 26px 24px;
+}
+.profile .stack {
+  gap: 20px;
+}
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 12px;
+  /* About three rows, then scroll to browse the rest. */
+  max-height: 268px;
+  overflow-y: auto;
+  padding: 2px 6px 2px 2px;
+  scrollbar-width: thin;
+}
+.avatar-opt {
+  aspect-ratio: 1;
+  padding: 6px;
+  border: 1px solid var(--line);
+  background: var(--side);
+  transition: border-color 0.15s, background 0.15s;
+}
+.avatar-opt img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.avatar-opt:hover {
+  border-color: var(--line-hi);
+}
+.avatar-opt.on {
+  border-color: var(--red);
+  background: var(--red-soft);
+}
+.record {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 16px;
+}
+.record .stat .cap {
+  font-size: 11px;
+}
+.record .stat b {
+  font-size: 20px;
+}
+.record .stat b.up {
+  color: var(--yes);
+}
+.record .stat b.down {
+  color: var(--dim);
+}
+@media (max-width: 640px) {
+  .profile-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

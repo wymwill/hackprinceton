@@ -40,8 +40,8 @@ function check(name, ok, detail) {
 }
 
 // Demo mode ("Playing as" cookie) unless a phase passes its own auth settings.
-const DEMO_AUTH = { BWF_AUTH: "demo" };
-const NO_AUTH = { BWF_AUTH: "", SUPABASE_URL: "", SUPABASE_PUBLISHABLE_KEY: "", NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "", NEXT_PUBLIC_SUPABASE_ANON_KEY: "" };
+const DEMO_AUTH = { BWF_AUTH: "demo", BWF_ALLOW_DEMO_IN_PRODUCTION: "1" };
+const NO_AUTH = { BWF_AUTH: "", BWF_ALLOW_DEMO_IN_PRODUCTION: "", SUPABASE_URL: "", SUPABASE_PUBLISHABLE_KEY: "", NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "", NEXT_PUBLIC_SUPABASE_ANON_KEY: "" };
 
 async function startServer(seed, auth = DEMO_AUTH) {
   const file = path.join(tmpdir(), `bwf-e2e-${process.pid}-${seed}-${auth.BWF_AUTH || (auth.SUPABASE_URL ? "supabase" : "none")}.json`);
@@ -222,6 +222,62 @@ async function emptyPhase() {
   for (const p of [p1, p3, p4]) await p.post(`/api/markets/${pm}/vote`, { vote: "confirm" });
   s = await p2.state(g2id);
   check("a settled points market pays correct picks max(10, 100 minus side share)", member(s, "p1").points === 33 && member(s, "p4").points === 0, s.group.members.map((m) => [m.userId, m.points]));
+
+  await accessPhase();
+}
+
+/** Invite resets, removing members, who gets a vote, and upload limits. */
+async function accessPhase() {
+  console.log("\nGroup access and voting");
+  const [p1, p2, p3, p4] = ["p1", "p2", "p3", "p4"].map(as);
+  const gid = (await p1.post("/api/groups", { name: "Access Club", mode: "tokens", startingBalance: 1000 })).result.id;
+  const code = (await p1.state(gid)).group.inviteCode;
+  await p2.post("/api/groups/join", { code });
+  await p3.post("/api/groups/join", { code });
+
+  const notOwner = await p2.post(`/api/groups/${gid}/invite`);
+  check("only the owner can make a new invite link", notOwner.status === 403 && notOwner.error.code === "not_owner", notOwner);
+  const reset = await p1.post(`/api/groups/${gid}/invite`);
+  const fresh = reset.result?.inviteCode;
+  check("the owner gets a new invite code", reset.status === 200 && /^[A-HJ-NP-Z2-9]{8}$/.test(fresh) && fresh !== code, reset);
+  check("the old code stops working", (await p4.post("/api/groups/join", { code })).status === 404);
+  check("and so does the old link's preview", (await fetch(`${BASE}/api/invites/${code}`, { headers: { cookie: "bwf_user=p4" } })).status === 404);
+
+  // p2 hosts a market, and p3 trades on p1's market, before p4 joins.
+  const hosted = (await p2.post(`/api/groups/${gid}/markets`, { question: "Will p2 finish the book?", deadline: inHours(24) })).result.id;
+  const m = (await p1.post(`/api/groups/${gid}/markets`, { question: "Will the club meet on Friday?", deadline: inHours(24) })).result.id;
+  await p3.post(`/api/markets/${m}/trade`, { action: "buy", side: "yes", amount: 100 });
+  await p2.post(`/api/markets/${m}/trade`, { action: "buy", side: "yes", amount: 100 });
+  check("a late joiner can join with the new code", (await p4.post("/api/groups/join", { code: fresh })).status === 200);
+  await p4.post(`/api/markets/${m}/trade`, { action: "buy", side: "no", amount: 100 });
+  await p1.post(`/api/markets/${m}/result`, { outcome: "no" });
+  let s = await p1.state(gid);
+  const voters = market(s, m).proposal?.voters ?? [];
+  check("only people in the group when the market opened get a vote", voters.length === 2 && voters.includes("p2") && voters.includes("p3") && !voters.includes("p4"), voters);
+  const late = await p4.post(`/api/markets/${m}/vote`, { vote: "confirm" });
+  check("a late joiner's vote is refused", late.status === 403 && late.error.code === "not_a_voter", late);
+
+  const del = (who, target) => fetch(`${BASE}/api/groups/${gid}/members/${target}`, { method: "DELETE", headers: { cookie: `bwf_user=${who}` } }).then((r) => r.json().then((j) => ({ status: r.status, ...j })));
+  check("only the owner can remove someone", (await del("p3", "p2")).status === 403);
+  check("the owner can't remove themselves", (await del("p1", "p1")).status === 409);
+  check("removing someone not in the group gives 404", (await del("p1", "nobody")).status === 404);
+  const balanceBefore = member(await p2.state(gid), "p2").balance;
+  const removed = await del("p1", "p2");
+  check("the owner removes a member", removed.status === 200 && removed.result?.removed === "p2", removed);
+  check("a removed member loses access to the group", (await p2.state(gid)).status === 404);
+  s = await p1.state(gid);
+  check("their unsettled markets pass to the owner", market(s, hosted).hostId === "p1", market(s, hosted).hostId);
+  check("and they no longer count as a voter", !(market(s, m).proposal?.voters ?? []).includes("p2"), market(s, m).proposal?.voters);
+  await p2.post("/api/groups/join", { code: fresh });
+  check("rejoining doesn't hand out a second starting grant", member(await p2.state(gid), "p2").balance === balanceBefore, member(await p2.state(gid), "p2"));
+
+  // Uploads: the size is checked before the body is read.
+  const big = await fetch(`${BASE}/api/markets/${m}/evidence`, {
+    method: "POST",
+    headers: { cookie: "bwf_user=p1", "content-type": "multipart/form-data; boundary=x" },
+    body: Buffer.alloc(6 * 1024 * 1024),
+  });
+  check("an upload over the limit is refused before it's read", big.status === 413, big.status);
 }
 
 // ---------------------------------------------------------------- demo seed
@@ -466,6 +522,11 @@ async function supabasePhase() {
   a = await ana.get(`/api/state?group=${gid}`);
   check("and still nobody from groups they aren't in", a.users.length === 2, a.users);
 
+  const form = new FormData();
+  form.append("file", new Blob([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0])], { type: "image/png" }), "x.png");
+  const up = await fetch(`${BASE}/api/markets/m_x/evidence`, { method: "POST", body: form });
+  check("a signed-out upload is refused before it's read", up.status === 401, up.status);
+
   const page = await anon.get("/g/demo");
   check("signed out, pages redirect to sign in", page.status === 307 && page.location?.endsWith("/login?next=%2Fg%2Fdemo"), page);
   check("signed in, pages load", (await ana.get(`/g/${gid}`)).status === 200);
@@ -479,6 +540,15 @@ async function supabasePhase() {
   const out = await fetch(`${BASE}/auth/signout`, { method: "POST", redirect: "manual", headers: { cookie: sessionCookie(token("auth-ana", "Ana Lopez")) } });
   const cleared = out.headers.getSetCookie().some((c) => c.startsWith(`${COOKIE}=;`) || (c.startsWith(`${COOKIE}=`) && /Max-Age=0|Expires=Thu, 01 Jan 1970/i.test(c)));
   check("signing out clears the session and goes to /login", out.status === 303 && out.headers.get("location")?.endsWith("/login") && cleared, out.headers.getSetCookie());
+}
+
+async function demoInProductionPhase() {
+  console.log("\nBWF_AUTH=demo in a production build, without the opt-in");
+  const anon = signedIn("");
+  const s = await anon.get("/api/state", "bwf_user=sam");
+  check("demo mode is ignored: the API refuses instead of trusting the cookie", s.status === 503, s);
+  const res = await fetch(`${BASE}/api/session`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ userId: "elena" }) });
+  check("and nobody can pick who they play as", res.status === 403, res.status);
 }
 
 async function unconfiguredPhase() {
@@ -521,6 +591,16 @@ try {
   console.error(err, none.log());
 } finally {
   await none.stop();
+}
+
+const prodDemo = await startServer("demo", { BWF_AUTH: "demo" });
+try {
+  await demoInProductionPhase();
+} catch (err) {
+  failed++;
+  console.error(err, prodDemo.log());
+} finally {
+  await prodDemo.stop();
 }
 
 console.log(`\n${passed} passed, ${failed} failed (BOOKIE_AI=${MODE})`);

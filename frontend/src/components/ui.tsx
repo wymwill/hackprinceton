@@ -70,11 +70,16 @@ export function PoolBar({ bet }: { bet: Bet }) {
   );
 }
 
-export function Avatar({ id }: { id: Id }) {
-  const { name, me } = useStore();
-  const n = name(id);
-  const initials = n.match(/\d+$/)?.[0] ?? n.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-  return <span className={`avatar ${id === me ? "me" : ""}`}>{initials}</span>;
+export function initialsOf(n: string) {
+  return n.match(/\d+$/)?.[0] ?? n.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+}
+
+/** A player's picture, or their initials when they haven't picked one. */
+export function Avatar({ id, size }: { id: Id; size?: "lg" }) {
+  const { name, avatar, me } = useStore();
+  const url = avatar(id);
+  const cls = `avatar ${id === me ? "me" : ""} ${size ?? ""}`;
+  return url ? <img className={cls} src={url} alt="" referrerPolicy="no-referrer" /> : <span className={cls}>{initialsOf(name(id))}</span>;
 }
 
 export function Who({ id, suffix }: { id: Id; suffix?: ReactNode }) {

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { supabase } from "../lib/supabase.ts";
+import { useEffect, useState } from "react";
+import { providerEnabled, supabase } from "../lib/supabase.ts";
 
 /**
  * Sign in with Google, or with an email and password (works with no provider
@@ -14,6 +14,11 @@ export default function SignIn() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; tone: "ok" | "err" } | null>(null);
+  // Google only works once it is turned on in Supabase; until then, offer email only.
+  const [googleOn, setGoogleOn] = useState<boolean | null>(null);
+  useEffect(() => {
+    providerEnabled("google").then(setGoogleOn);
+  }, []);
 
   const google = async () => {
     setMessage(null);
@@ -42,16 +47,17 @@ export default function SignIn() {
 
   return (
     <div className="boot">
-      <span className="brand-name">Betting with Friends</span>
+      <span className="brand-name">Alea</span>
       <p className="hint" style={{ maxWidth: 380 }}>
         YES/NO bets with friends, played for virtual coins across a whole series. Sign in to see your series.
       </p>
       <section className="panel tagged" style={{ width: "min(400px, 100%)", textAlign: "left" }}>
         <span className="plabel">{mode === "in" ? "Sign in" : "Create account"}</span>
         <div className="pbody stack">
-          <button type="button" className="btn primary block" onClick={google}>
+          <button type="button" className="btn primary block" onClick={google} disabled={googleOn === false}>
             Continue with Google
           </button>
+          {googleOn === false && <p className="hint">Google sign-in isn't set up yet. Use email for now.</p>}
           <div className="rule" />
           <form
             className="stack"

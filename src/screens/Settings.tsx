@@ -16,7 +16,7 @@ export default function Settings() {
 }
 
 function SettingsForm({ group, me }: { group: GroupView; me: string }) {
-  const { updateGroup, toast } = useGroup();
+  const { updateGroup, resetInvite, removeMember, toast } = useGroup();
   const owner = group.ownerId === me;
   const [name, setName] = useState(group.name);
   const [emoji, setEmoji] = useState(group.emoji);
@@ -59,6 +59,19 @@ function SettingsForm({ group, me }: { group: GroupView; me: string }) {
         <p className="font-body-sm text-body-sm text-on-surface-variant">
           Or use the code <span className="font-num tracking-[0.2em] text-on-surface">{group.inviteCode}</span> with Join with code in the group menu.
         </p>
+        {owner && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              onClick={async () => {
+                if (!window.confirm("Make a new invite link? The current link and code stop working right away.")) return;
+                if (await resetInvite()) toast("New invite link made. The old one no longer works.");
+              }}
+            >
+              New invite link
+            </Button>
+            <span className="font-body-sm text-body-sm text-on-surface-variant">Use this if the link reached someone it shouldn&apos;t have.</span>
+          </div>
+        )}
       </section>
 
       <fieldset disabled={!owner} className={`${card} p-5 flex flex-col gap-4 disabled:opacity-80`}>
@@ -135,6 +148,19 @@ function SettingsForm({ group, me }: { group: GroupView; me: string }) {
               <Avatar name={m.name} size={28} />
               <span className="text-on-surface">{m.name}</span>
               <span className="font-label-sm text-xs text-on-surface-variant">{m.role}</span>
+              {owner && m.userId !== group.ownerId && (
+                <button
+                  type="button"
+                  className="ml-auto font-label-sm text-xs text-on-surface-variant hover:text-secondary"
+                  aria-label={`Remove ${m.name}`}
+                  onClick={async () => {
+                    if (!window.confirm(`Remove ${m.name} from ${group.name}? They lose access to its markets. Their past results stay.`)) return;
+                    if (await removeMember(m.userId)) toast(`${m.name} was removed.`);
+                  }}
+                >
+                  Remove
+                </button>
+              )}
             </li>
           ))}
         </ul>

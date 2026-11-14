@@ -63,11 +63,20 @@ export function positionsOf(db: Db, marketId: string) {
   return [...map.values()];
 }
 
-/** Everyone with a position or pick, minus the host. */
+/**
+ * Who votes on a proposed result: everyone with a position or pick, minus the
+ * host, who is still in the group and was already in it when the market opened.
+ * Joining afterwards (say, with a second account) to swing the vote doesn't count,
+ * and people the owner removed stop counting.
+ */
 export function votersOf(db: Db, m: Market) {
   const ids = new Set([...db.trades.filter((t) => t.marketId === m.id).map((t) => t.userId), ...db.picks.filter((p) => p.marketId === m.id).map((p) => p.userId)]);
   ids.delete(m.hostId);
-  return [...ids];
+  const opened = Date.parse(m.createdAt);
+  return [...ids].filter((id) => {
+    const membership = db.memberships.find((x) => x.groupId === m.groupId && x.userId === id);
+    return !!membership && Date.parse(membership.joinedAt) <= opened;
+  });
 }
 
 /** Settled, non void markets in a group, shaped for the baseline. */
@@ -221,7 +230,10 @@ export function proposeResult(db: Db, userId: string, marketId: string, outcome:
   market.closedAt ??= now.toISOString();
   const review = db.reviews.filter((r) => r.marketId === marketId).at(-1);
   market.proposal = { outcome, by: userId, at: now.toISOString(), reviewId: review?.id, votes: {} };
-  if (votersOf(db, market).length === 0) settle(db, market, outcome, now);
+  // Nobody else has anything riding on it: settle now. Otherwise it waits for votes or the window,
+  // even when nobody is eligible to vote, so late joiners can still see the result coming.
+  const others = db.trades.some((t) => t.marketId === marketId && t.userId !== userId) || db.picks.some((p) => p.marketId === marketId && p.userId !== userId);
+  if (!others) settle(db, market, outcome, now);
   return { outcome };
 }
 
@@ -229,7 +241,7 @@ export function vote(db: Db, userId: string, marketId: string, v: unknown, now =
   const { market } = requireMarket(db, userId, marketId);
   if (!market.proposal) throw new AppError(409, "no_proposal", "There's no proposed result to vote on.");
   if (market.hostId === userId) throw new AppError(403, "host_cannot_vote", "The host can't vote on their own proposal.");
-  if (!votersOf(db, market).includes(userId)) throw new AppError(403, "not_a_voter", "Only people who traded or picked can vote.");
+  if (!votersOf(db, market).includes(userId)) throw new AppError(403, "not_a_voter", "Only people who traded or picked, and were in the group when this market opened, can vote.");
   if (v !== "confirm" && v !== "dispute") throw new AppError(400, "bad_vote", "Confirm or dispute.");
   market.proposal.votes[userId] = v;
   evaluate(db, market, now, false);

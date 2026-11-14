@@ -3,6 +3,7 @@ import { StoreProvider } from "./lib/store.tsx";
 import CreateSeries from "./pages/CreateSeries.tsx";
 import Home from "./pages/Home.tsx";
 import JoinLink from "./pages/JoinLink.tsx";
+import Profile from "./pages/Profile.tsx";
 import { SeriesBet, SeriesHome, SeriesLeaderboard, SeriesRules } from "./pages/SeriesRoutes.tsx";
 
 export default function App() {
@@ -13,6 +14,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/new" element={<CreateSeries />} />
           <Route path="/join/:code" element={<JoinLink />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/s/:id" element={<SeriesHome />} />
           <Route path="/s/:id/bets/:betId" element={<SeriesBet />} />
           <Route path="/s/:id/leaderboard" element={<SeriesLeaderboard />} />

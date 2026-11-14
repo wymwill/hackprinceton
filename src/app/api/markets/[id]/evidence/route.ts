@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { identify } from "@/server/auth";
 import { errorResponse, mutate } from "@/server/http";
 import { postEvidence } from "@/server/markets";
 import { readEvidenceBody, removeUpload } from "@/server/uploads";
@@ -11,6 +12,8 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/markets/[id
   const { id } = await ctx.params;
   let input;
   try {
+    // Who's asking comes first: a signed-out request never gets its body read or saved.
+    await identify(req);
     input = await readEvidenceBody(req);
   } catch (err) {
     return errorResponse(err);

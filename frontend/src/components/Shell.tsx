@@ -3,6 +3,7 @@ import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
 import { balances, isParticipant, participantIds, standings } from "../lib/rules.ts";
 import { STATUS_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
+import { useTheme } from "../lib/theme.ts";
 import type { Db, Series } from "../lib/types.ts";
 import { Avatar, Modal, Toasts } from "./ui.tsx";
 
@@ -112,23 +113,27 @@ function SeriesSwitcher({ current }: { current?: Series }) {
 /** Who's signed in, and the way out. */
 function Account() {
   const { me, meUser, signOut } = useStore();
+  const { theme, choose } = useTheme();
   return (
     <div className="whoami">
       <span className="cap">Signed in as</span>
-      <span className="who">
+      <Link to="/profile" className="who whoami-link" title="Edit your profile">
         <Avatar id={me} />
         <span style={{ minWidth: 0 }}>
           <b className="bright">{meUser.name}</b>
-          {meUser.email && (
-            <span className="dim" style={{ display: "block", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis" }}>
-              {meUser.email}
-            </span>
-          )}
+          <span className="dim" style={{ display: "block", fontSize: 12 }}>
+            Edit profile
+          </span>
         </span>
-      </span>
-      <button type="button" className="btn ghost sm" onClick={signOut}>
-        Sign out
-      </button>
+      </Link>
+      <div className="row">
+        <button type="button" className="btn ghost sm" onClick={() => choose(theme === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
+          {theme === "light" ? "Dark mode" : "Light mode"}
+        </button>
+        <button type="button" className="btn ghost sm" onClick={signOut}>
+          Sign out
+        </button>
+      </div>
     </div>
   );
 }
@@ -138,9 +143,9 @@ function Sidebar({ current }: { current?: Series }) {
   const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
   return (
     <aside className="sidebar">
-      <Link to="/" className="brand" aria-label="Betting with Friends home">
+      <Link to="/" className="brand" aria-label="Alea home">
         <span className="brand-mark">B</span>
-        <span className="brand-name">Betting with Friends</span>
+        <span className="brand-name">Alea</span>
       </Link>
       <SeriesSwitcher current={current} />
       {current ? (
@@ -160,6 +165,7 @@ function Sidebar({ current }: { current?: Series }) {
             All series
           </NavLink>
           <NavLink to="/new">New series</NavLink>
+          <NavLink to="/profile">Profile</NavLink>
         </nav>
       )}
       <div className="grow" />

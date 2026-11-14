@@ -1,4 +1,4 @@
-# Betting with Friends: frontend
+# Alea: Bet Series frontend
 
 The screens for **Bet Series**: friend groups compete over a series of YES/NO bets with virtual coins, and the bottom players owe favors (or, later, real money). The look follows Scarlet Market's layout (framed panels with label tags, tracked captions, serif display numbers, YES teal / NO violet) in Rosy Copper `#CE4C3B` on Shadow Grey `#27242F`, without retro effects.
 

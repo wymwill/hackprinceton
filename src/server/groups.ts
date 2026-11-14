@@ -20,7 +20,9 @@ const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
 function addMember(db: Db, group: Group, userId: string, role: "owner" | "member", now: Date) {
   db.memberships.push({ groupId: group.id, userId, role, joinedAt: now.toISOString() });
-  if (group.mode === "tokens") {
+  // Someone removed and invited back keeps their old balance instead of a second grant.
+  const granted = db.ledger.some((r) => r.groupId === group.id && r.userId === userId && r.kind === "grant");
+  if (group.mode === "tokens" && !granted) {
     db.ledger.push({ id: newId("l"), groupId: group.id, userId, kind: "grant", amount: group.startingBalance, createdAt: now.toISOString() });
   }
 }
@@ -90,6 +92,36 @@ export function requireMember(db: Db, userId: string, groupId: string) {
   const m = group && db.memberships.find((x) => x.groupId === groupId && x.userId === userId);
   if (!group || !m) throw new AppError(404, "group_not_found", "That group doesn't exist or you're not in it.");
   return { group, membership: m };
+}
+
+function requireOwner(db: Db, userId: string, groupId: string) {
+  const { group } = requireMember(db, userId, groupId);
+  if (group.ownerId !== userId) throw new AppError(403, "not_owner", "Only the group owner can do that.");
+  return group;
+}
+
+/** Owner only. A new invite code; the old link stops working at once. */
+export function resetInvite(db: Db, userId: string, groupId: string) {
+  const group = requireOwner(db, userId, groupId);
+  group.inviteCode = inviteCode(db);
+  return { inviteCode: group.inviteCode };
+}
+
+/**
+ * Owner only. Takes someone out of the group: they lose access to its markets,
+ * evidence and dares. Their past trades and results stay on the record. Markets
+ * they host that aren't settled pass to the owner, so they can still be settled.
+ */
+export function removeMember(db: Db, userId: string, groupId: string, targetId: unknown) {
+  const group = requireOwner(db, userId, groupId);
+  if (targetId === group.ownerId) throw new AppError(409, "cannot_remove_owner", "The owner can't be removed.");
+  const before = db.memberships.length;
+  db.memberships = db.memberships.filter((m) => !(m.groupId === groupId && m.userId === targetId));
+  if (db.memberships.length === before) throw new AppError(404, "not_member", "That person isn't in this group.");
+  for (const m of db.markets) {
+    if (m.groupId === groupId && m.hostId === targetId && !m.receiptId) m.hostId = group.ownerId;
+  }
+  return { removed: targetId };
 }
 
 export const isLocked = (db: Db, groupId: string) => db.markets.some((m) => m.groupId === groupId);

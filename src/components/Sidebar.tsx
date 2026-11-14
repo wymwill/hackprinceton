@@ -77,7 +77,7 @@ export default function Sidebar() {
           {group && (
             <button
               onClick={() => open("new-market")}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(206,76,59,0.2)] hover:shadow-[0_0_28px_rgba(206,76,59,0.33)] active:scale-[0.98] transition-all"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(255,95,31,0.2)] hover:shadow-[0_0_28px_rgba(255,95,31,0.33)] active:scale-[0.98] transition-all"
             >
               + New market
             </button>

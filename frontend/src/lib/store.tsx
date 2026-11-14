@@ -112,6 +112,10 @@ type Store = {
   me: Id;
   meUser: Me;
   name: (id: Id) => string;
+  /** A player's picture, if they picked one. */
+  avatar: (id: Id) => string | undefined;
+  /** Change your name and picture, then refresh them in every series you're in. */
+  saveProfile: (profile: { name: string; avatarUrl: string | null }) => Promise<boolean>;
   api: Api;
   toast: (text: string, tone?: Toast["tone"]) => void;
   signOut: () => void;
@@ -131,7 +135,7 @@ export function useStore() {
 function Boot({ children }: { children: ReactNode }) {
   return (
     <div className="boot">
-      <span className="brand-name">Betting with Friends</span>
+      <span className="brand-name">Alea</span>
       {children}
     </div>
   );
@@ -216,23 +220,55 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     supabase?.auth.signOut();
   }, []);
 
+  const saveProfile = useCallback<Store["saveProfile"]>(
+    async ({ name, avatarUrl }) => {
+      if (!supabase || !state) return false;
+      const { error: err } = await supabase.auth.updateUser({ data: { display_name: name.trim(), avatar_url: avatarUrl ?? "" } });
+      if (err) {
+        toast(err.message, "err");
+        return false;
+      }
+      // The API reads your name and picture from the sign-in token, so get a fresh one,
+      // then rejoin each series: rejoining copies the new name and picture into it.
+      await supabase.auth.refreshSession();
+      try {
+        for (const s of state.series) await request("POST", `/series/${s.id}/join`);
+      } catch {
+        toast("Saved, but some series didn't update yet. Try again in a moment.", "err");
+      }
+      await refresh();
+      toast("Profile saved.");
+      return true;
+    },
+    [state, refresh, toast]
+  );
+
   const value = useMemo<Store | null>(() => {
     if (!state) return null;
     const names = new Map<Id, string>();
-    for (const s of state.series) for (const m of s.members) names.set(m.userId, m.name);
+    const avatars = new Map<Id, string>();
+    for (const s of state.series)
+      for (const m of s.members) {
+        names.set(m.userId, m.name);
+        if (m.avatarUrl) avatars.set(m.userId, m.avatarUrl);
+      }
     names.set(state.me.id, state.me.name);
+    if (state.me.avatarUrl) avatars.set(state.me.id, state.me.avatarUrl);
+    else avatars.delete(state.me.id);
     return {
       db: { series: state.series as Series[] },
       me: state.me.id,
       meUser: state.me,
       name: (id) => names.get(id) ?? "Someone",
+      avatar: (id) => avatars.get(id),
+      saveProfile,
       api,
       toast,
       signOut,
       toasts,
       skew,
     };
-  }, [state, api, toast, signOut, toasts, skew]);
+  }, [state, api, toast, signOut, toasts, skew, saveProfile]);
 
   if (!supabase) {
     return (

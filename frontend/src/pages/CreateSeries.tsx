@@ -8,9 +8,9 @@ import { useStore } from "../lib/store.tsx";
 import type { Mode, Settings } from "../lib/types.ts";
 
 const MODES: { mode: Mode; letter: string; blurb: string }[] = [
-  { mode: "money", letter: "A", blurb: "Players chip in real money instead of favors. Shown for the demo; no money moves." },
-  { mode: "pledge", letter: "B", blurb: "Each player pledges their own favor up front. The bottom players do their own." },
-  { mode: "pool", letter: "C", blurb: "Everyone adds favors to a shared pool. The top players pick favors for the bottom." },
+  { mode: "money", letter: "A", blurb: "Real money. Preview only." },
+  { mode: "pledge", letter: "B", blurb: "Each player pledges a favor." },
+  { mode: "pool", letter: "C", blurb: "Winners pick from a shared pool." },
 ];
 
 function Seg<T extends string | number | boolean>({
@@ -52,12 +52,13 @@ export default function CreateSeries() {
 
   return (
     <Shell crumbs={[{ label: "New series" }]}>
+      <div className="create">
       <section className="hero">
         <div>
           <h1>
             New <em>series</em>
           </h1>
-          <p>Set the rules once. They lock when betting starts, so everyone plays the same game.</p>
+          <p>Rules lock when betting starts.</p>
         </div>
       </section>
 
@@ -67,11 +68,11 @@ export default function CreateSeries() {
             <div className="stack">
               <label className="field">
                 <span>Series name</span>
-                <input className="input text" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="Placeholder placeholder" />
+                <input className="input text" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="Gym month" />
               </label>
               <label className="field">
                 <span>Description</span>
-                <textarea className="input" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={280} placeholder="Placeholder placeholder" />
+                <textarea className="input" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={280} placeholder="Optional" />
               </label>
               <div className="two-col">
                 <label className="field">
@@ -79,30 +80,24 @@ export default function CreateSeries() {
                   <input className="input" type="number" min={1} max={50} value={st.betCount} onChange={(e) => set("betCount", Number(e.target.value))} />
                 </label>
                 <label className="field">
-                  <span>Losing players (bottom X)</span>
+                  <span>Losers</span>
                   <input className="input" type="number" min={1} max={20} value={st.losers} onChange={(e) => set("losers", Number(e.target.value))} />
                 </label>
               </div>
               <label className="field">
-                <span>Starting coins per player</span>
+                <span>Starting coins</span>
                 <input className="input" type="number" min={100} max={100000} step={100} value={st.startingCoins} onChange={(e) => set("startingCoins", Number(e.target.value))} />
               </label>
-              <p className="hint">After you create it, share the invite link or code. Friends sign in and join from the lobby.</p>
               <label className="check">
                 <input type="checkbox" checked={st.hostPlays} onChange={(e) => set("hostPlays", e.target.checked)} />
-                <span>I'm playing too. (The host still decides every result.)</span>
+                <span>I'm playing too</span>
               </label>
             </div>
           </Panel>
 
           <Panel label="02 · Bets" right={`${written.length}/${st.betCount} written`}>
             <div className="stack">
-              <p className="hint">
-                Write the YES/NO questions now, or add them in the lobby.{" "}
-                {st.betCreation === "upfront"
-                  ? `All ${st.betCount} have to be written before betting starts.`
-                  : "You can also add the rest while the series runs."}
-              </p>
+              <p className="hint">Write them now or in the lobby.</p>
               {questions.map((q, i) => (
                 <div key={i} className="row">
                   <span className="num dim" style={{ width: 22 }}>
@@ -113,7 +108,7 @@ export default function CreateSeries() {
                     value={q}
                     onChange={(e) => setQuestion(i, e.target.value)}
                     maxLength={300}
-                    placeholder="Placeholder placeholder?"
+                    placeholder="Will Sam hit the gym 5 times this week?"
                     aria-label={`Bet ${i + 1}`}
                   />
                   {questions.length > 1 && (
@@ -150,18 +145,17 @@ export default function CreateSeries() {
                     <input className="input" type="number" min={1} value={st.minContribution} onChange={(e) => set("minContribution", Number(e.target.value))} />
                   </label>
                   <p className="notice">
-                    <b>Preview only.</b> Real-money payments need legal and payment review, so this demo records the
-                    amount and rankings but moves no money.
+                    <b>Preview only.</b> No money moves.
                   </p>
                 </>
               )}
               {st.mode === "pledge" && (
-                <p className="hint">In the lobby, every player writes the one favor they'll do if they finish in the bottom {st.losers}.</p>
+                <p className="hint">Each player writes their favor in the lobby.</p>
               )}
               {st.mode === "pool" && (
                 <div className="two-col">
                   <label className="field">
-                    <span>Favors each player can add</span>
+                    <span>Favors per player</span>
                     <input className="input" type="number" min={1} max={5} value={st.favorsPerPlayer} onChange={(e) => set("favorsPerPlayer", Number(e.target.value))} />
                   </label>
                   <div className="field">
@@ -176,8 +170,7 @@ export default function CreateSeries() {
                     />
                   </div>
                   <p className="hint" style={{ gridColumn: "1 / -1" }}>
-                    Everyone adds at least one favor. At the end, 1st picks for last place, 2nd for second-to-last, and so
-                    on. {st.exclusivePool ? "Each favor can be picked once." : "The same favor can be picked more than once."}
+                    1st picks for last, 2nd for second-to-last. {st.exclusivePool ? "Each favor is used once." : "Favors can repeat."}
                   </p>
                 </div>
               )}
@@ -198,8 +191,8 @@ export default function CreateSeries() {
                 />
                 <p className="hint">
                   {st.tiebreak === "first"
-                    ? "Whoever reached the tied score first ranks higher. On the same bet, the earlier wager wins."
-                    : "Ties are broken by an order drawn at random when betting starts."}
+                    ? "Whoever got there first ranks higher."
+                    : "A random order is drawn at the start."}
                 </p>
               </div>
               <div className="field">
@@ -214,8 +207,8 @@ export default function CreateSeries() {
                 />
                 <p className="hint">
                   {st.betCreation === "upfront"
-                    ? `All ${st.betCount} bets are written in the lobby, so players see every question before agreeing.`
-                    : `You can write bets in the lobby and add the rest while the series runs, up to ${st.betCount}.`}
+                    ? "Players see every question before starting."
+                    : `Add more while it runs, up to ${st.betCount}.`}
                 </p>
               </div>
               <div className="field">
@@ -232,8 +225,8 @@ export default function CreateSeries() {
                 />
                 <p className="hint">
                   {st.withdrawMinutes
-                    ? `Players can take a wager back during the first ${st.withdrawMinutes} minutes after a bet opens. That's also the only way to switch sides.`
-                    : "Wagers are final. Players can still add more coins to their side."}
+                    ? `Wagers can be taken back for ${st.withdrawMinutes} min.`
+                    : "Wagers are final."}
                 </p>
               </div>
             </div>
@@ -259,9 +252,8 @@ export default function CreateSeries() {
             </div>
             <div className="rule" />
             <p className="notice">
-              <b>Needs {needed}+ players</b> to start
-              {st.mode === "pool" ? `, so the top ${st.losers} can pick for the bottom ${st.losers}` : ""}
-              {st.hostPlays ? ", counting you" : ""}. Friends join with the invite link.
+              <b>Needs {needed}+ players</b>
+              {st.hostPlays ? ", counting you" : ""}.
             </p>
             <div style={{ height: 14 }} />
             <button type="button" className="btn primary block" onClick={submit} disabled={!name.trim() || tooMany}>
@@ -269,6 +261,7 @@ export default function CreateSeries() {
             </button>
           </Panel>
         </div>
+      </div>
       </div>
     </Shell>
   );
