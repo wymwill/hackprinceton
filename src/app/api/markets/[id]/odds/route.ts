@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { refreshOdds } from "@/server/ai/bookie";
+import { requestRecheck } from "@/server/ai/bookie";
 import { AppError } from "@/server/errors";
 import { currentUser, errorResponse } from "@/server/http";
 import { requireMarket } from "@/server/markets";
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/markets/[id
   try {
     const me = await currentUser(req);
     await read((db) => requireMarket(db, me, id));
-    const est = await refreshOdds(id, "manual");
+    const est = await requestRecheck(id);
     if (!est) throw new AppError(409, "market_settled", "This market is already settled.");
     return Response.json({ result: est });
   } catch (err) {

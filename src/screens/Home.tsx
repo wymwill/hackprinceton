@@ -20,7 +20,7 @@ export default function Home() {
     <div className={`${card} max-w-lg mx-auto mt-10 p-8 flex flex-col items-center text-center gap-4`}>
       <BookieMark size="md" label={false} />
       <h1 className="font-display text-headline-lg text-on-surface">Bet with your friends on real life</h1>
-      <p className="font-body-md text-body-md text-on-surface-variant">No money. Tokens or points, a Bookie who sets fair odds and settles it with proof, and dares that actually get done.</p>
+      <p className="font-body-md text-body-md text-on-surface-variant">Bet on real life with friends. No money, just dares.</p>
       <div className="flex gap-2">
         <Button tone="primary" onClick={() => open("create-group")}>
           Create a group

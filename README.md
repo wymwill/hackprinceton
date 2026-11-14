@@ -1,8 +1,8 @@
-# hackprinceton — Bookie 🎲
+# Betting with Friends
 
-A social platform where friend groups make no-money bets on real life. The stakes are reputation points, titles and dares. An AI bookie sets the odds from each friend's track record, settles bets from connected apps and cited evidence, and roasts the losers.
+Friend groups bet on real life (gym streaks, wake-up times, side projects) without money. Each group plays for **tokens** or **points**, and losers owe a **dare**. Every market is a Yes/No question priced like a prediction market, and **the Bookie**, an AI character, sets the opening odds from the group's track record, reviews the evidence when a market closes, and writes the roast on the receipt. People stay in control: the host proposes the result and the group can dispute it.
 
-Built with Next.js 16 (App Router) and Tailwind v4. The UI uses the "Warm Slate Social" palette from the Google Stitch export (soft mint, peach and lavender), and bets, balances and settlements are real: they live on the server and persist across refreshes and restarts. The other screens (Dares, Profile, the static bet `/bets/8842` and receipt `/receipts/8704`) are still mocked.
+Built with Next.js 16 (App Router), React 19 and Tailwind v4. The full design is in [`docs/superpowers/specs/2026-11-14-betting-with-friends-redesign-design.md`](docs/superpowers/specs/2026-11-14-betting-with-friends-redesign-design.md).
 
 ## Run it
 
@@ -11,89 +11,106 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. The layout is designed for a 1440px-wide desktop.
+Open http://localhost:3000. The first request creates `.data/bwf.json` from the demo seed. Delete that file to reset.
+
+No API key is needed. Without one the Bookie runs in `off` mode (see [AI Bookie](#ai-bookie)). To turn Claude on, copy `.env.example` to `.env.local` and set `ANTHROPIC_API_KEY`.
+
+There's no login. Use **Playing as** in the header to switch friends (it sets a cookie). That's how you demo several people in one market, and it also means nobody's identity is verified.
+
+## Scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Dev server |
+| `npm run build` / `npm start` | Production build and server |
+| `npm run lint` | ESLint |
+| `npm run test:unit` | Node test runner over `src/**/*.test.ts` (the LMSR pricing math) |
+| `npm run test:e2e` | End-to-end API tests. Run `npm run build` first: it starts the production server twice (empty seed, then demo seed) on throwaway data files. Uses `BOOKIE_AI=stub` by default and never calls the real API. |
 
 ## Screens
 
-| Route | Screen | Interactions |
-| --- | --- | --- |
-| `/` | Group Home | Live countdown, Fade/Back the bet, emoji reactions, a chat composer the AI bookie replies to, "Make it a bet" opens the bet builder, Back buttons in the right rail |
-| `/` (feed) | Group bets | Live feed of the group's bets at the top of Home; join from the card |
-| `/bets` | Bets (markets) | Live bets: filters (incl. Needs result / Settled), search, sort, biggest-pool featured bet, chance gauges from the pool, multi-outcome bets, join sheet with pool payout, and a Your bets rail |
-| `/bets/[id]` | Live bet | Outcomes and pools, who's in, join, creator can close early and settle |
-| `/receipts/[id]` | Live receipt | Result, pool, every friend's stake / payout / net, proof JSON download |
-| `/bets/8842` | Bet Detail | Take the Bet / Pass / contrarian play, pool updates, side bets that back either person, odds chart |
-| `/receipts/8704` | Settlement Receipt | Confetti, animated "L" stamp, Dispute opens a squad vote and updates the consensus bar, share link, download proof JSON |
-| `/leaderboard` | Leaderboard | Live: This Week net / Balance / All-Time net drive the podium and table; win %, record, streak and points in play come from settled bets |
-| `/dares` | Dares | Punishment wheel spins and reports where it lands, Upload Proof moves your card to Proof Submitted, Approve/Redo voting |
-| `/profile` | Profile | Bet history filters, Share Card, connect/disconnect proof apps |
+| Route | Screen |
+| --- | --- |
+| `/` | Goes to your first group, or offers to create or join one |
+| `/g/[groupId]` | Markets: filters (open, needs result, in review, settled), closing soon, new market |
+| `/g/[groupId]/m/[marketId]` | One market: chance chart, trade ticket or pick, the Bookie's estimate and log, evidence, result and voting, receipt |
+| `/g/[groupId]/leaderboard` | Balances or points, record, streak, dares done and skipped |
+| `/g/[groupId]/dares` | To do, group is voting, done. Proof upload and approve or redo |
+| `/g/[groupId]/settings` | Name, emoji, dare presets, invite code. Currency locks after the first market |
 
-The **+ Create Bet** button in the sidebar opens a bet builder: claim, 2–6 outcomes, the one you back, your stake, and when entries close (5 min to a week, or a custom time). Pick who's on the hook to see a live odds preview from the group's stored history.
+## How a market works
 
-## Bet lifecycle
-
-1. **Create.** The creator's stake comes out of their balance right away.
-2. **Join.** Friends pick an outcome and stake points. One entry per person per bet; you can't stake more than you have.
-3. **Close.** Entries close automatically at the deadline. The creator can also close early.
-4. **Settle.** Once closed, the creator records the winning outcome. Settling is safe to retry: the same outcome returns the original receipt, a different one is rejected, and points are only ever paid once.
-5. **Pay out.** Parimutuel pool: winners split the whole pool in proportion to their stake (rounding leftovers go to the biggest winning stakes, so payouts always add up to the pool). If nobody backed the winner, everyone is refunded.
-
-There's no login yet. Use **Playing as** in the header to switch friends (it sets a cookie), which is how you demo several people joining one bet.
-
-### Server
-
-- `src/server/store.ts`: one JSON file (`.data/bookie.json`, gitignored; override with `BOOKIE_DATA_FILE`). Every change runs through `transact`, which serializes writes, so balance and settlement checks are atomic with their writes. Delete the file to reset to the seed data.
-- `src/server/bets.ts`: create / join / close / settle and the views. Balances are never stored: they're the starting balance plus the ledger.
-- `src/lib/bets/payout.ts`: the payout rule, shared with the client for estimates.
-- API: `GET /api/state`, `POST /api/bets`, `POST /api/bets/:id/entries`, `POST /api/bets/:id/close`, `POST /api/bets/:id/settle`, `POST /api/bets/:id/evidence`, `POST /api/bets/:id/odds`, `POST /api/bets/:id/review`, `POST /api/bets/:id/decision`, `GET /api/evidence/:id`, `POST /api/session`.
-
-The lock is in-process, so this assumes a single server process (fine for `next dev` / `next start`, not for multi-instance serverless).
+1. **Create.** Question, optional "how we'll know" rule, deadline (up to 90 days), starting chance (5–95%), optional subject and dare.
+2. **Trade or pick.**
+   - *Tokens:* an LMSR market maker (`b = 25`) always quotes and always fills. A winning contract pays 100. Buys round cost up, sells round proceeds down, and the house's loss per market is at most about 1,733 tokens.
+   - *Points:* one Yes/No pick each, changeable until close. A correct pick scores `max(10, 100 − % of pickers on your side)`.
+3. **Close.** At the deadline, or early by the host.
+4. **Evidence.** Anyone can post text or an image (PNG, JPEG, GIF or WebP, up to 5 MB, checked by file signature) until the market settles.
+5. **Propose and vote.** The host proposes Yes, No or Void. Everyone with a position or pick, except the host, can confirm or dispute. A dispute majority sends it back to the host. It settles when everyone has voted, when there are no voters, or when the window ends (24h by default). Only one proposal can be live at a time.
+6. **Settle.** Payouts, or refunds for Void, go into the ledger, a receipt is written, and each loser owes the market's dare to the winners. Proof is voted on, and dares with no proof by the deadline (48h) are marked skipped.
 
 ## AI Bookie
 
-**Odds.** Every bet gets an estimate the moment it's created, shown next to (never mixed with) the pool percentages.
-
-- The baseline in `src/lib/bets/odds.ts` comes only from settled bets in the database: the on-the-hook friend's last 10 Yes/No results, with the group's record in that category as a prior. Each fact lists the bet ids it was computed from, and the UI links to them.
-- With no relevant history it says so and starts from an even split. It never invents a record.
-- With Claude on, the model gets those facts, the baseline and any evidence so far, and returns probabilities plus a short explanation. The server normalizes the numbers and drops any fact or evidence id it cites that doesn't exist. The history-only baseline stays visible next to Claude's number.
-- Estimates update when evidence arrives on an open bet, when a bet about the same friend settles, or when someone presses Re-estimate.
-
-**Evidence and settlement.**
-
-- Anyone in a bet can add statements, links or images (PNG/JPEG/GIF/WebP, max 5 MB, checked by file signature) until it settles.
-- After entries close, anyone in the bet can ask the Bookie to review. Claude returns a verdict, the evidence it used, and issues (missing, contradictory, inconclusive, can't verify, self-interested).
-- The server, not the model, decides whether that counts as a recommendation. It needs a named outcome, confidence of at least 75%, cited evidence and no contradictions. Anything else is flagged "needs a human decision".
-- Only the bet's creator can confirm (which settles through the same once-only `settleBet` path), reject (with a note), or settle by hand. A recommendation can't be confirmed if newer evidence or a newer review exists.
-- Links are never opened, and the model is told evidence is untrusted claims, not instructions.
-- Every step lands in the bet's audit trail: entries, estimates, evidence, reviews and decisions.
-
-**Modes** (`BOOKIE_AI`):
-
-| Mode | When | Odds | Reviews |
+| Mode (`BOOKIE_AI`) | When | Odds | Evidence review |
 | --- | --- | --- | --- |
-| `claude` | default when `ANTHROPIC_API_KEY` is set | Claude on top of stored stats | Claude recommends or flags |
-| `off` | default with no key | Stored stats only | Lists the evidence and flags it for a human; never recommends |
-| `stub` | tests only | Stored stats only | Deterministic fake: recommends when 2+ claims agree |
+| `claude` | Default when `ANTHROPIC_API_KEY` (or `ANTHROPIC_AUTH_TOKEN`) is set | Claude, given the history-based baseline and the facts behind it | Claude recommends a result, or flags it for a human |
+| `off` | Default with no key | History-based baseline only | Lists the evidence and leaves the call to the host |
+| `stub` | Tests only | Baseline, labeled as a stub | Deterministic: recommends when 2+ claims agree |
 
-Claude calls use `claude-opus-5-5` (override with `BOOKIE_AI_MODEL`) with structured output and server-side refusal fallback. If a call fails, the app falls back to `off` behavior for that request and says why.
+- **Advisory only.** The Bookie never moves tokens or points. Its estimate re-opens a market's price only before the first trade or pick. After that it's shown next to the price.
+- The server, not the model, decides what counts as a recommendation: a named outcome, confidence of at least 75%, cited evidence and no contradictions.
+- Model calls run outside the database lock, and their output is checked against stored ids before it's saved. If a call fails, that request falls back to `off` behavior and says why.
+- Manual "Re-check" requests run one at a time per market, at most once every 30s (`BWF_ODDS_COOLDOWN_MS`), so nobody can run up model calls.
+- Everything the Bookie does is written to the market's audit log.
 
-### Test the lifecycle
+## Configuration
 
-```bash
-BOOKIE_DATA_FILE=/tmp/bookie-test.json npm run dev   # terminal 1
-npm run test:e2e                                     # terminal 2 (BOOKIE_URL defaults to localhost:3000)
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | (unset) | Turns on `claude` mode |
+| `BOOKIE_AI` | from the key | `claude`, `off` or `stub` |
+| `BOOKIE_AI_MODEL` | `claude-opus-5-5` | Model for Bookie calls |
+| `BWF_DATA_FILE` | `.data/bwf.json` | Database file. Uploads go in an `uploads/` folder next to it |
+| `BWF_SEED` | `demo` | Seed used when the file doesn't exist: `demo` or `empty` |
+| `BWF_DISPUTE_WINDOW_MS` | 24h | How long a proposal stays open for votes |
+| `BWF_DARE_WINDOW_MS` | 48h | How long a loser has to post proof |
+| `BWF_ODDS_COOLDOWN_MS` | 30s | Minimum gap between manual odds re-checks per market |
+
+## Code layout
+
+```
+src/
+  app/            routes: pages under g/[groupId], JSON API under api/
+  screens/        one component per screen
+  components/     app shell, AppProvider (state, polling, actions), modals, cards
+  lib/markets/    shared with the client: LMSR math, baseline odds, types
+  server/
+    store.ts      JSON file persistence and the transact() lock
+    http.ts       request helpers: current user, mutate/query, error responses
+    groups.ts     groups, membership, balances
+    markets.ts    market lifecycle, resolution, settlement
+    dares.ts      dares, proof, votes
+    views.ts      shapes data for the client
+    uploads.ts    image validation and storage
+    seed.ts       demo and empty starting data
+    ai/           mode, Claude calls, and the Bookie's orchestration
+scripts/e2e.mjs   end-to-end tests
 ```
 
-It creates, joins, overspends, races, auto-closes, settles, re-settles, fires 8 settle requests at once, and checks balances, receipts, stats and point conservation.
+### API
 
-For the AI Bookie, start the server with `BOOKIE_AI=stub` (or `off`) on a fresh data file and run `npm run test:ai`.
+All responses are JSON. Mutations return `{ result }`. Errors return `{ error: { code, message } }` with a matching HTTP status.
 
-## Layout
+- `GET /api/state?group=` everything the screens need
+- `POST /api/session` switch who you're playing as
+- `POST /api/groups`, `POST /api/groups/join`, `PATCH /api/groups/:id`
+- `POST /api/groups/:id/markets`, `POST /api/groups/:id/dare-suggestion`
+- `POST /api/markets/:id/{trade,pick,close,evidence,odds,review,result,vote}`
+- `POST /api/dares/:id/{proof,vote}`
+- `GET /api/evidence/:id` an uploaded image, for members of that market's group
 
-- `src/app/globals.css`: design tokens from Stitch's `DESIGN.md` (colors, type scale, spacing) as a Tailwind v4 `@theme`
-- `src/components/`: app shell (Sidebar, Header), `BookieProvider` (toasts and the Create Bet modal), and the modals
-- `src/screens/`: one component per screen, converted from the Stitch HTML and then wired up with React state
-- `src/lib/data.ts`: mock user, groups, nav and the odds model
-- `src/lib/bets/`: shared bet types, payout rule and formatting
-- `src/server/`: persistence, lifecycle rules, seed data
-- `src/server/ai/`: AI mode, Claude calls, and the orchestration that records odds and reviews
+### Limits
+
+- Persistence is one JSON file behind an in-process lock, so it assumes a **single server process** (`next dev` or `next start`). Don't deploy it to multi-instance serverless as is.
+- Queued Bookie work (opening odds, roasts) is held in memory and is lost if the server restarts before it runs.
+- There are no accounts. "Playing as" is a cookie anyone can change.

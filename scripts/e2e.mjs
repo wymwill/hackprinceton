@@ -160,6 +160,19 @@ async function emptyPhase() {
   const odds = await p1.post(`/api/markets/${mid}/odds`);
   s = await p1.state(g1id);
   check("asking the Bookie to re-check stores another estimate", odds.status === 200 && market(s, mid).aiLog.filter((a) => a.kind === "odds").length >= 2, odds);
+  check("a second re-check inside the cooldown gives 429", (await p1.post(`/api/markets/${mid}/odds`)).status === 429);
+
+  // Evidence images are served only to members of the market's group.
+  const form = new FormData();
+  form.append("file", new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0])], "proof.png", { type: "image/png" }));
+  form.append("text", "Screenshot");
+  const up = await fetch(`${BASE}/api/markets/${mid}/evidence`, { method: "POST", headers: { cookie: "bwf_user=p3" }, body: form });
+  const evId = (await up.json()).result;
+  check("an image upload returns 201", up.status === 201 && typeof evId === "string", up.status);
+  const img = (user) => fetch(`${BASE}/api/evidence/${evId}`, { headers: { cookie: `bwf_user=${user}` } });
+  check("a member can load the image", (await img("p3")).status === 200);
+  check("a non member gets 404 for the image", (await img("p2")).status === 404);
+  check("an unknown evidence id gives 404", (await fetch(`${BASE}/api/evidence/ev_nope`)).status === 404);
 
   // Concurrency: eight buys at once never overdraw.
   await p4.post("/api/groups/join", { code: code1 });
@@ -237,6 +250,7 @@ async function demoPhase() {
   await sam.post(`/api/markets/${r1}/result`, { outcome: "yes" });
   s = await sam.state(G);
   check("a new proposal starts with no votes", Object.keys(market(s, r1).proposal.votes).length === 0);
+  check("the host can't re-propose while a vote is live", (await sam.post(`/api/markets/${r1}/result`, { outcome: "no" })).status === 409);
   const priyaBefore = member(s, "priya").balance;
   await marcus.post(`/api/markets/${r1}/vote`, { vote: "dispute" });
   await marcus.post(`/api/markets/${r1}/vote`, { vote: "confirm" });

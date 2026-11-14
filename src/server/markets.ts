@@ -216,6 +216,8 @@ export function proposeResult(db: Db, userId: string, marketId: string, outcome:
   if (market.hostId !== userId) throw new AppError(403, "not_host", "Only the host can propose the result.");
   if (outcome !== "yes" && outcome !== "no" && outcome !== "void") throw new AppError(400, "bad_outcome", "Propose Yes, No, or Void.");
   if (market.receiptId) throw new AppError(409, "market_settled", "This market is already settled.");
+  // A live proposal can only end by vote, dispute or the window. Re-proposing would wipe the votes.
+  if (market.proposal) throw new AppError(409, "already_proposed", "There's already a result up for a vote.");
   market.closedAt ??= now.toISOString();
   const review = db.reviews.filter((r) => r.marketId === marketId).at(-1);
   market.proposal = { outcome, by: userId, at: now.toISOString(), reviewId: review?.id, votes: {} };

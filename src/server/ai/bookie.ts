@@ -73,6 +73,24 @@ export async function refreshOdds(marketId: string, trigger: string): Promise<Bo
   });
 }
 
+const RECHECK_COOLDOWN_MS = Number(process.env.BWF_ODDS_COOLDOWN_MS ?? 30_000);
+const rechecking = new Set<string>();
+const lastRecheck = new Map<string, number>();
+
+/** A person asked for a re-check. One at a time per market, and at most once per cooldown, so nobody can run up model calls. */
+export async function requestRecheck(marketId: string) {
+  if (rechecking.has(marketId)) throw new AppError(409, "recheck_running", "The Bookie is already re-checking this one.");
+  const wait = (lastRecheck.get(marketId) ?? 0) + RECHECK_COOLDOWN_MS - Date.now();
+  if (wait > 0) throw new AppError(429, "recheck_cooldown", `The Bookie just looked. Try again in ${Math.ceil(wait / 1000)}s.`);
+  rechecking.add(marketId);
+  lastRecheck.set(marketId, Date.now());
+  try {
+    return await refreshOdds(marketId, "manual");
+  } finally {
+    rechecking.delete(marketId);
+  }
+}
+
 // ---------- evidence review ----------
 
 function rulesReview(evidence: StoredEvidence[], why: string) {

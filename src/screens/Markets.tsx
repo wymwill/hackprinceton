@@ -81,13 +81,13 @@ export default function Markets() {
             <BookieMark size="md" label={false} />
             <div className="flex-1 grid sm:grid-cols-3 gap-3 font-body-sm text-body-sm text-on-surface-variant">
               <p>
-                <b className="text-on-surface">Ask a Yes or No question</b> about real life. The Bookie sets the opening chance from everyone&apos;s track record.
+                <b className="text-on-surface">Ask Yes or No.</b> The Bookie sets the odds.
               </p>
               <p>
-                <b className="text-on-surface">{group.mode === "tokens" ? "Buy Yes or No." : "Make your pick."}</b> {group.mode === "tokens" ? "The price is the chance. A right call pays 100 per contract." : "Calling it against the crowd scores more."}
+                <b className="text-on-surface">{group.mode === "tokens" ? "Buy Yes or No." : "Make your pick."}</b> {group.mode === "tokens" ? "Price = chance. Wins pay 100." : "Bold calls score more."}
               </p>
               <p>
-                <b className="text-on-surface">Settle with proof.</b> Post evidence, the Bookie weighs in, the host calls it, and the loser does the dare.
+                <b className="text-on-surface">Settle with proof.</b> Loser does the dare.
               </p>
             </div>
             <button
@@ -114,9 +114,9 @@ export default function Markets() {
               {soon.map((m) => (
                 <Link key={m.id} href={`/g/${group.id}/m/${m.id}`} className={`${card} p-3 hover:ring-outline-variant flex flex-col gap-1.5`}>
                   <span className="font-label-md text-label-md text-on-surface line-clamp-2">{m.question}</span>
-                  <span className="flex items-center justify-between font-label-sm text-[11px]">
+                  <span className="flex items-center justify-between font-label-sm text-xs">
                     <span className="font-num text-primary text-[13px]">{m.chance}%</span>
-                    <span className="text-secondary">⏱ {timeLeft(m.deadline, now)}</span>
+                    <span className="text-secondary">{timeLeft(m.deadline, now)}</span>
                   </span>
                 </Link>
               ))}
@@ -146,7 +146,7 @@ export default function Markets() {
           </div>
         ) : (
           <Empty icon="inbox" title={filter === "open" ? "No open markets" : "Nothing here yet"}>
-            {filter === "open" && <p>Post one and the Bookie will set the line.</p>}
+            {filter === "open" && <p>Post one to get started.</p>}
           </Empty>
         )}
       </div>
@@ -172,7 +172,7 @@ export default function Markets() {
               <li key={i}>
                 <Link href={`/g/${group.id}/m/${a.href}`} className={`flex flex-col font-body-sm text-body-sm hover:underline ${a.bookie ? "text-tertiary" : "text-on-surface"}`}>
                   <span className="line-clamp-2">{a.text}</span>
-                  <span className="font-label-sm text-[11px] text-on-surface-variant">{ago(a.at, now)}</span>
+                  <span className="font-label-sm text-xs text-on-surface-variant">{ago(a.at, now)}</span>
                 </Link>
               </li>
             ))}
