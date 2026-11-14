@@ -48,7 +48,7 @@ The flow: `/login` sends you to Google through Supabase, Google returns to `/aut
 | `npm run dev` | Dev server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run lint` | ESLint |
-| `npm run test:unit` | Node test runner over `src/**/*.test.ts` (the LMSR pricing math) |
+| `npm run test:unit` | Node test runner over `src/**/*.test.ts`: the LMSR pricing math, and the Deep Agent with a scripted model |
 | `npm run test:e2e` | End-to-end tests. Run `npm run build` first. It starts the production server four times on throwaway data files: demo mode (empty seed, then demo seed), Supabase mode against a local test signing key (real token verification, no Supabase project needed), and with nothing configured. Uses `BOOKIE_AI=stub` by default and never calls the real API. |
 | `npm run test:series-sql` | Bet Series rules: the Supabase migrations in an in-process Postgres (PGlite), no project or keys needed |
 | `npm run test:series` | Bet Series against the real Supabase project (needs `.supabase-test-secret`) |
@@ -83,13 +83,25 @@ Friends play a series of YES/NO bets for virtual coins; the bottom players owe f
 
 | Mode (`BOOKIE_AI`) | When | Odds | Evidence review |
 | --- | --- | --- | --- |
-| `claude` | Default when `ANTHROPIC_API_KEY` (or `ANTHROPIC_AUTH_TOKEN`) is set | Claude, given the history-based baseline and the facts behind it | Claude recommends a result, or flags it for a human |
+| `claude` | Default when `ANTHROPIC_API_KEY` (or `ANTHROPIC_AUTH_TOKEN`) is set | Opening line from a LangChain Deep Agent. Re-checks use one structured Claude call. Both start from the history-based baseline | Claude recommends a result, or flags it for a human |
 | `off` | Default with no key | History-based baseline only | Lists the evidence and leaves the call to the host |
 | `stub` | Tests only | Baseline, labeled as a stub | Deterministic: recommends when 2+ claims agree |
 
 - **Advisory only.** The Bookie never moves tokens or points. Its estimate re-opens a market's price only before the first trade or pick. After that it's shown next to the price.
 - The server, not the model, decides what counts as a recommendation: a named outcome, confidence of at least 75%, cited evidence and no contradictions.
 - Model calls run outside the database lock, and their output is checked against stored ids before it's saved. If a call fails, that request falls back to `off` behavior and says why.
+
+### The opening-line Deep Agent
+
+When a market is created in `claude` mode, a LangChain Deep Agent (`deepagents`, in `src/server/ai/agent.ts`) sets the opening line after the response is sent:
+
+1. `get_market` reads the question, rule, deadline, who it's about, the group's friends, facts from settled markets, and the baseline.
+2. `get_track_record` looks up a friend by name: settled markets about them and how each went, plus their results in markets they played.
+3. `submit_estimate` records a chance, a likely range, an uncertainty level, a one-line explanation and the fact ids it relied on.
+
+The tools read a snapshot taken before the run, so the agent can't change anything and never holds the database lock. Deep Agents' own file tools work on in-memory state only. The submitted numbers are clamped and their fact ids checked, the same as a single call. The Bookie card shows "Deep Agent" on lines it set.
+
+If the agent errors, times out (45s) or finishes without submitting, the Bookie tries one structured call and then falls back to the baseline, keeping both reasons on the estimate. `npm run test:unit` runs the agent loop against a scripted model, so it's tested without an API key.
 - Manual "Re-check" requests run one at a time per market, at most once every 30s (`BWF_ODDS_COOLDOWN_MS`), so nobody can run up model calls.
 - Everything the Bookie does is written to the market's audit log.
 
@@ -129,7 +141,7 @@ src/
     views.ts      shapes data for the client
     uploads.ts    image validation and storage
     seed.ts       demo and empty starting data
-    ai/           mode, Claude calls, and the Bookie's orchestration
+    ai/           mode, Claude calls, the opening-line Deep Agent, and the Bookie's orchestration
 scripts/e2e.mjs   end-to-end tests
 ```
 

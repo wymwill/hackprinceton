@@ -26,6 +26,10 @@ export type BookieEstimate = {
   at: string;
   /** Set when Claude was asked but failed, so this is the baseline. */
   fallbackReason?: string;
+  /** How Claude produced it: the opening-line Deep Agent, or one structured call. */
+  via?: "deep-agent" | "single-call";
+  /** Set when the Deep Agent failed and a single call stood in for it. */
+  agentFallbackReason?: string;
 };
 
 export type ReviewIssue = { type: "missing" | "contradictory" | "inconclusive" | "unverifiable" | "self_interested"; detail: string; evidenceIds: string[] };

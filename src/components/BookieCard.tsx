@@ -17,7 +17,7 @@ export default function BookieCard({ market: m, now }: { market: MarketView; now
     <section className="rounded-2xl bg-tertiary-container/[0.07] ring-1 ring-tertiary-container/30 p-4 flex flex-col gap-3" aria-label="The Bookie's estimate">
       <div className="flex items-center justify-between gap-2">
         <BookieMark />
-        {b && <span className="font-label-sm text-xs text-tertiary">{sourceLabel(b.source)} · {ago(b.at, now)}</span>}
+        {b && <span className="font-label-sm text-xs text-tertiary">{sourceLabel(b.source)}{b.via === "deep-agent" ? " · Deep Agent" : ""} · {ago(b.at, now)}</span>}
       </div>
       {b ? (
         <>
