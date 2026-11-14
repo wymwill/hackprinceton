@@ -6,6 +6,7 @@ import { ConfirmButton, Empty, Panel, PersonAvatar } from "../components/ui.tsx"
 import { fmt } from "../lib/format.ts";
 import { clanLink, useSocial } from "../lib/social.tsx";
 import { useStore } from "../lib/store.tsx";
+import { ClanTabs } from "./ClanChat.tsx";
 import type { ClanRow } from "../lib/types.ts";
 
 /** Your clan, starting or joining one, and every clan ranked by coins wagered. */
@@ -44,6 +45,8 @@ export default function Clans() {
             <p>Team up and climb the board. Every coin your members wager counts.</p>
           </div>
         </section>
+
+        {data?.clan && <ClanTabs />}
 
         {!data ? (
           <Panel>
