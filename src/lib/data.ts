@@ -16,7 +16,7 @@ export const GROUPS: Group[] = [
 
 export const NAV = [
   { href: "/", label: "Home", icon: "local_fire_department", match: (p: string) => p === "/" },
-  { href: "/bets/8842", label: "Bets", icon: "casino", match: (p: string) => p.startsWith("/bets") || p.startsWith("/receipts") },
+  { href: "/bets", label: "Bets", icon: "casino", match: (p: string) => p.startsWith("/bets") || p.startsWith("/receipts") },
   { href: "/leaderboard", label: "Leaderboard", icon: "trophy", match: (p: string) => p.startsWith("/leaderboard") },
   { href: "/dares", label: "Dares", icon: "warning", match: (p: string) => p.startsWith("/dares") },
   { href: "/profile", label: "Profile", icon: "id_card", match: (p: string) => p.startsWith("/profile") },
@@ -40,9 +40,9 @@ export function bookieOdds(friend: string, category: string) {
   const ratio = against >= 1 ? `${Math.round(against)}:1` : `1:${Math.round(1 / against)}`;
   const roasts =
     p < 0.25
-      ? `${friend.split(" ")[0]} has a ${Math.round(p * 100)}% hit rate. I'm being generous. 🤡`
+      ? `${friend.split(" ")[0]} has a ${Math.round(p * 100)}% hit rate. Prove me wrong! 😄`
       : p < 0.55
-        ? `Coin flip energy. ${friend.split(" ")[0]} talks big, delivers medium. 🪙`
-        : `${friend.split(" ")[0]} usually delivers. Fading them is a bold move. 😬`;
+        ? `Coin flip energy. ${friend.split(" ")[0]} could go either way. 🪙`
+        : `${friend.split(" ")[0]} usually delivers. Betting against them is bold. 😬`;
   return { p, ratio, roast: roasts };
 }
