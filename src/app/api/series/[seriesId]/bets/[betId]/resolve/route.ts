@@ -1,0 +1,2 @@
+import {seriesRequest} from "@/server/supabase";import {readJson} from "@/server/http";
+export async function POST(req:Request,{params}:{params:Promise<{seriesId:string;betId:string}>}){const {seriesId,betId}=await params;const body=await readJson(req);return seriesRequest(req,async c=>{const {data,error}=await c.rpc("finish_series_bet",{p_series_id:seriesId,p_bet_id:betId,p_outcome:body.outcome,p_cancel:false});if(error)throw error;return data;});}

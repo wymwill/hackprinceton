@@ -69,6 +69,10 @@ export default function Sidebar() {
           </div>
 
           <nav aria-label="Main" className="flex flex-col gap-1">
+            <Link href="/series" onClick={() => setNavOpen(false)} aria-current={pathname === "/series" ? "page" : undefined} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${pathname === "/series" ? "bg-primary-container/15 text-primary font-semibold ring-1 ring-primary-container/30" : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"}`}>
+              <span className="material-symbols-outlined" aria-hidden>groups</span>
+              <span className="font-body-md text-body-md">Ongoing Bet Series</span>
+            </Link>
             {NAV.map((item) => {
               const active = item.match(pathname);
               return (

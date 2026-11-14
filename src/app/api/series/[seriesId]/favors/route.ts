@@ -1,0 +1,3 @@
+import {seriesRequest} from "@/server/supabase";import {readJson} from "@/server/http";
+export async function GET(req:Request,{params}:{params:Promise<{seriesId:string}>}){const {seriesId}=await params;return seriesRequest(req,async c=>{const {data,error}=await c.from("series_favors").select("*").eq("series_id",seriesId).eq("withdrawn",false);if(error)throw error;return data;});}
+export async function POST(req:Request,{params}:{params:Promise<{seriesId:string}>}){const {seriesId}=await params;const body=await readJson(req);return seriesRequest(req,async c=>{const {data,error}=await c.rpc("propose_series_favor",{p_series_id:seriesId,p_description:body.description});if(error)throw error;return data;},201);}

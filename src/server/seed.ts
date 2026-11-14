@@ -22,7 +22,7 @@ const HOUR = 3_600_000;
 
 /** First-run data: a few bets at different points in the lifecycle so every screen has something to show. */
 export function seed(): Db {
-  const db: Db = { version: 1, users: USERS, bets: [], entries: [], ledger: [], receipts: [], evidence: [], reviews: [], audit: [] };
+  const db: Db = { version: 1, users: USERS, bets: [], entries: [], ledger: [], receipts: [], evidence: [], reviews: [], audit: [], series: [], seriesParticipants: [] };
   const now = Date.now();
   const at = (h: number) => new Date(now + h * HOUR);
   const iso = (h: number) => at(h).toISOString();

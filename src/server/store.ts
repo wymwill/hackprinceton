@@ -72,7 +72,12 @@ export type Db = {
   evidence: StoredEvidence[];
   reviews: Review[];
   audit: AuditEntry[];
+  series: Series[];
+  seriesParticipants: SeriesParticipant[];
 };
+
+export type Series = { id:string; title:string; description:string; hostUserId:string; status:"LOBBY"|"ACTIVE"|"COMPLETED"|"CANCELLED"; plannedBetCount:number; initialBankroll:number; loserCount:number; stakeMode:"SHARED_FAVOR_POOL"; createdAt:string; startedAt?:string };
+export type SeriesParticipant = { seriesId:string; userId:string; joinedAt:string; balance:number };
 
 const DATA_FILE = process.env.BOOKIE_DATA_FILE ?? path.join(process.cwd(), ".data", "bookie.json");
 /** Uploaded evidence images live here. */
@@ -99,6 +104,8 @@ function upgrade(db: Db): Db {
   db.evidence ??= [];
   db.reviews ??= [];
   db.audit ??= [];
+  db.series ??= [];
+  db.seriesParticipants ??= [];
   for (const b of db.bets) b.odds ??= [];
   return db;
 }
