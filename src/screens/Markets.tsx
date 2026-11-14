@@ -8,6 +8,7 @@ import { ago, timeLeft, useNow } from "@/lib/format";
 import BookieMark from "@/components/BookieMark";
 import MarketCard from "@/components/MarketCard";
 import { useGroup } from "@/components/useGroup";
+import ShareInvite from "@/components/ShareInvite";
 import { Button, Empty, Loading, NotInGroup, amount, card, label } from "@/components/ui";
 
 const FILTERS: { id: MarketStatus; label: string }[] = [
@@ -71,9 +72,12 @@ export default function Markets() {
               {group.members.length} {group.members.length === 1 ? "member" : "friends"} · playing for {group.mode}
             </p>
           </div>
-          <Button tone="primary" onClick={() => open("new-market")}>
-            + New market
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareInvite group={group} compact />
+            <Button tone="primary" onClick={() => open("new-market")}>
+              + New market
+            </Button>
+          </div>
         </div>
 
         {explainer && (

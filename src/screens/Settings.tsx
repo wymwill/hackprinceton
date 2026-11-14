@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { GroupView } from "@/lib/markets/types";
 import Avatar from "@/components/Avatar";
+import ShareInvite, { inviteUrl } from "@/components/ShareInvite";
 import { useGroup } from "@/components/useGroup";
 import { Button, Field, Loading, NotInGroup, Segmented, card, input, label } from "@/components/ui";
 
@@ -39,22 +40,25 @@ function SettingsForm({ group, me }: { group: GroupView; me: string }) {
 
       <section className={`${card} p-5 flex flex-col gap-3`}>
         <h2 className={label}>Invite friends</h2>
-        <div className="flex items-center gap-3">
-          <span className="font-num text-[28px] tracking-[0.25em] text-on-surface">{group.inviteCode}</span>
+        <p className="font-body-md text-body-md text-on-surface">Send the link. Friends tap it, see the group, and join in one tap.</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <ShareInvite group={group} />
           <Button
             onClick={async () => {
               try {
-                await navigator.clipboard.writeText(group.inviteCode);
-                toast("Code copied.");
+                await navigator.clipboard.writeText(inviteUrl(group.inviteCode));
+                toast("Invite link copied.");
               } catch {
-                toast("Couldn't copy. Select the code instead.", "warn");
+                toast("Couldn't copy. Select the link instead.", "warn");
               }
             }}
           >
-            Copy
+            Copy link
           </Button>
         </div>
-        <p className="font-body-sm text-body-sm text-on-surface-variant">They pick Join with code from the group menu.</p>
+        <p className="font-body-sm text-body-sm text-on-surface-variant">
+          Or use the code <span className="font-num tracking-[0.2em] text-on-surface">{group.inviteCode}</span> with Join with code in the group menu.
+        </p>
       </section>
 
       <fieldset disabled={!owner} className={`${card} p-5 flex flex-col gap-4 disabled:opacity-80`}>
