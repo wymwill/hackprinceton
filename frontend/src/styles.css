@@ -1,28 +1,28 @@
 /* Betting with Friends
- * Colors: Rosy Copper (#CE4C3B) on Shadow Grey (#27242F).
+ * Colors: bright orange (#FF5F1F) on dark grey (#1C1B1F), matching the main app.
  * Layout language from Scarlet Market: framed panels with label tags, tracked
  * uppercase captions, serif display numbers, mono figures, YES teal / NO violet.
  * No retro effects (no scanlines, grain, grid, flicker or corner brackets). */
 
 :root {
-  --bg: #27242f;
-  --side: #1f1c26;
-  --panel: #2d2a36;
-  --panel-a: rgba(45, 42, 54, 0.86);
-  --hover: #36323f;
-  --border: #34303d;
-  --line: #433e4f;
-  --line-hi: #5c5569;
+  --bg: #1c1b1f;
+  --side: #18171b;
+  --panel: #28272d;
+  --panel-a: rgba(40, 39, 45, 0.86);
+  --hover: #313036;
+  --border: #333238;
+  --line: #45434b;
+  --line-hi: #5a5862;
 
-  --fg: #d8d1d8;
-  --bright: #f5eff1;
-  --dim: #9d95a6;
-  --mute: #5c5569;
+  --fg: #ddd9de;
+  --bright: #faf6f6;
+  --dim: #a3a0a8;
+  --mute: #5a5862;
 
-  --red: #ce4c3b;
-  --red-hi: #e2685a;
-  --red-soft: rgba(206, 76, 59, 0.14);
-  --red-glow: rgba(206, 76, 59, 0.42);
+  --red: #ff5f1f;
+  --red-hi: #ff7a45;
+  --red-soft: rgba(255, 95, 31, 0.14);
+  --red-glow: rgba(255, 95, 31, 0.42);
   --yes: #7fdbca;
   --yes-soft: rgba(127, 219, 202, 0.1);
   --no: #c792ea;
@@ -48,7 +48,7 @@
 html,
 body {
   background:
-    radial-gradient(60% 45% at 95% -10%, rgba(206, 76, 59, 0.1), transparent 70%),
+    radial-gradient(60% 45% at 95% -10%, rgba(255, 95, 31, 0.1), transparent 70%),
     var(--bg);
   background-attachment: fixed;
   color: var(--fg);
@@ -128,7 +128,7 @@ button {
   flex-direction: column;
   gap: 18px;
   padding: 18px 16px;
-  background: rgba(31, 28, 38, 0.92);
+  background: rgba(24, 23, 27, 0.92);
   border-right: 1px solid var(--line);
   overflow-y: auto;
   z-index: 20;
@@ -302,7 +302,7 @@ button {
   align-items: center;
   gap: 16px;
   padding: 0 32px;
-  background: linear-gradient(180deg, rgba(31, 28, 38, 0.97), rgba(31, 28, 38, 0.86));
+  background: linear-gradient(180deg, rgba(24, 23, 27, 0.97), rgba(24, 23, 27, 0.86));
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(6px);
 }
@@ -481,7 +481,7 @@ button {
   text-transform: uppercase;
   line-height: 1;
   color: var(--fg);
-  background: rgba(31, 28, 38, 0.7);
+  background: rgba(24, 23, 27, 0.7);
   border: 1px solid var(--line-hi);
   padding: 9px 14px;
   white-space: nowrap;
@@ -495,7 +495,7 @@ button {
   color: #fff;
   border-color: var(--red);
   background: var(--red-soft);
-  box-shadow: 0 0 14px rgba(206, 76, 59, 0.22);
+  box-shadow: 0 0 14px rgba(255, 95, 31, 0.22);
 }
 .btn:disabled {
   opacity: 0.45;
@@ -845,7 +845,7 @@ textarea.input {
 }
 .scard:hover {
   border-color: var(--red);
-  box-shadow: 0 0 24px rgba(206, 76, 59, 0.14);
+  box-shadow: 0 0 24px rgba(255, 95, 31, 0.14);
   transform: translateY(-2px);
 }
 .scard h3 {
@@ -940,7 +940,7 @@ textarea.input {
 }
 .bcard:hover {
   border-color: var(--line-hi);
-  box-shadow: 0 0 22px rgba(206, 76, 59, 0.08);
+  box-shadow: 0 0 22px rgba(255, 95, 31, 0.08);
 }
 .bcard .head {
   display: flex;
@@ -1067,7 +1067,7 @@ textarea.input {
   font-size: 14.5px;
 }
 .table tr:hover td {
-  background: rgba(54, 50, 63, 0.5);
+  background: rgba(49, 48, 54, 0.5);
 }
 .table .r {
   text-align: right;
@@ -1442,7 +1442,7 @@ textarea.input {
   position: fixed;
   inset: 0;
   z-index: 70;
-  background: rgba(14, 12, 18, 0.72);
+  background: rgba(10, 10, 12, 0.72);
   backdrop-filter: blur(3px);
   animation: fade 0.2s ease;
 }
