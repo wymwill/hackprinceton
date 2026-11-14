@@ -104,6 +104,52 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
   - System messages (`kind: "system"`) mark clan events: `clan_created`, `member_joined`, `member_left`, `owner_changed` (from triggers, so every path is covered). Each has an `event` name and a `data` object, so later announcements such as bet results can be new events without a schema change.
   - The app shows each message once: it keeps messages by id, sends a client id with each message (retries return the first copy), and after reconnecting fetches only what's newer than the last message it has. While the live connection is down it checks every few seconds instead.
 
+## Catching up a project that ran 0012 early
+
+The live project got `0012_friends_and_clans.sql` before `0009`–`0011` were merged, so it has 0001–0008 and 0012 but not 0009 (multiple choice), 0010 (ranges), 0011 (pledge resets) or 0013 (clan chat). Until they're applied, those features answer 503 `migrations_missing`, naming the missing function and the migration. `supabase db push` won't apply migrations older than the newest one already applied without `--include-all`, so use the catch-up SQL instead:
+
+1. **Check where the database is** (read-only, SQL editor):
+
+   ```sql
+   select
+     to_regclass('public.clans') is not null                      as has_0012_clans,
+     to_regclass('public.series_bet_outcomes') is not null        as has_0009_multi,
+     exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'series_bets' and column_name = 'unit') as has_0010_ranges,
+     to_regclass('public.clan_messages') is not null              as has_0013_chat,
+     (select count(*) from public.series_wagers where outcome is null or outcome not in ('YES','NO'))
+       + (select count(*) from public.series_bet_results where side not in ('YES','NO'))
+       + (select count(*) from public.series_bets where winning_outcome not in ('YES','NO')) as not_yes_no,
+     (select count(*) from public.bet_series)                     as series,
+     (select count(*) from public.series_wagers)                  as wagers,
+     (select coalesce(sum(balance), 0) from public.bet_series_participants) as coins;
+   ```
+
+   Expect `true, false, false, false` and `not_yes_no = 0` (the catch-up stops otherwise). Note the three counts.
+2. **Make a backup** (Database → Backups, or `pg_dump`) and pick a quiet moment: the migration briefly locks the bet tables.
+3. **Generate and run the catch-up SQL**: `node scripts/catchup-sql.mjs > catchup.sql`, then paste the whole file into the SQL editor and run it once. It applies 0009, 0010, 0011 and 0013 in one transaction after a preflight check, so it either all applies or nothing changes, and a second run stops at the preflight. It only adds tables, columns, functions and policies, and fills in the new columns on existing rows; no existing value changes. `upgrade.test.mjs` runs this same SQL on a copy of the live project's state and checks all of that, including a failure partway through.
+4. **Check the result** (read-only):
+
+   ```sql
+   select
+     to_regclass('public.series_bet_outcomes') is not null as has_0009_multi,
+     exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'series_bets' and column_name = 'unit') as has_0010_ranges,
+     to_regclass('public.clan_messages') is not null as has_0013_chat,
+     coalesce((select relrowsecurity from pg_class where oid = to_regclass('public.clan_messages')), false) as chat_rls_on,
+     exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'clan_messages') as chat_policy,
+     exists (select 1 from pg_publication_tables
+             where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'clan_messages') as chat_realtime,
+     to_regprocedure('public.send_clan_message(uuid,text,uuid)') is not null as chat_send_fn,
+     (select count(*) from public.bet_series) as series,
+     (select count(*) from public.series_wagers) as wagers,
+     (select coalesce(sum(balance), 0) from public.bet_series_participants) as coins;
+   ```
+
+   Everything should be `true`, with the same three counts as before.
+5. **If you use the Supabase CLI later**, record what was applied: `supabase migration repair --status applied 202611140009 202611140010 202611140011 202611140013`.
+6. **Check live chat with two accounts**: `node scripts/verify-clan-chat-live.mjs --yes` makes three temporary users, a temporary clan and a few messages, checks live delivery, privacy, deleting and leaving, then removes all of it. It needs `.supabase-test-secret`, like `npm run test:series`. Or open the app in two browsers signed in as two members of the same clan.
+
 ## Tests
 
 | Command | Runs against | Needs |
@@ -114,6 +160,8 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
 | `npm run test:chat-local` | Clan chat over HTTP and live over the stand-in's Realtime: two members exchanging messages, other clans and nonmembers refused, deleting, a dropped connection with no duplicates, leaving | Nothing |
 | `npm run test:outcomes-local` | Multiple-choice bets over HTTP through the Next API, with users signed up on the stand-in. Start the stand-in and the Next app first (commands in the script header) | Nothing |
 | `npm run test:series` | The real project, with disposable users | `.env.local` and `.supabase-test-secret` |
+| `node scripts/verify-clan-chat-live.mjs --yes` | Clan chat on the real project after 0013: live delivery between two temporary users, privacy, deleting, leaving; removes everything after | `.env.local` and `.supabase-test-secret` |
+| `node scripts/e2e-missing-migration-local.mjs` | What chat says on a database without 0013 (stand-in started with `MIGRATIONS_UP_TO=202611140013`) | Nothing |
 
 ## Notes
 

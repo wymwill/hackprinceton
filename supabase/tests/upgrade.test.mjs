@@ -181,3 +181,198 @@ async function rejects(p, hint) {
     return true;
   });
 }
+
+test("catch-up SQL for the live project: 0012 already applied, then 0009, 0010, 0011, 0013 in one go", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const { catchupSql } = await import("../../scripts/catchup-sql.mjs");
+  const val = async (p) => Object.values((await p)[0])[0];
+  // The live project's state: 0001–0008, then 0012 (friends and clans) applied before 0009–0011 existed.
+  const t = await createDb({ upTo: "202611140009" });
+  await t.db.exec(await readFile(new URL("../migrations/202611140012_friends_and_clans.sql", import.meta.url), "utf8"));
+  const [ana, ben, cat] = await Promise.all(["Ana", "Ben", "Cat"].map((n) => t.user(n)));
+
+  // Data made with the old functions: a live YES/NO series with wagers, a pledge lobby, a clan and a friendship.
+  const [s] = await ana.rpc("create_bet_series", {
+    p_title: "Live", p_description: "", p_planned_bet_count: 2, p_initial_bankroll: 1000,
+    p_loser_count: 1, p_stake_mode: "MONEY", p_questions: ["Rain?", "Snow?"], p_settings: { minContribution: 5 },
+  });
+  await ben.rpc("join_bet_series", { p_series_id: s.id });
+  for (const p of [ana, ben]) await p.rpc("set_series_ready", { p_series_id: s.id, p_ready: true });
+  await ana.rpc("start_bet_series", { p_series_id: s.id });
+  const bets = await ana.as("select id from public.series_bets where series_id = $1 order by position", [s.id]);
+  await ana.rpc("place_series_wager", { p_series_id: s.id, p_bet_id: bets[0].id, p_outcome: "YES", p_amount: 100 });
+  await ben.rpc("place_series_wager", { p_series_id: s.id, p_bet_id: bets[0].id, p_outcome: "NO", p_amount: 50 });
+  const [pl] = await ana.rpc("create_bet_series", {
+    p_title: "Pledges", p_description: "", p_planned_bet_count: 1, p_initial_bankroll: 1000,
+    p_loser_count: 1, p_stake_mode: "PLEDGE", p_questions: ["Gym?"], p_settings: {},
+  });
+  await ben.rpc("join_bet_series", { p_series_id: pl.id });
+  const clan = await val(ana.rpc("create_clan", { p_name: "Old Clan" }));
+  await ben.rpc("join_clan", { p_code: clan.code });
+  await cat.rpc("add_friend", { p_code: (await val(ana.rpc("my_social_state"))).me.friendCode });
+  const socialBefore = await val(ana.rpc("my_social_state"));
+  const coinsBefore = await t.db.query("select user_id, balance from public.bet_series_participants order by series_id, user_id");
+
+  await t.db.exec(await catchupSql());
+
+  // Bets: existing ones became YES/NO with outcome ids, wagers and balances intact; settling works.
+  let v = (await val(ana.rpc("my_series_state"))).series.find((x) => x.id === s.id);
+  assert.deepEqual(v.bets[0].outcomes.map((o) => [o.label, o.pool]), [["YES", 100], ["NO", 50]]);
+  assert.deepEqual((await t.db.query("select user_id, balance from public.bet_series_participants order by series_id, user_id")).rows, coinsBefore.rows);
+  await ana.rpc("finish_series_bet", { p_series_id: s.id, p_bet_id: bets[0].id, p_outcome: v.bets[0].outcomes[0].id });
+  v = (await val(ana.rpc("my_series_state"))).series.find((x) => x.id === s.id);
+  assert.equal(v.bets[0].status, "resolved");
+  // Multiple-choice (0009) and range (0010) bets can be added.
+  const [lobby] = await ana.rpc("create_bet_series", {
+    p_title: "New", p_description: "", p_planned_bet_count: 2, p_initial_bankroll: 1000, p_loser_count: 1, p_stake_mode: "MONEY",
+    p_settings: { minContribution: 5 },
+    p_bets: [{ question: "Who wins?", outcomes: ["A", "B", "C"] }, { question: "High?", kind: "range", unit: "°F", decimals: 0, ranges: [{ lower: null, upper: 60 }, { lower: 60, upper: null }] }],
+  });
+  const nv = (await val(ana.rpc("my_series_state"))).series.find((x) => x.id === lobby.id);
+  assert.deepEqual(nv.bets.map((b) => b.kind), ["multi", "range"]);
+  // Pledge changes un-ready everyone (0011).
+  await ana.rpc("propose_series_favor", { p_series_id: pl.id, p_description: "Cook dinner" });
+  await ben.rpc("propose_series_favor", { p_series_id: pl.id, p_description: "Wash the car" });
+  for (const p of [ana, ben]) await p.rpc("set_series_ready", { p_series_id: pl.id, p_ready: true });
+  await ben.rpc("propose_series_favor", { p_series_id: pl.id, p_description: "Something easier" });
+  assert.ok((await val(ana.rpc("my_series_state"))).series.find((x) => x.id === pl.id).members.every((m) => !m.ready));
+  // Friends and clans unchanged; clan chat works and is in the Realtime publication (0013).
+  const socialAfter = await val(ana.rpc("my_social_state"));
+  assert.deepEqual([socialAfter.clan, socialAfter.friends], [socialBefore.clan, socialBefore.friends]);
+  await ana.rpc("send_clan_message", { p_clan_id: clan.id, p_body: "chat works" });
+  assert.deepEqual((await val(ben.rpc("clan_messages_page", { p_clan_id: clan.id }))).messages.map((m) => m.body), ["chat works"]);
+  await rejects(cat.rpc("clan_messages_page", { p_clan_id: clan.id }), "not_clan_member");
+  const pub = await t.db.query("select tablename from pg_publication_tables where pubname = 'supabase_realtime'");
+  assert.deepEqual(pub.rows.map((r) => r.tablename), ["clan_messages"]);
+
+  // Running it a second time is refused by the preflight check, and changes nothing.
+  const count = async () => (await t.db.query("select count(*)::int as n from public.clan_messages")).rows[0].n;
+  const n = await count();
+  await assert.rejects(t.db.exec(await catchupSql()), /already applied/);
+  await t.db.exec("rollback");
+  assert.equal(await count(), n);
+  await t.close();
+});
+
+test("catch-up SQL refuses a database without friends and clans (0012), changing nothing", async () => {
+  const { catchupSql } = await import("../../scripts/catchup-sql.mjs");
+  const t = await createDb({ upTo: "202611140009" });
+  await assert.rejects(t.db.exec(await catchupSql()), /0012\) are missing/);
+  await t.db.exec("rollback");
+  assert.equal((await t.db.query("select to_regclass('public.series_bet_outcomes') as t")).rows[0].t, null);
+  await t.close();
+});
+
+/** Every row of every table that exists now, in the columns that exist now (to compare after a migration adds columns). */
+async function snapshot(db) {
+  const cols = (await db.query(`select table_name, array_agg(column_name::text order by column_name) as cols
+    from information_schema.columns where table_schema = 'public' and table_name in
+      (select table_name from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE')
+    group by table_name order by table_name`)).rows;
+  const out = {};
+  for (const { table_name: t, cols: c } of cols) {
+    const list = c.map((x) => `"${x}"`).join(", ");
+    out[t] = { cols: c, rows: (await db.query(`select ${list} from public."${t}" order by ${list}`)).rows };
+  }
+  return out;
+}
+
+/** The live project's state (0001–0008, then 0012) with a bit of everything in it. */
+async function liveProjectWithData() {
+  const { readFile } = await import("node:fs/promises");
+  const val = async (p) => Object.values((await p)[0])[0];
+  const t = await createDb({ upTo: "202611140009" });
+  await t.db.exec(await readFile(new URL("../migrations/202611140012_friends_and_clans.sql", import.meta.url), "utf8"));
+  const [ana, ben, cat] = await Promise.all(["Ana", "Ben", "Cat"].map((n) => t.user(n)));
+  const make = async (host, mode, questions, settings = {}) =>
+    (await host.rpc("create_bet_series", { p_title: `${mode} series`, p_description: "", p_planned_bet_count: questions.length,
+      p_initial_bankroll: 1000, p_loser_count: 1, p_stake_mode: mode, p_questions: questions, p_settings: settings }))[0];
+  const betIds = async (host, s) => (await host.as("select id from public.series_bets where series_id = $1 order by position", [s.id])).map((r) => r.id);
+
+  // A live money series: one bet won, one cancelled, one still open with wagers on both sides.
+  const m = await make(ana, "MONEY", ["Rain?", "Snow?", "Sun?"], { minContribution: 5 });
+  await ben.rpc("join_bet_series", { p_series_id: m.id });
+  for (const p of [ana, ben]) await p.rpc("set_series_ready", { p_series_id: m.id, p_ready: true });
+  await ana.rpc("start_bet_series", { p_series_id: m.id });
+  const [b1, b2, b3] = await betIds(ana, m);
+  await ana.rpc("place_series_wager", { p_series_id: m.id, p_bet_id: b1, p_outcome: "YES", p_amount: 120 });
+  await ben.rpc("place_series_wager", { p_series_id: m.id, p_bet_id: b1, p_outcome: "NO", p_amount: 80 });
+  await ana.rpc("finish_series_bet", { p_series_id: m.id, p_bet_id: b1, p_outcome: "NO", p_cancel: false });
+  await ben.rpc("place_series_wager", { p_series_id: m.id, p_bet_id: b2, p_outcome: "YES", p_amount: 40 });
+  await ana.rpc("place_series_wager", { p_series_id: m.id, p_bet_id: b2, p_outcome: "NO", p_amount: 40 });
+  await ana.rpc("finish_series_bet", { p_series_id: m.id, p_bet_id: b2, p_outcome: null, p_cancel: true });
+  await ana.rpc("place_series_wager", { p_series_id: m.id, p_bet_id: b3, p_outcome: "YES", p_amount: 30 });
+  await ben.rpc("place_series_wager", { p_series_id: m.id, p_bet_id: b3, p_outcome: "NO", p_amount: 70 });
+
+  // A finished shared-pool series, with the winner's favor pick waiting on the loser.
+  const pool = await make(cat, "SHARED_FAVOR_POOL", ["Gym?"]);
+  await ben.rpc("join_bet_series", { p_series_id: pool.id });
+  const [f1] = await cat.rpc("propose_series_favor", { p_series_id: pool.id, p_description: "Cook dinner" });
+  await ben.rpc("propose_series_favor", { p_series_id: pool.id, p_description: "Wash the car" });
+  for (const p of [cat, ben]) await p.rpc("set_series_ready", { p_series_id: pool.id, p_ready: true });
+  await cat.rpc("start_bet_series", { p_series_id: pool.id });
+  const [g1] = await betIds(cat, pool);
+  await cat.rpc("place_series_wager", { p_series_id: pool.id, p_bet_id: g1, p_outcome: "YES", p_amount: 200 });
+  await ben.rpc("place_series_wager", { p_series_id: pool.id, p_bet_id: g1, p_outcome: "NO", p_amount: 100 });
+  await cat.rpc("finish_series_bet", { p_series_id: pool.id, p_bet_id: g1, p_outcome: "YES", p_cancel: false });
+  await cat.rpc("assign_series_favor", { p_series_id: pool.id, p_loser_id: ben.id, p_favor_id: f1.id });
+
+  // A pledge lobby, a clan of two, a friendship.
+  const pl = await make(ana, "PLEDGE", ["Run?"]);
+  await cat.rpc("join_bet_series", { p_series_id: pl.id });
+  await cat.rpc("propose_series_favor", { p_series_id: pl.id, p_description: "Buy coffee" });
+  const clan = await val(ana.rpc("create_clan", { p_name: "Old Clan" }));
+  await ben.rpc("join_clan", { p_code: clan.code });
+  await cat.rpc("add_friend", { p_code: (await val(ana.rpc("my_social_state"))).me.friendCode });
+  return { t, ana, ben, cat, val, series: { m, pool, pl }, clan };
+}
+
+test("catch-up SQL keeps every existing row and column exactly as it was", async () => {
+  const { catchupSql } = await import("../../scripts/catchup-sql.mjs");
+  const { t, ana, val, series } = await liveProjectWithData();
+  const before = await snapshot(t.db);
+  await t.db.exec(await catchupSql());
+  const after = await snapshot(t.db);
+  for (const [table, { cols, rows }] of Object.entries(before)) {
+    const kept = after[table].rows.map((r) => Object.fromEntries(cols.map((c) => [c, r[c]])));
+    assert.deepEqual(kept, rows, `rows of ${table} changed`);
+  }
+  // The new columns on old rows are filled in: every wager points at its YES/NO outcome, winners too.
+  const { rows: [w] } = await t.db.query("select count(*)::int as n, count(*) filter (where o.label = w.outcome)::int as ok from public.series_wagers w join public.series_bet_outcomes o on o.id = w.outcome_id");
+  assert.deepEqual([w.n, w.ok], [before.series_wagers.rows.length, before.series_wagers.rows.length]);
+  // And the open bet from before still settles on the new rules.
+  const s = (await val(ana.rpc("my_series_state"))).series.find((x) => x.id === series.m.id);
+  const open = s.bets.find((b) => b.status === "open");
+  await ana.rpc("finish_series_bet", { p_series_id: series.m.id, p_bet_id: open.id, p_outcome: open.outcomes.find((o) => o.label === "NO").id });
+  await t.close();
+});
+
+test("catch-up SQL is all-or-nothing: a failure in the last migration leaves the first three unapplied", async () => {
+  const { catchupSql } = await import("../../scripts/catchup-sql.mjs");
+  const { t } = await liveProjectWithData();
+  const before = await snapshot(t.db);
+  // Something in the database that 0013 can't replace: a same-named function with a different return type.
+  await t.db.exec("create function public.clan_chat_status() returns text language sql as $$ select 'in the way' $$");
+  await assert.rejects(t.db.exec(await catchupSql()), /return type/);
+  await t.db.exec("rollback");
+  await t.db.exec("drop function public.clan_chat_status()");
+  // Nothing from 0009, 0010 or 0011 stuck, and the data is untouched.
+  assert.equal((await t.db.query("select to_regclass('public.series_bet_outcomes') as x")).rows[0].x, null);
+  assert.equal((await t.db.query("select count(*)::int as n from information_schema.columns where table_name = 'series_bets' and column_name in ('kind','unit')")).rows[0].n, 0);
+  assert.deepEqual(await snapshot(t.db), before);
+  // With the obstacle gone, it applies cleanly.
+  await t.db.exec(await catchupSql());
+  assert.notEqual((await t.db.query("select to_regclass('public.clan_messages') as x")).rows[0].x, null);
+  await t.close();
+});
+
+test("catch-up SQL stops before changing anything if an old wager isn't YES/NO", async () => {
+  const { catchupSql } = await import("../../scripts/catchup-sql.mjs");
+  const { t } = await liveProjectWithData();
+  await t.db.exec("alter table public.series_wagers drop constraint if exists series_wagers_outcome_check; update public.series_wagers set outcome = 'MAYBE' where amount = 30");
+  const before = await snapshot(t.db);
+  await assert.rejects(t.db.exec(await catchupSql()), /other than YES\/NO/);
+  await t.db.exec("rollback");
+  assert.deepEqual(await snapshot(t.db), before);
+  await t.close();
+});
