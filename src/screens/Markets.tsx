@@ -111,7 +111,7 @@ export default function Markets() {
           </div>
         )}
 
-        {soon.length > 0 && (
+        {soon.length > 0 && counts.open >= 5 && (
           <section aria-label="Closing soon" className="flex flex-col gap-2">
             <h2 className={label}>Closing soon</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">

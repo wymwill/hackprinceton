@@ -2,9 +2,8 @@ import { initials } from "@/lib/format";
 
 // A stable colour per name, so friends are easy to tell apart.
 const HUES = [
-  "bg-[#ff5f1f]/25 text-[#ffb3a6] ring-[#ff5f1f]/50",
+  "bg-[#e8503c]/25 text-[#ffb3a6] ring-[#e8503c]/50",
   "bg-[#ffc76e]/20 text-[#ffd99c] ring-[#ffc76e]/45",
-  "bg-[#7d8cff]/25 text-[#c4cdff] ring-[#7d8cff]/50",
   "bg-[#3ccf9a]/20 text-[#9ff0d0] ring-[#3ccf9a]/45",
   "bg-[#d46cff]/20 text-[#ecbcff] ring-[#d46cff]/45",
   "bg-[#4cc3ff]/20 text-[#b0e6ff] ring-[#4cc3ff]/45",
