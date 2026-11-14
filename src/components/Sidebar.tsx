@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useHydrated } from "@/lib/bets/format";
 import { GROUPS, ME, NAV } from "@/lib/data";
 import Avatar from "./Avatar";
 import { useBookie } from "./BookieProvider";
@@ -10,7 +11,10 @@ import { useBookie } from "./BookieProvider";
 export default function Sidebar() {
   const pathname = usePathname();
   const { openCreateBet, toast, me } = useBookie();
-  const profile = me ?? { name: ME.name, title: ME.title, avatar: ME.avatar, balance: ME.points };
+  // The sidebar streams in behind a Suspense boundary, so it can hydrate after live
+  // data has loaded. Render the prerendered placeholder until hydration finishes.
+  const hydrated = useHydrated();
+  const profile = (hydrated && me) || { name: ME.name, title: ME.title, avatar: ME.avatar, balance: ME.points };
   const [activeGroup, setActiveGroup] = useState(GROUPS[0].id);
 
   return (
