@@ -41,8 +41,8 @@ export default function GroupHome() {
     setSide(which);
     toast(
       which === "fade"
-        ? "✅ You faded Jake for 250 PTS. Bookie: “Safest money on the board.”"
-        : "🚀 Hero call! You backed Jake at 6x. Bookie: “Respect. Also, condolences.”",
+        ? "✅ 250 pts on No. Bookie: “The safe pick.”"
+        : "🚀 250 pts on Yes at 6x. Bookie: “Bold. I love it.”",
       which === "fade" ? "lime" : "purple"
     );
   };
@@ -66,7 +66,7 @@ export default function GroupHome() {
                 {" "}Active Bets
               </span>
               {" "}
-              <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(16,230,104,0.35)]">
+              <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(52,211,153,0.17)]">
                 +3 today
               </span>
             </div>
@@ -82,7 +82,7 @@ export default function GroupHome() {
             </div>
             {" "}
             <div className="mt-space-xs flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
               {" "}
               <p className="font-body-sm text-body-sm text-on-surface-variant">
                 2 expiring before 12:00 AM
@@ -104,7 +104,7 @@ export default function GroupHome() {
               </span>
               {" "}
               <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
-                +4.2% vs lw
+                +4.2% vs last week
               </span>
             </div>
             {" "}
@@ -115,7 +115,7 @@ export default function GroupHome() {
             </div>
             {" "}
             <div className="mt-space-xs w-full bg-surface-container-highest rounded-full h-1.5 overflow-clip">
-              <div className="bg-primary-container h-full rounded-full shadow-[0_0_8px_rgba(16,230,104,0.6)]" style={{ width: "68.4%" }}></div>
+              <div className="bg-primary-container h-full rounded-full shadow-[0_0_8px_rgba(52,211,153,0.3)]" style={{ width: "68.4%" }}></div>
             </div>
           </div>
           {" "}
@@ -148,7 +148,7 @@ export default function GroupHome() {
             </div>
             {" "}
             <p className="mt-space-xs font-body-sm text-body-sm text-on-surface-variant">
-              Only 430 PTS behind Marcus
+              430 pts behind Marcus
             </p>
           </div>
           {" "}
@@ -165,8 +165,8 @@ export default function GroupHome() {
                 {" "}Dares Owed
               </span>
               {" "}
-              <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold shadow-[0_0_10px_rgba(255,77,109,0.3)]">
-                Due in 2d ⏳
+              <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold shadow-[0_0_10px_rgba(251,113,133,0.15)]">
+                Due in 2 days
               </span>
             </div>
             {" "}
@@ -181,7 +181,7 @@ export default function GroupHome() {
             </div>
             {" "}
             <p className="mt-space-xs font-body-sm text-body-sm text-secondary-fixed-dim">
-              Cold plunge video proof required
+              Cold plunge video
             </p>
           </div>
         </section>
@@ -206,7 +206,7 @@ export default function GroupHome() {
                       The Boyz Gym Arc
                     </h1>
                     {" "}
-                    <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(16,230,104,0.6)] shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(52,211,153,0.3)] shrink-0"></span>
                   </div>
                   {" "}
                   <div className="flex items-center gap-space-xs">
@@ -225,7 +225,7 @@ export default function GroupHome() {
                     </div>
                     {" "}
                     <span className="font-body-sm text-body-sm text-on-surface-variant">
-                      • 8 Bros Locked In
+                      • 8 friends in this group
                     </span>
                   </div>
                 </div>
@@ -238,11 +238,11 @@ export default function GroupHome() {
                   </span>
                   {" "}
                   <span className="font-label-sm text-label-sm text-on-surface-variant uppercase font-medium">
-                    Group Pot:
+                    Points in play:
                   </span>
                   {" "}
                   <span className="font-label-md text-label-md text-primary font-bold">
-                    8,450 Rep PTS
+                    8,450 pts
                   </span>
                 </div>
                 {" "}
@@ -273,11 +273,11 @@ export default function GroupHome() {
                     <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
                       <div className="flex items-center gap-space-xs">
                         <span className="font-label-md text-label-md text-tertiary font-bold tracking-wide">
-                          BOOKIE BOT
+                          AI Bookie
                         </span>
                         {" "}
                         <span className="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-tertiary/15 text-tertiary uppercase font-mono">
-                          [Odds Arbiter]
+                          sets the odds
                         </span>
                       </div>
                       {" "}
@@ -287,24 +287,24 @@ export default function GroupHome() {
                     </div>
                     {" "}
                     <p className="font-body-md text-body-md text-on-surface leading-relaxed">
-                      Jake claimed he hit the gym 14x this month, but Apple Health telemetry registers exactly{" "}
+                      Jake claims 14 gym trips. His app shows{" "}
                       <span className="font-bold text-secondary">
                         2 real sessions
                       </span>
-                      . Odds mathematically re-indexed at{" "}
+                      . New odds:{" "}
                       <span className="font-label-md text-label-md text-primary font-bold">
-                        6:1 AGAINST
+                        6 to 1 against
                       </span>
-                      . Don’t let your mouth write checks your hamstrings can’t cash. 🤡🦵
+                      . Talk is cheap, Jake. Leg day isn’t. 🦵😅
                     </p>
                     {" "}
                     <div className="mt-space-xs flex items-center gap-2">
                       <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-mono">
-                        Evidence: Apple Health API Synced
+                        Source: fitness app
                       </span>
                       {" "}
                       <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-mono">
-                        Confidence: 99.4%
+                        99% sure
                       </span>
                     </div>
                   </div>
@@ -329,7 +329,7 @@ export default function GroupHome() {
                   {" "}
                   <div className="flex items-center gap-space-xs">
                     <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary-container/20 text-primary font-mono font-bold">
-                      6:1 AGAINST JAKE
+                      14% chance
                     </span>
                     {" "}
                     <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-mono">
@@ -342,7 +342,7 @@ export default function GroupHome() {
                 {" "}
                 <h2 className="font-headline-md text-headline-md text-on-surface font-bold leading-snug mb-space-md">
                   <Link href="/bets/8842" className="hover:text-primary transition-colors">
-                    Jake hits 6:00 AM Leg Day tomorrow without pressing snooze a single time.
+                    Jake makes 6 AM leg day without snoozing.
                   </Link>
                 </h2>
                 {" "}
@@ -372,11 +372,11 @@ export default function GroupHome() {
                       </div>
                       {" "}
                       <span className="font-body-sm text-body-sm text-on-surface-variant">
-                        "The Sloth" • Solo Runner
+                        "The Snoozer" • going solo
                       </span>
                       {" "}
                       <span className="font-label-sm text-label-sm text-secondary font-mono">
-                        250 Rep PTS at Risk
+                        250 pts on the line
                       </span>
                     </div>
                   </div>
@@ -395,7 +395,7 @@ export default function GroupHome() {
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="font-label-lg text-label-lg text-primary font-bold truncate">
-                          The Boyz Syndicate
+                          The rest of the group
                         </span>
                         {" "}
                         <span className="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-primary/20 text-primary font-mono">
@@ -404,11 +404,11 @@ export default function GroupHome() {
                       </div>
                       {" "}
                       <span className="font-body-sm text-body-sm text-on-surface-variant">
-                        5 Squad Members Backed
+                        5 friends betting no
                       </span>
                       {" "}
                       <span className="font-label-sm text-label-sm text-primary font-mono">
-                        1,500 Rep PTS Backed
+                        1,500 pts in
                       </span>
                     </div>
                     {" "}
@@ -431,18 +431,18 @@ export default function GroupHome() {
                 <div className="flex flex-col gap-1.5 mb-space-md">
                   <div className="flex justify-between font-label-sm text-label-sm font-mono">
                     <span className="text-secondary font-bold">
-                      14% Back Jake (1 Punter)
+                      14% say yes (1 friend)
                     </span>
                     {" "}
                     <span className="text-primary font-bold">
-                      86% Fade Jake (5 Punters)
+                      86% say no (5 friends)
                     </span>
                   </div>
                   {" "}
                   <div className="w-full h-3 rounded-full bg-surface-container-highest overflow-clip flex">
                     <div className="bg-secondary-container h-full transition-all" style={{ width: "14%" }}></div>
                     {" "}
-                    <div className="bg-primary-container h-full shadow-[0_0_12px_rgba(16,230,104,0.5)] transition-all" style={{ width: "86%" }}></div>
+                    <div className="bg-primary-container h-full shadow-[0_0_12px_rgba(52,211,153,0.25)] transition-all" style={{ width: "86%" }}></div>
                   </div>
                 </div>
                 {" "}
@@ -455,7 +455,7 @@ export default function GroupHome() {
                     </span>
                     {" "}
                     <span className="font-body-md text-body-md text-on-surface font-semibold truncate">
-                      Penalty Dare:{" "}
+                      Loser's dare:{" "}
                       <span className="text-secondary">
                         50 Full Burpees on Zoom with camera on
                       </span>
@@ -464,11 +464,11 @@ export default function GroupHome() {
                   {" "}
                   <div className="flex items-center gap-2">
                     <span className="font-label-sm text-label-sm font-mono text-on-surface-variant">
-                      Pool Total:
+                      Total in play:
                     </span>
                     {" "}
                     <span className="font-label-md text-label-md text-primary font-bold font-mono">
-                      1,750 Rep PTS
+                      1,750 pts
                     </span>
                   </div>
                 </div>
@@ -479,28 +479,28 @@ export default function GroupHome() {
                   <button
                     onClick={() => takeSide("fade")}
                     disabled={side !== null}
-                    className={`flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(16,230,104,0.4)] hover:shadow-[0_0_28px_rgba(16,230,104,0.65)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:hover:scale-100 ${side === "back" ? "opacity-40" : ""}`}
+                    className={`flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(52,211,153,0.2)] hover:shadow-[0_0_28px_rgba(52,211,153,0.33)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:hover:scale-100 ${side === "back" ? "opacity-40" : ""}`}
                   >
                     <span className="material-symbols-outlined text-lg">
                       {side === "fade" ? "check_circle" : "thumb_down"}
                     </span>
                     {" "}
                     <span>
-                      {side === "fade" ? "You faded Jake · 250 PTS in" : "Fade Jake (+250 PTS)"}
+                      {side === "fade" ? "You bet No · 250 pts" : "Bet No · he snoozes"}
                     </span>
                   </button>
                   {" "}
                   <button
                     onClick={() => takeSide("back")}
                     disabled={side !== null}
-                    className={`flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl font-headline-sm text-headline-sm font-semibold transition-all ${side === "back" ? "bg-tertiary-container text-on-tertiary-container shadow-[0_0_20px_rgba(157,108,255,0.4)]" : "bg-surface-container-highest text-on-surface hover:bg-surface-bright"} ${side === "fade" ? "opacity-40" : ""}`}
+                    className={`flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl font-headline-sm text-headline-sm font-semibold transition-all ${side === "back" ? "bg-tertiary-container text-on-tertiary-container shadow-[0_0_20px_rgba(167,139,250,0.2)]" : "bg-surface-container-highest text-on-surface hover:bg-surface-bright"} ${side === "fade" ? "opacity-40" : ""}`}
                   >
                     <span className="material-symbols-outlined text-lg">
                       {side === "back" ? "check_circle" : "rocket_launch"}
                     </span>
                     {" "}
                     <span>
-                      {side === "back" ? "You backed Jake · 6x" : "Back Jake (Hero Call • 6x)"}
+                      {side === "back" ? "You bet Yes · pays 6x" : "Bet Yes · pays 6x"}
                     </span>
                   </button>
                 </div>
@@ -518,7 +518,7 @@ export default function GroupHome() {
                     </span>
                     {" "}
                     <span className="font-label-sm text-label-sm px-1.5 py-0.2 rounded-full bg-primary/10 text-primary font-mono font-semibold">
-                      Rank #1 Leader
+                      #1 this week
                     </span>
                     {" "}
                     <span className="font-label-sm text-label-sm text-on-surface-variant font-mono">
@@ -527,7 +527,7 @@ export default function GroupHome() {
                   </div>
                   {" "}
                   <div className="p-space-md rounded-2xl rounded-tl-sm bg-surface-container text-on-surface shadow-sm font-body-md text-body-md">
-                    Bro I am putting 500 PTS on Jake staying glued to that mattress. That man hasn't seen a 6:00 AM since 2019. Absolute free real estate 😂💸
+                    500 on Jake staying in bed. He hasn't seen 6 AM since 2019 😂
                   </div>
                   {" "}
                   <div className="flex items-center gap-2 pl-2">
@@ -540,7 +540,7 @@ export default function GroupHome() {
                     {" "}
                     <button className="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors cursor-pointer" onClick={() => setReactions((r) => ({ ...r, skull: r.skull + 1 }))}>
                       <span>
-                        💀
+                        😂
                       </span>
                       {" "}{reactions.skull}
                     </button>
@@ -569,7 +569,7 @@ export default function GroupHome() {
                       </span>
                       {" "}
                       <span className="font-label-sm text-label-sm text-on-surface-variant font-mono">
-                        Strava Verified 22m ago
+                        Checked by the Bookie · 22m ago
                       </span>
                     </div>
                     {" "}
@@ -579,9 +579,9 @@ export default function GroupHome() {
                       </span>
                       {" "}broke his 5km PR before midnight (21:42)!{" "}
                       <span className="text-primary font-bold">
-                        +150 PTS distributed
+                        +150 pts
                       </span>
-                      {" "}to 4 winners.
+                      {" "}went to 4 winners.
                     </p>
                   </div>
                   {" "}
@@ -608,7 +608,7 @@ export default function GroupHome() {
                     </div>
                   </article>
                 ) : (
-                  <article key={m.id} className="relative overflow-clip rounded-xl bg-surface-container-low p-space-md border-l-4 border-tertiary-container shadow-[0_0_20px_rgba(157,108,255,0.12)]">
+                  <article key={m.id} className="relative overflow-clip rounded-xl bg-surface-container-low p-space-md border-l-4 border-tertiary-container shadow-[0_0_20px_rgba(167,139,250,0.06)]">
                     <div className="flex items-start gap-space-sm">
                       <span className="w-9 h-9 shrink-0 rounded-lg bg-on-tertiary-container/40 flex items-center justify-center">🤖</span>
                       <div className="flex flex-col gap-1">
@@ -653,7 +653,7 @@ export default function GroupHome() {
                 {" "}
                 {/* Fast Bet CTA Button */}
                 {" "}
-                <button onClick={() => { openCreateBet(draft); setDraft(""); }} className="flex items-center gap-space-xs px-space-md py-2.5 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_18px_rgba(16,230,104,0.4)] hover:shadow-[0_0_24px_rgba(16,230,104,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap">
+                <button onClick={() => { openCreateBet(draft); setDraft(""); }} className="flex items-center gap-space-xs px-space-md py-2.5 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_18px_rgba(52,211,153,0.2)] hover:shadow-[0_0_24px_rgba(52,211,153,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap">
                   <span>
                     Make it a bet
                   </span>
@@ -679,12 +679,12 @@ export default function GroupHome() {
                   </span>
                   {" "}
                   <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                    Live Bets in Group
+                    Open bets
                   </h3>
                 </div>
                 {" "}
                 <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-mono font-bold">
-                  3 Live
+                  3 open
                 </span>
               </div>
               {" "}
@@ -720,8 +720,8 @@ export default function GroupHome() {
                       </span>
                     </div>
                     {" "}
-                    <button onClick={() => { setBacked((b) => ({ ...b, dave: true })); toast("🤝 Backed! 50 PTS in the pool.", "lime"); }} disabled={backed.dave} className={backed.dave ? "px-space-sm py-1 rounded-lg bg-primary/20 text-primary font-label-md text-label-md font-bold" : "px-space-sm py-1 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer"}>
-                      {backed.dave ? "In ✓" : "Back"}
+                    <button onClick={() => { setBacked((b) => ({ ...b, dave: true })); toast("🤝 You're in for 50 pts.", "lime"); }} disabled={backed.dave} className={backed.dave ? "px-space-sm py-1 rounded-lg bg-primary/20 text-primary font-label-md text-label-md font-bold" : "px-space-sm py-1 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer"}>
+                      {backed.dave ? "In ✓" : "Join"}
                     </button>
                   </div>
                 </div>
@@ -757,8 +757,8 @@ export default function GroupHome() {
                       </span>
                     </div>
                     {" "}
-                    <button onClick={() => { setBacked((b) => ({ ...b, sam: true })); toast("🤝 Backed! 50 PTS in the pool.", "lime"); }} disabled={backed.sam} className={backed.sam ? "px-space-sm py-1 rounded-lg bg-primary/20 text-primary font-label-md text-label-md font-bold" : "px-space-sm py-1 rounded-lg bg-surface-container-highest text-on-surface font-label-md text-label-md font-bold hover:bg-surface-bright transition-all cursor-pointer"}>
-                      {backed.sam ? "In ✓" : "Back"}
+                    <button onClick={() => { setBacked((b) => ({ ...b, sam: true })); toast("🤝 You're in for 50 pts.", "lime"); }} disabled={backed.sam} className={backed.sam ? "px-space-sm py-1 rounded-lg bg-primary/20 text-primary font-label-md text-label-md font-bold" : "px-space-sm py-1 rounded-lg bg-surface-container-highest text-on-surface font-label-md text-label-md font-bold hover:bg-surface-bright transition-all cursor-pointer"}>
+                      {backed.sam ? "In ✓" : "Join"}
                     </button>
                   </div>
                 </div>
@@ -794,8 +794,8 @@ export default function GroupHome() {
                       </span>
                     </div>
                     {" "}
-                    <button onClick={() => { setBacked((b) => ({ ...b, alex: true })); toast("🤝 Backed! 50 PTS in the pool.", "lime"); }} disabled={backed.alex} className={backed.alex ? "px-space-sm py-1 rounded-lg bg-primary/20 text-primary font-label-md text-label-md font-bold" : "px-space-sm py-1 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer"}>
-                      {backed.alex ? "In ✓" : "Back"}
+                    <button onClick={() => { setBacked((b) => ({ ...b, alex: true })); toast("🤝 You're in for 50 pts.", "lime"); }} disabled={backed.alex} className={backed.alex ? "px-space-sm py-1 rounded-lg bg-primary/20 text-primary font-label-md text-label-md font-bold" : "px-space-sm py-1 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer"}>
+                      {backed.alex ? "In ✓" : "Join"}
                     </button>
                   </div>
                 </div>
@@ -812,7 +812,7 @@ export default function GroupHome() {
                   </span>
                   {" "}
                   <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                    Mini Leaderboard
+                    This week's top
                   </h3>
                 </div>
                 {" "}
@@ -844,7 +844,7 @@ export default function GroupHome() {
                       </div>
                       {" "}
                       <span className="font-body-sm text-body-sm text-on-surface-variant truncate">
-                        8 Streak • 79% win
+                        8 wins in a row · 79% right
                       </span>
                     </div>
                   </div>
@@ -876,7 +876,7 @@ export default function GroupHome() {
                       </div>
                       {" "}
                       <span className="font-body-sm text-body-sm text-primary font-mono truncate">
-                        68.4% win
+                        68% right
                       </span>
                     </div>
                   </div>
@@ -902,7 +902,7 @@ export default function GroupHome() {
                       </span>
                       {" "}
                       <span className="font-body-sm text-body-sm text-on-surface-variant truncate">
-                        5 Streak
+                        5 wins in a row
                       </span>
                     </div>
                   </div>
@@ -929,12 +929,12 @@ export default function GroupHome() {
                         </span>
                         {" "}
                         <span className="text-xs">
-                          💀
+                          😴
                         </span>
                       </div>
                       {" "}
                       <span className="font-body-sm text-body-sm text-on-surface-variant truncate">
-                        Down bad
+                        Rough week
                       </span>
                     </div>
                   </div>
@@ -947,7 +947,7 @@ export default function GroupHome() {
               {" "}
               <Link className="flex items-center justify-center gap-1 pt-space-xs font-label-sm text-label-sm text-primary hover:underline font-bold transition-all" href="/leaderboard">
                 <span>
-                  View Full Podium
+                  See full leaderboard
                 </span>
                 {" "}
                 <span className="material-symbols-outlined text-sm">
@@ -966,11 +966,11 @@ export default function GroupHome() {
                   </span>
                   {" "}
                   <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                    Urgent Dares
+                    Dares due soon
                   </h3>
                 </div>
                 {" "}
-                <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-mono font-bold shadow-[0_0_8px_rgba(255,77,109,0.3)]">
+                <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-mono font-bold shadow-[0_0_8px_rgba(251,113,133,0.15)]">
                   18h left
                 </span>
               </div>
@@ -980,21 +980,21 @@ export default function GroupHome() {
                   <img className="w-6 h-6 rounded-full object-cover" alt="Headshot of guy Jake Miller with sheepish expression on his face" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0envocG2-dYewfrwk4f_Xw5e8fbUI6snSURrSguf30lHdlnitt2iPb-bRxceapEDcRVBQw5ySQQ17Zwvg5C0BO0WDtB--DH023XPZOxOSJGkA-Wg1C-3IR9L5YwlqK9OhmnPdIjJtj-1VlK14FgxKSXQHJ5UUps5_4KszZaCERrhWKs9CdNVMqijq_DYMbXhKxEvXOKvNtcDYaiFbDIGSSzic2SmKVfOrPHeH38np" />
                   {" "}
                   <span className="font-label-sm text-label-sm text-secondary font-bold">
-                    Jake Owes:
+                    Jake owes the group:
                   </span>
                 </div>
                 {" "}
                 <p className="font-body-lg text-body-lg text-on-surface font-bold leading-tight mb-2">
-                  "Sing Taylor Swift's 'Love Story' on full blast at Saturday Gym Karaoke"
+                  "Sing a love song at Saturday gym karaoke"
                 </p>
                 {" "}
                 <div className="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
                   <span>
-                    Resulted from: Failed 315 squat bet
+                    From: the 315 lb squat bet
                   </span>
                   {" "}
                   <span className="text-secondary font-bold font-mono">
-                    Proof: Video Upload
+                    Needs a video
                   </span>
                 </div>
               </div>
@@ -1005,7 +1005,7 @@ export default function GroupHome() {
                 </span>
                 {" "}
                 <span>
-                  Demand Proof from Jake
+                  Nudge Jake
                 </span>
               </button>
             </section>

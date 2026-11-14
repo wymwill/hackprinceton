@@ -32,7 +32,7 @@ const ROWS: Row[] = [
   { name: "Priya Sharma", initials: "PS", avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCKRmPUwUlFh7okGbu1YK0cLExx-6Mqgy7YNQG2yyKINVIXgp8iV2AEl-DFF4tmUPBIaD69s4FzCcJgL5FPyfuuMbQ-f8hO4F1siNQ51JUJ4YWH3eVLW09Im0uV1t9BQU09TQYFAJne7ehnWJ4wpe-ZtIN-iWCGRPZ8QN49Hl_lFbGbe3OeCLDhlNWMJ1tMy5e9ibBgD1S5C5MmBr0k-xUUkOSvOcxl9ChZaG0WzOwp", title: "Statistical Menace", titleTone: "purple", tone: "plain", points: { week: 310, season: 2740, all: 7010 }, win: { week: 67, season: 61, all: 63 }, streak: "1W", streakLabel: "1W", dares: "2 Done" },
   { name: "Marcus Reed", initials: "MR", title: "The Wildcard", titleTone: "plain", tone: "plain", points: { week: 290, season: 2150, all: 5880 }, win: { week: 50, season: 52, all: 55 }, streak: "1L", streakLabel: "1L", dares: "1 Owed" },
   { name: "David K.", initials: "DK", title: "Safe Bet Dave", titleTone: "plain", tone: "plain", points: { week: 150, season: 1820, all: 4200 }, win: { week: 50, season: 49, all: 51 }, streak: "2L", streakLabel: "2L", dares: "0 Owed" },
-  { name: "Jake Miller", initials: "JM", title: "🤡 Delusional Optimist", titleTone: "shame", tone: "shame", points: { week: -60, season: 640, all: 1150 }, win: { week: 0, season: 21, all: 24 }, streak: "5L", streakLabel: "💀 5L Streak", dares: "3 Owed" },
+  { name: "Jake Miller", initials: "JM", title: "🙃 Eternal Optimist", titleTone: "shame", tone: "shame", points: { week: -60, season: 640, all: 1150 }, win: { week: 0, season: 21, all: 24 }, streak: "5L", streakLabel: "💀 5L Streak", dares: "3 Owed" },
 ];
 
 const ROW_STYLE = {
@@ -46,7 +46,7 @@ const TITLE_STYLE = {
   coral: "bg-secondary-container/30 text-on-secondary-container",
   purple: "bg-tertiary-container/20 text-tertiary",
   plain: "bg-surface-container-high text-on-surface-variant",
-  shame: "bg-secondary-container text-on-secondary-container font-bold shadow-[0_0_8px_rgba(172,0,55,0.4)]",
+  shame: "bg-secondary-container text-on-secondary-container font-bold shadow-[0_0_8px_rgba(190,60,90,0.2)]",
 };
 
 export default function Leaderboard() {
@@ -68,16 +68,16 @@ export default function Leaderboard() {
               </span>
               {" "}
               <span className="tracking-widest uppercase">
-                THE BOYZ GYM ARC // STANDINGS FEED
+                The Boyz Gym Arc
               </span>
             </div>
             {" "}
             <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
-              🏆 Group Leaderboard &amp; Hall of Shame
+              🏆 Leaderboard
             </h1>
             {" "}
             <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl">
-              Where reputations are minted, stakes are violently settled, and delusional optimists are publicly archived.
+              Who called it, and who owes a dare.
             </p>
           </div>
           {" "}
@@ -91,7 +91,7 @@ export default function Leaderboard() {
                 onClick={() => setTab(t.id)}
                 className={`px-space-md py-space-xs rounded-lg font-label-md text-label-md transition-all ${
                   tab === t.id
-                    ? "bg-primary-container text-on-primary-container font-bold shadow-[0_0_14px_rgba(16,230,104,0.4)]"
+                    ? "bg-primary-container text-on-primary-container font-bold shadow-[0_0_14px_rgba(52,211,153,0.2)]"
                     : "text-on-surface-variant hover:text-on-surface"
                 }`}
               >
@@ -187,11 +187,11 @@ export default function Leaderboard() {
                   👑
                 </div>
                 {" "}
-                <div className="relative w-24 h-24 rounded-2xl overflow-clip p-1 bg-gradient-to-tr from-primary via-tertiary to-primary-container shadow-[0_0_30px_rgba(16,230,104,0.45)]">
+                <div className="relative w-24 h-24 rounded-2xl overflow-clip p-1 bg-gradient-to-tr from-primary via-tertiary to-primary-container shadow-[0_0_30px_rgba(52,211,153,0.23)]">
                   <img className="w-full h-full object-cover rounded-xl" alt="Confident charismatic athletic man with buzzcut and sharp gaze in dark sports gym jersey standing under golden and mint green overhead stadium spotlights, hyper-realistic, dramatic rim lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMGHDydx1hSfHzkHOhvbVwEb4BeK4MCPnQ68l_RCeZKQlw2xQXfrO6TtqCwuA8UhBcVMXrD4Cy4f_Vt8RnVdBJekzJwWgsWsCty-EdtucH-3q4l77DzAOdLYzBk34Hy-5orgS_5n-Ye4OMvaL2zLmCgg_lavAafAxwjSjy0QApT7UUBbjqKWwXCxy8WNOLRwvyRsYWzAlbrTjrQnnWHsaRxQdbM1eZDHfeGY3b6K1q" />
                 </div>
                 {" "}
-                <span className="absolute -bottom-2 px-3 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-extrabold uppercase shadow-[0_0_12px_rgba(16,230,104,0.6)]">
+                <span className="absolute -bottom-2 px-3 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-extrabold uppercase shadow-[0_0_12px_rgba(52,211,153,0.3)]">
                   CHAMPION
                 </span>
               </div>
@@ -237,7 +237,7 @@ export default function Leaderboard() {
                   {" "}
                   <div className="p-2 rounded-lg bg-surface-container-high flex flex-col">
                     <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      UNSTOPPABLE
+                      ON A ROLL
                     </span>
                     {" "}
                     <span className="font-headline-sm text-headline-sm text-primary font-bold">
@@ -333,12 +333,12 @@ export default function Leaderboard() {
                 </span>
                 {" "}
                 <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                  Squad Leaderboard Ledger
+                  Everyone in the group
                 </h2>
               </div>
               {" "}
               <span className="font-label-sm text-label-sm text-on-surface-variant">
-                6 Contenders Synced
+                6 friends
               </span>
             </div>
             {" "}
@@ -352,10 +352,10 @@ export default function Leaderboard() {
                       Rank
                     </th>
                     <th className="py-3 px-space-sm">
-                      Bettor
+                      Friend
                     </th>
                     <th className="py-3 px-space-sm">
-                      Designation
+                      Title
                     </th>
                     <th className="py-3 px-space-sm text-right">
                       Points
@@ -401,7 +401,7 @@ export default function Leaderboard() {
                         <span className={`font-label-sm text-label-sm font-semibold whitespace-nowrap ${r.streak.startsWith("L") || r.streak.includes("L") ? "text-secondary" : "text-primary"}`}>{r.streakLabel}</span>
                       </td>
                       <td className={`py-3 px-space-sm text-right font-label-sm text-label-sm font-bold ${r.dares.includes("Owed") && !r.dares.startsWith("0") ? "text-secondary" : r.dares.includes("Done") ? "text-primary" : "text-on-surface-variant"}`}>
-                        {r.tone === "shame" ? <span className="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-bold animate-pulse whitespace-nowrap">{r.dares}</span> : r.dares}
+                        {r.tone === "shame" ? <span className="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-bold whitespace-nowrap">{r.dares}</span> : r.dares}
                       </td>
                     </tr>
                   ))}
@@ -418,12 +418,12 @@ export default function Leaderboard() {
                 </span>
                 {" "}
                 <span className="font-body-sm text-body-sm text-on-surface-variant">
-                  Penalty Rule: Jake Miller owes 3 dares. Next settlement deadline is Sunday 11:59 PM.
+                  Jake owes 3 dares. They're due Sunday night.
                 </span>
               </div>
               {" "}
               <button onClick={() => toast("📹 Video proof demanded from Jake. The squad has been notified.", "coral")} className="px-space-sm py-1 rounded-lg bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold hover:brightness-110 transition-all cursor-pointer">
-                Demand Video
+                Nudge Jake
               </button>
             </div>
           </div>
@@ -440,12 +440,12 @@ export default function Leaderboard() {
                 </span>
                 {" "}
                 <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                  Fierce Rivalries
+                  Rivalries
                 </h2>
               </div>
               {" "}
               <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-                H2H Data
+                Head to head
               </span>
             </div>
             {" "}
@@ -491,11 +491,11 @@ export default function Leaderboard() {
               <div className="w-full h-2.5 rounded-full bg-surface-container-lowest overflow-clip flex">
                 <div className="h-full bg-surface-bright" style={{ width: "57.1%" }}></div>
                 {" "}
-                <div className="h-full bg-primary-container shadow-[0_0_8px_rgba(16,230,104,0.6)]" style={{ width: "42.9%" }}></div>
+                <div className="h-full bg-primary-container shadow-[0_0_8px_rgba(52,211,153,0.3)]" style={{ width: "42.9%" }}></div>
               </div>
               {" "}
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Alex has closed the spread with back-to-back PR deadlift prop bets this month.
+                Alex won the last two.
               </p>
             </div>
             {" "}
@@ -518,7 +518,7 @@ export default function Leaderboard() {
                 </div>
                 {" "}
                 <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold">
-                  The Bully Match
+                  Lopsided
                 </span>
               </div>
               {" "}
@@ -545,13 +545,13 @@ export default function Leaderboard() {
               </div>
               {" "}
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Marcus has extracted 800 PTS and 2 public grocery store dares from Jake this season alone.
+                Marcus is up 800 pts this season.
               </p>
             </div>
             {" "}
             {/* AI Bookie's Power Ranking Roast Card */}
             {" "}
-            <div className="p-space-md rounded-2xl bg-gradient-to-br from-tertiary-container/15 via-surface-container-low to-surface-container-low flex flex-col gap-space-xs relative overflow-clip shadow-[0_0_24px_rgba(157,108,255,0.2)]">
+            <div className="p-space-md rounded-2xl bg-gradient-to-br from-tertiary-container/15 via-surface-container-low to-surface-container-low flex flex-col gap-space-xs relative overflow-clip shadow-[0_0_24px_rgba(167,139,250,0.1)]">
               <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-tertiary-container/10 blur-xl pointer-events-none rounded-full"></div>
               {" "}
               <div className="flex items-center justify-between">
@@ -561,7 +561,7 @@ export default function Leaderboard() {
                   </span>
                   {" "}
                   <span className="font-label-sm text-label-sm text-tertiary font-bold tracking-wider">
-                    [BOT_ARBITER // ROAST ENGINE]
+                    AI Bookie
                   </span>
                 </div>
                 {" "}
@@ -569,20 +569,20 @@ export default function Leaderboard() {
               </div>
               {" "}
               <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">
-                AI Power Ranking Roast
+                Weekly roast
               </h3>
               {" "}
               <p className="font-body-md text-body-md text-tertiary italic leading-relaxed">
-                “Jake's win probability has entered cryptocurrency territory. Our algorithm officially recommends betting against him on anything requiring consciousness before 9 AM.”
+                “Never bet on Jake before 9 AM.”
               </p>
               {" "}
               <div className="mt-2 pt-2 flex items-center justify-between">
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
-                  Next Roast Drop: In 14 hrs
+                  Next roast in 14 hrs
                 </span>
                 {" "}
                 <Link href="/" className="font-label-sm text-label-sm text-tertiary font-bold hover:underline cursor-pointer flex items-center gap-0.5">
-                  Roast Feed{" "}
+                  See all{" "}
                   <span className="material-symbols-outlined text-xs">
                     arrow_forward
                   </span>

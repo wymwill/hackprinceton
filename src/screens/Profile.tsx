@@ -51,7 +51,7 @@ export default function Profile() {
                 </div>
                 {" "}
                 <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-surface-container-lowest">
-                  <span className="h-2.5 w-2.5 rounded-full bg-primary-container shadow-[0_0_8px_rgba(16,230,104,0.8)]"></span>
+                  <span className="h-2.5 w-2.5 rounded-full bg-primary-container shadow-[0_0_8px_rgba(52,211,153,0.4)]"></span>
                 </span>
               </div>
               {" "}
@@ -65,7 +65,7 @@ export default function Profile() {
                     @alex_c
                   </span>
                   {" "}
-                  <span className="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-container font-label-sm text-label-sm font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(16,230,104,0.35)] flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-container font-label-sm text-label-sm font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(52,211,153,0.17)] flex items-center gap-1">
                     <span className="text-xs">
                       ⚡
                     </span>
@@ -74,7 +74,7 @@ export default function Profile() {
                 </div>
                 {" "}
                 <p className="font-body-md text-body-md text-on-surface-variant max-w-xl italic mt-0.5">
-                  “Always fading the consensus. If everyone says yes, I'm putting 500 on no.”
+                  “If everyone says yes, I say no.”
                 </p>
                 {" "}
                 <div className="flex items-center gap-space-md mt-1 text-on-surface-variant">
@@ -103,7 +103,7 @@ export default function Profile() {
                 {" "}Edit Profile
               </button>
               {" "}
-              <button className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-space-md py-2.5 rounded-xl bg-primary-container text-on-primary font-label-md text-label-md font-bold shadow-[0_0_16px_rgba(16,230,104,0.35)] hover:shadow-[0_0_24px_rgba(16,230,104,0.55)] transition-all cursor-pointer" onClick={shareCard}>
+              <button className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-space-md py-2.5 rounded-xl bg-primary-container text-on-primary font-label-md text-label-md font-bold shadow-[0_0_16px_rgba(52,211,153,0.17)] hover:shadow-[0_0_24px_rgba(52,211,153,0.28)] transition-all cursor-pointer" onClick={shareCard}>
                 <span className="material-symbols-outlined text-base">
                   {copied ? "check" : "ios_share"}
                 </span>
@@ -135,7 +135,7 @@ export default function Profile() {
               </div>
               {" "}
               <div className="font-label-sm text-label-sm text-on-surface-variant font-mono mt-1">
-                Total Wagers Recorded
+                Bets made
               </div>
             </div>
             {" "}
@@ -157,7 +157,7 @@ export default function Profile() {
               </span>
               {" "}
               <span className="text-on-surface-variant font-semibold">
-                4 Push
+                4 ties
               </span>
             </div>
           </div>
@@ -183,12 +183,12 @@ export default function Profile() {
               </div>
               {" "}
               <div className="font-label-sm text-label-sm text-on-surface-variant font-mono mt-1">
-                Top 15% across Bookie
+                Top 15% on Bookie
               </div>
             </div>
             {" "}
             <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-clip">
-              <div className="bg-primary-container h-full rounded-full shadow-[0_0_8px_rgba(16,230,104,0.6)]" style={{ width: "68.4%" }}></div>
+              <div className="bg-primary-container h-full rounded-full shadow-[0_0_8px_rgba(52,211,153,0.3)]" style={{ width: "68.4%" }}></div>
             </div>
           </div>
           {" "}
@@ -214,7 +214,7 @@ export default function Profile() {
               </div>
               {" "}
               <div className="font-label-sm text-label-sm text-on-surface-variant font-mono mt-1">
-                Longest Win Run
+                Longest win streak
               </div>
             </div>
             {" "}
@@ -224,7 +224,7 @@ export default function Profile() {
               </span>
               {" "}
               <span className="text-primary font-bold px-2 py-0.5 rounded-full bg-primary-container/15">
-                3 Wins Alive
+                3 wins
               </span>
             </div>
           </div>
@@ -248,13 +248,13 @@ export default function Profile() {
               </div>
               {" "}
               <div className="font-label-sm text-label-sm text-on-surface-variant font-mono mt-1">
-                Honored Penalties
+                Dares completed
               </div>
             </div>
             {" "}
             <div className="flex items-center justify-between font-label-sm text-label-sm font-mono">
               <span className="text-on-surface-variant">
-                Honor Score:
+                On time:
               </span>
               {" "}
               <span className="text-tertiary font-bold px-2 py-0.5 rounded-full bg-tertiary-container/20 flex items-center gap-1">
@@ -277,27 +277,27 @@ export default function Profile() {
               {" "}
               <div className="flex items-center justify-between pb-space-sm">
                 <div className="flex items-center gap-space-sm">
-                  <div className="w-10 h-10 rounded-xl bg-tertiary-container/25 flex items-center justify-center text-lg shadow-[0_0_12px_rgba(157,108,255,0.4)]">
+                  <div className="w-10 h-10 rounded-xl bg-tertiary-container/25 flex items-center justify-center text-lg shadow-[0_0_12px_rgba(167,139,250,0.2)]">
                     🤖
                   </div>
                   {" "}
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-label-sm text-label-sm font-mono font-bold text-tertiary uppercase tracking-wider">
-                        [BOT_ARBITER]
+                        AI Bookie
                       </span>
                       {" "}
                       <span className="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
                     </div>
                     {" "}
                     <h2 className="font-headline-sm text-headline-sm text-on-surface">
-                      AI Scouting Report for Alex
+                      AI scouting report
                     </h2>
                   </div>
                 </div>
                 {" "}
                 <span className="font-label-sm text-label-sm font-mono text-on-surface-variant">
-                  v2.4 Auto-Generated
+                  Updated weekly
                 </span>
               </div>
               {" "}
@@ -311,11 +311,11 @@ export default function Profile() {
                   </div>
                   {" "}
                   <p className="font-body-md text-body-md text-on-surface">
-                    Lethal on fitness and habit endurance bets (
+                    Great at fitness and habit bets (
                     <span className="text-primary font-semibold font-mono">
                       88% win rate
                     </span>
-                    ). Possesses an uncanny radar for identifying when friends are bluffing on Sunday workout claims.
+                    ).
                   </p>
                 </div>
                 {" "}
@@ -328,11 +328,11 @@ export default function Profile() {
                   </div>
                   {" "}
                   <p className="font-body-md text-body-md text-on-surface">
-                    Terrible at entertainment and box office predictions (
+                    Struggles with movie and box office picks (
                     <span className="text-secondary font-semibold font-mono">
                       1-5 record
                     </span>
-                    ). Chronically underestimates Marvel movies and big-budget tentpoles.
+                    ).
                   </p>
                 </div>
                 {" "}
@@ -348,7 +348,7 @@ export default function Profile() {
                     <span className="text-on-surface font-semibold">
                       “The Late Night Contrarian”
                     </span>
-                    {" "}— locking in high-conviction stakes against exhausted friends between 11 PM and 2 AM right as their willpower collapses.
+                    {" "}bets against tired friends after 11 PM.
                   </p>
                 </div>
                 {" "}
@@ -359,15 +359,15 @@ export default function Profile() {
                     </span>
                     {" "}
                     <span className="font-label-md text-label-md font-semibold text-on-surface">
-                      Threat Level:{" "}
+                      Friends' advice:{" "}
                       <span className="text-secondary uppercase">
-                        HIGH
+                        think twice
                       </span>
                     </span>
                   </div>
                   {" "}
                   <span className="font-body-sm text-body-sm text-on-surface-variant italic">
-                    Never bet against Alex on cold showers or 5K pacing.
+                    Don't bet against Alex on fitness.
                   </span>
                 </div>
               </div>
@@ -379,11 +379,11 @@ export default function Profile() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
                 <div>
                   <h2 className="font-headline-sm text-headline-sm text-on-surface">
-                    Bet History Ledger
+                    Bet history
                   </h2>
                   {" "}
                   <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Public peer-reviewed ledger of wagers and settlements
+                    Every bet you've made and how it ended
                   </p>
                 </div>
                 {" "}
@@ -443,7 +443,7 @@ export default function Profile() {
                       </div>
                     </div>
                     {" "}
-                    <span className="px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold uppercase shadow-[0_0_8px_rgba(16,230,104,0.3)]">
+                    <span className="px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold uppercase shadow-[0_0_8px_rgba(52,211,153,0.15)]">
                       WON
                     </span>
                   </div>
@@ -481,7 +481,7 @@ export default function Profile() {
                       </div>
                     </div>
                     {" "}
-                    <span className="px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold uppercase shadow-[0_0_8px_rgba(16,230,104,0.3)]">
+                    <span className="px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold uppercase shadow-[0_0_8px_rgba(52,211,153,0.15)]">
                       WON
                     </span>
                   </div>
@@ -578,11 +578,11 @@ export default function Profile() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="font-headline-sm text-headline-sm text-on-surface">
-                    Connected Proof Apps
+                    Connected apps
                   </h2>
                   {" "}
                   <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Automated verification integrations
+                    Let the Bookie check results for you
                   </p>
                 </div>
                 {" "}
@@ -604,7 +604,7 @@ export default function Profile() {
                           <div className="flex items-center gap-2">
                             <span className="font-body-md text-body-md font-semibold text-on-surface">{app.name}</span>
                             <span className="font-label-sm text-label-sm px-1.5 rounded bg-surface-container-highest text-on-surface-variant">{app.kind}</span>
-                            {on && <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_rgba(16,230,104,0.8)]"></span>}
+                            {on && <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_rgba(52,211,153,0.4)]"></span>}
                           </div>
                           <span className="font-body-sm text-body-sm text-on-surface-variant truncate">{app.desc}</span>
                         </div>
@@ -615,7 +615,7 @@ export default function Profile() {
                           <span className="hidden group-hover:inline">Disconnect</span>
                         </button>
                       ) : (
-                        <button onClick={() => toggleApp(app.id, app.name)} className="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-[0_0_8px_rgba(16,230,104,0.3)] hover:scale-105 active:scale-95 transition-all shrink-0">
+                        <button onClick={() => toggleApp(app.id, app.name)} className="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-[0_0_8px_rgba(52,211,153,0.15)] hover:scale-105 active:scale-95 transition-all shrink-0">
                           Connect
                         </button>
                       )}
@@ -631,11 +631,11 @@ export default function Profile() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="font-headline-sm text-headline-sm text-on-surface">
-                    Reputation Trophy Shelf
+                    Badges
                   </h2>
                   {" "}
                   <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Squad badges awarded for verified glory
+                    Earned from bets and dares
                   </p>
                 </div>
                 {" "}
@@ -687,11 +687,11 @@ export default function Profile() {
                   </span>
                   {" "}
                   <span className="font-label-md text-label-md font-semibold text-tertiary">
-                    Never Welched
+                    Always pays up
                   </span>
                   {" "}
                   <span className="font-body-sm text-body-sm text-on-surface-variant">
-                    100% loss honor rate
+                    Every dare done
                   </span>
                 </div>
                 {" "}
@@ -717,7 +717,7 @@ export default function Profile() {
               <div className="p-space-sm rounded-xl bg-surface-container-lowest flex flex-col gap-2">
                 <div className="flex items-center justify-between font-label-sm text-label-sm font-mono text-on-surface-variant">
                   <span>
-                    CATEGORY WIN RATES
+                    WIN RATE BY TOPIC
                   </span>
                   {" "}
                   <span className="text-primary font-bold">

@@ -72,7 +72,7 @@ export default function Dares() {
           <div className="flex flex-col gap-space-xs">
             <div className="flex items-center gap-space-xs">
               <span className="font-label-sm text-label-sm uppercase tracking-widest text-secondary font-bold px-space-xs py-0.5 rounded-full bg-secondary-container/30">
-                Court of Honor
+                Dares
               </span>
               {" "}
               <span className="text-outline-variant font-label-sm text-label-sm">
@@ -80,19 +80,19 @@ export default function Dares() {
               </span>
               {" "}
               <span className="font-label-sm text-label-sm text-on-surface-variant font-medium tracking-wide">
-                PUNISHMENT SYSTEM v2.4
+                The Boyz Gym Arc
               </span>
             </div>
             {" "}
             <h1 className="font-headline-lg text-headline-lg text-on-surface uppercase tracking-tight flex items-center gap-space-sm">
-              Wall of Shame{" "}
+              Dare Board{" "}
               <span className="text-secondary font-headline-sm text-headline-sm lowercase">
-                &amp; Dare Vault
+                😅
               </span>
             </h1>
             {" "}
             <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl">
-              Every loss carries collateral. Debts must be paid in full video evidence or suffer group-wide dishonor. AI Arbiter verifies proof validity.
+              Lose a bet, do the dare.
             </p>
           </div>
           {" "}
@@ -142,7 +142,7 @@ export default function Dares() {
                 </span>
                 {" "}
                 <span className="font-label-sm text-label-sm text-on-surface-variant uppercase">
-                  Honor Rate (0 Welched)
+                  Dares done on time
                 </span>
               </div>
             </div>
@@ -181,23 +181,23 @@ export default function Dares() {
                   <g transform="translate(150, 150)">
                     {/* Sector 1: Eat 1 Raw Onion */}
                     {" "}
-                    <path d="M 0 0 L 150 0 A 150 150 0 0 1 46.35 142.66 Z" fill="#ac0037" opacity="0.95"></path>
+                    <path d="M 0 0 L 150 0 A 150 150 0 0 1 46.35 142.66 Z" fill="#e86a82" opacity="0.95"></path>
                     {" "}
                     {/* Sector 2: 50 Burpees on IG Live */}
                     {" "}
-                    <path d="M 0 0 L 46.35 142.66 A 150 150 0 0 1 -121.35 88.17 Z" fill="#181c24"></path>
+                    <path d="M 0 0 L 46.35 142.66 A 150 150 0 0 1 -121.35 88.17 Z" fill="#2a3244"></path>
                     {" "}
                     {/* Sector 3: Wear Rival Jersey */}
                     {" "}
-                    <path d="M 0 0 L -121.35 88.17 A 150 150 0 0 1 -121.35 -88.17 Z" fill="#652ec4" opacity="0.9"></path>
+                    <path d="M 0 0 L -121.35 88.17 A 150 150 0 0 1 -121.35 -88.17 Z" fill="#8b72e0" opacity="0.9"></path>
                     {" "}
                     {/* Sector 4: Full Discord Standup */}
                     {" "}
-                    <path d="M 0 0 L -121.35 -88.17 A 150 150 0 0 1 46.35 -142.66 Z" fill="#262a33"></path>
+                    <path d="M 0 0 L -121.35 -88.17 A 150 150 0 0 1 46.35 -142.66 Z" fill="#323b50"></path>
                     {" "}
                     {/* Sector 5: Sing Taylor Swift */}
                     {" "}
-                    <path d="M 0 0 L 46.35 -142.66 A 150 150 0 0 1 150 0 Z" fill="#006127" opacity="0.95"></path>
+                    <path d="M 0 0 L 46.35 -142.66 A 150 150 0 0 1 150 0 Z" fill="#2fae7f" opacity="0.95"></path>
                   </g>
                 </svg>
                 {" "}
@@ -247,22 +247,22 @@ export default function Dares() {
             {" "}
             <div className="flex flex-col gap-space-md flex-1 min-w-0 z-10">
               <div className="flex items-center gap-space-xs">
-                <span className="material-symbols-outlined text-secondary animate-bounce">
+                <span className="material-symbols-outlined text-secondary">
                   near_me
                 </span>
                 {" "}
                 <span className="font-label-md text-label-md text-secondary font-bold uppercase tracking-wider">
-                  High Roller Wheel of Doom
+                  Dare wheel
                 </span>
               </div>
               {" "}
               <div className="flex flex-col gap-space-xs">
                 <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
-                  Spin For Jake's Next Loss 🎲
+                  Spin for Jake's dare 🎲
                 </h2>
                 {" "}
                 <p className="font-body-md text-body-md text-on-surface-variant">
-                  Jake is down 0-2 in the playoff series bet. When Boston loses, the wheel dictates his collateral. No substitutions permitted.
+                  Jake lost the playoff bet. The wheel picks.
                 </p>
               </div>
               {" "}
@@ -273,7 +273,7 @@ export default function Dares() {
                   <span className="w-2 h-2 rounded-full bg-secondary-container"></span>
                   {" "}
                   <span className="font-label-sm text-label-sm text-on-surface-variant truncate">
-                    Last Rolled Penalty:
+                    Last spin:
                   </span>
                   {" "}
                   <span className="font-label-sm text-label-sm text-on-surface font-semibold truncate">
@@ -282,14 +282,14 @@ export default function Dares() {
                 </div>
                 {" "}
                 <span className="font-label-sm text-label-sm text-primary px-space-xs py-0.5 rounded-full bg-surface-container">
-                  Odds: 1:5
+                  1 in 5
                 </span>
               </div>
               {" "}
               {/* Interactive Spin CTA */}
               {" "}
               <div className="flex items-center gap-space-sm pt-space-xs">
-                <button onClick={spin} disabled={spinning} className="flex-1 flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_24px_rgba(16,230,104,0.35)] hover:shadow-[0_0_32px_rgba(16,230,104,0.55)] hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100">
+                <button onClick={spin} disabled={spinning} className="flex-1 flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_24px_rgba(52,211,153,0.17)] hover:shadow-[0_0_32px_rgba(52,211,153,0.28)] hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100">
                   <span className={`material-symbols-outlined ${spinning ? "animate-spin" : ""}`}>
                     restart_alt
                   </span>
@@ -319,31 +319,28 @@ export default function Dares() {
               <div className="flex flex-col gap-space-sm z-10">
                 <div className="flex items-center justify-between">
                   <span className="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-tertiary-container/30 text-tertiary font-bold uppercase tracking-wider">
-                    [BOT_ARBITER_RULING]
+                    AI Bookie
                   </span>
                   {" "}
                   <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
                 </div>
                 {" "}
                 <p className="font-headline-sm text-headline-sm text-on-surface leading-snug">
-                  “Marcus's manicure video has been classified as 85% sincere. The clown wig was permitted under Section 4B of the Gym Arc Codex.”
+                  “Marcus's karaoke video checks out. Nice wig.”
                 </p>
                 {" "}
-                <p className="font-body-sm text-body-sm text-on-surface-variant">
-                  Automated image parsing detected no deepfakes in Elena's Carolina Reaper submission. Milk sip timestamp recorded at 00:04.
-                </p>
               </div>
               {" "}
               <div className="pt-space-md mt-space-sm flex items-center justify-between z-10">
                 <span className="font-label-sm text-label-sm text-tertiary font-mono">
-                  ARBITER PROTOCOL: STRICT
+                  Fair but firm
                 </span>
                 {" "}
                 <span className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
                   <span className="material-symbols-outlined text-xs">
                     gavel
                   </span>
-                  {" "}Zero Welching Tolerance
+                  {" "}No skipping dares
                 </span>
               </div>
             </div>
@@ -352,13 +349,13 @@ export default function Dares() {
             {" "}
             <div className="p-space-md rounded-2xl bg-surface-container-lowest flex flex-col gap-space-sm">
               <span className="font-label-sm text-label-sm text-on-surface-variant uppercase font-bold tracking-wider">
-                Group Punishment Statutes
+                Group dare rules
               </span>
               {" "}
               <div className="flex flex-col gap-space-xs">
                 <div className="flex items-center justify-between py-1 text-on-surface font-body-sm text-body-sm">
                   <span>
-                    1. Proof must be 1080p raw video
+                    1. Proof is a photo or video
                   </span>
                   {" "}
                   <span className="material-symbols-outlined text-primary text-sm">
@@ -368,7 +365,7 @@ export default function Dares() {
                 {" "}
                 <div className="flex items-center justify-between py-1 text-on-surface font-body-sm text-body-sm">
                   <span>
-                    2. 48hr turnaround from bet close
+                    2. You have 48 hours
                   </span>
                   {" "}
                   <span className="material-symbols-outlined text-primary text-sm">
@@ -378,7 +375,7 @@ export default function Dares() {
                 {" "}
                 <div className="flex items-center justify-between py-1 text-on-surface font-body-sm text-body-sm">
                   <span>
-                    3. Majority vote (4/5) to discharge
+                    3. 4 of 5 friends approve it
                   </span>
                   {" "}
                   <span className="material-symbols-outlined text-primary text-sm">
@@ -395,11 +392,11 @@ export default function Dares() {
         <div className="flex items-center justify-between pt-space-sm">
           <div className="flex items-center gap-space-sm">
             <h2 className="font-headline-md text-headline-md text-on-surface font-bold uppercase tracking-tight">
-              Active Dare Board
+              All dares
             </h2>
             {" "}
             <span className="font-label-sm text-label-sm px-space-xs py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-mono">
-              KANBAN VIEW
+              By status
             </span>
           </div>
           {" "}
@@ -433,12 +430,12 @@ export default function Dares() {
                 <span className="w-3 h-3 rounded-full bg-secondary-container"></span>
                 {" "}
                 <h3 className="font-headline-sm text-headline-sm text-on-surface uppercase tracking-tight">
-                  ⏳ Pending Dares
+                  ⏳ To do
                 </h3>
               </div>
               {" "}
               <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary font-bold">
-                3 UNPAID
+                3 open
               </span>
             </div>
             {" "}
@@ -475,7 +472,7 @@ export default function Dares() {
                     </div>
                     {" "}
                     <span className="font-label-sm text-label-sm text-outline-variant font-mono">
-                      BET-8810 • Sweep Rd 2
+                      Playoff bet
                     </span>
                   </div>
                 </div>
@@ -490,11 +487,11 @@ export default function Dares() {
               {" "}
               <div className="flex flex-col gap-space-xs p-space-sm rounded-xl bg-surface-container-lowest">
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">
-                  The Punishment:
+                  The dare:
                 </span>
                 {" "}
                 <p className="font-body-md text-body-md text-on-surface font-medium leading-snug">
-                  “Wear a Boston Celtics jersey to the Dallas sports bar during Game 7 and toast every Dallas turnover.”
+                  “Wear a rival jersey to the sports bar on game night.”
                 </p>
               </div>
               {" "}
@@ -546,7 +543,7 @@ export default function Dares() {
                     </div>
                     {" "}
                     <span className="font-label-sm text-label-sm text-outline-variant font-mono">
-                      BET-8794 • 1RM Bench Loss
+                      Bench press bet
                     </span>
                   </div>
                 </div>
@@ -561,11 +558,11 @@ export default function Dares() {
               {" "}
               <div className="flex flex-col gap-space-xs p-space-sm rounded-xl bg-surface-container-lowest">
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">
-                  The Punishment:
+                  The dare:
                 </span>
                 {" "}
                 <p className="font-body-md text-body-md text-on-surface font-medium leading-snug">
-                  “Post a 60-second TikTok review of glitter nail polish with an utterly serious tech-reviewer tone.”
+                  “Review glitter nail polish like it's a new phone.”
                 </p>
               </div>
               {" "}
@@ -619,29 +616,29 @@ export default function Dares() {
                     </div>
                     {" "}
                     <span className="font-label-sm text-label-sm text-primary-fixed-dim font-mono">
-                      YOUR DEBT • Fantasy Matchup
+                      Fantasy football bet
                     </span>
                   </div>
                 </div>
                 {" "}
-                <span className="font-label-sm text-label-sm px-space-xs py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold tracking-wider uppercase animate-pulse">
-                  Action Req.
+                <span className="font-label-sm text-label-sm px-space-xs py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold tracking-wider uppercase">
+                  Your turn
                 </span>
               </div>
               {" "}
               <div className="flex flex-col gap-space-xs p-space-sm rounded-xl bg-surface-container-lowest z-10">
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">
-                  Your Required Punishment:
+                  Your dare:
                 </span>
                 {" "}
                 <p className="font-body-md text-body-md text-on-surface font-semibold leading-snug">
-                  “Do tomorrow morning's engineering standup presentation entirely in a full Caribbean pirate accent.”
+                  “Run tomorrow's standup in a pirate accent.”
                 </p>
               </div>
               {" "}
               <div className="flex items-center justify-between pt-space-xs z-10">
                 <span className="font-label-sm text-label-sm text-primary flex items-center gap-1 font-mono">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+                  <span className="w-2 h-2 rounded-full bg-primary"></span>
                   {" "}Live Penalty
                 </span>
                 {" "}
@@ -657,13 +654,13 @@ export default function Dares() {
                     toast("📤 Proof submitted! The squad is reviewing. Bookie: “Arr, nice accent.” 🏴‍☠️", "lime");
                   }}
                 />
-                <button onClick={() => fileRef.current?.click()} className="px-space-md py-2 rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg font-bold shadow-[0_0_16px_rgba(16,230,104,0.4)] hover:shadow-[0_0_24px_rgba(16,230,104,0.6)] hover:scale-[1.03] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-space-xs">
+                <button onClick={() => fileRef.current?.click()} className="px-space-md py-2 rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg font-bold shadow-[0_0_16px_rgba(52,211,153,0.2)] hover:shadow-[0_0_24px_rgba(52,211,153,0.3)] hover:scale-[1.03] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-space-xs">
                   <span className="material-symbols-outlined text-base">
                     video_call
                   </span>
                   {" "}
                   <span>
-                    Upload Proof / Video
+                    Upload proof
                   </span>
                 </button>
               </div>
@@ -681,12 +678,12 @@ export default function Dares() {
                 <span className="w-3 h-3 rounded-full bg-tertiary"></span>
                 {" "}
                 <h3 className="font-headline-sm text-headline-sm text-on-surface uppercase tracking-tight">
-                  👀 Proof Submitted
+                  👀 Group is voting
                 </h3>
               </div>
               {" "}
               <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-highest text-tertiary font-bold">
-                2 VOTING
+                2 voting
               </span>
             </div>
             {" "}
@@ -731,7 +728,7 @@ export default function Dares() {
                 </span>
                 {" "}
                 <span className="absolute top-2 right-2 px-space-xs py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm font-bold uppercase">
-                  AI Analyzed
+                  AI checked
                 </span>
               </div>
               {" "}
@@ -747,7 +744,7 @@ export default function Dares() {
                 </div>
                 {" "}
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
-                  Dare: “Sing Disney's Let It Go at bar karaoke wearing clown wig.”
+                  Dare: “Let It Go” at karaoke in a clown wig
                 </p>
               </div>
               {" "}
@@ -776,7 +773,7 @@ export default function Dares() {
                   </div>
                   {" "}
                   <span className="font-label-sm text-label-sm text-on-surface-variant">
-                    voted 'Satisfied'
+                    approved
                   </span>
                 </div>
               </div>
@@ -800,7 +797,7 @@ export default function Dares() {
                 </span>
                 {" "}
                 <span className="absolute top-2 right-2 px-space-xs py-0.5 rounded-full bg-secondary-container text-on-secondary font-label-sm text-label-sm font-bold uppercase">
-                  🌶️ Extreme Dare
+                  🌶️ Spicy dare
                 </span>
               </div>
               {" "}
@@ -816,7 +813,7 @@ export default function Dares() {
                 </div>
                 {" "}
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
-                  Dare: “Eat 1 Carolina Reaper chip without milk for 3 full minutes.”
+                  Dare: one Carolina Reaper chip, no milk
                 </p>
               </div>
               {" "}
@@ -845,12 +842,12 @@ export default function Dares() {
                 <span className="w-3 h-3 rounded-full bg-primary-container"></span>
                 {" "}
                 <h3 className="font-headline-sm text-headline-sm text-on-surface uppercase tracking-tight">
-                  ✅ Done &amp; Hall of Fame
+                  ✅ Done
                 </h3>
               </div>
               {" "}
               <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-bold">
-                14 CLEARED
+                14 done
               </span>
             </div>
             {" "}
@@ -869,7 +866,7 @@ export default function Dares() {
                     </span>
                     {" "}
                     <span className="font-label-sm text-label-sm text-primary font-mono">
-                      VERIFIED BY SQUAD
+                      Approved by the group
                     </span>
                   </div>
                 </div>
@@ -880,12 +877,12 @@ export default function Dares() {
               </div>
               {" "}
               <p className="font-body-md text-body-md text-on-surface font-medium">
-                Completed: 100 pushups in 10 minutes flat on live gym floor stream.
+                100 pushups in 10 minutes, on stream.
               </p>
               {" "}
               <div className="flex items-center justify-between pt-1">
                 <span className="font-label-sm text-label-sm text-on-surface-variant font-mono">
-                  Settled Bet #8721
+                  Pushup bet
                 </span>
                 {" "}
                 <span className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
@@ -929,7 +926,7 @@ export default function Dares() {
               </div>
               {" "}
               <p className="font-body-md text-body-md text-on-surface font-medium">
-                Completed: Shaved off signature 3-year mustache on video after losing championship by 0.4 points.
+                Shaved his 3 year mustache on video.
               </p>
               {" "}
               {/* Attached Mini Media Thumbnail */}
@@ -951,7 +948,7 @@ export default function Dares() {
                   </span>
                   {" "}
                   <span className="font-label-sm text-label-sm text-on-surface-variant">
-                    Archived in Group Vault
+                    Saved in group memories
                   </span>
                 </div>
                 {" "}
@@ -982,7 +979,7 @@ export default function Dares() {
                     </span>
                     {" "}
                     <span className="font-label-sm text-label-sm text-primary font-mono">
-                      VERIFIED BY SQUAD
+                      Approved by the group
                     </span>
                   </div>
                 </div>
@@ -993,12 +990,12 @@ export default function Dares() {
               </div>
               {" "}
               <p className="font-body-md text-body-md text-on-surface font-medium">
-                Completed: Ordered his morning double espresso in a thick Parisian accent for 7 consecutive days at local cafe.
+                Ordered coffee in a French accent for a week.
               </p>
               {" "}
               <div className="flex items-center justify-between pt-1">
                 <span className="font-label-sm text-label-sm text-on-surface-variant font-mono">
-                  Barista Signed Affidavit
+                  Barista confirmed
                 </span>
                 {" "}
                 <span className="font-label-sm text-label-sm text-tertiary flex items-center gap-1">
@@ -1025,7 +1022,7 @@ export default function Dares() {
                     </span>
                     {" "}
                     <span className="font-label-sm text-label-sm text-primary font-mono">
-                      VERIFIED BY SQUAD
+                      Approved by the group
                     </span>
                   </div>
                 </div>
@@ -1036,16 +1033,16 @@ export default function Dares() {
               </div>
               {" "}
               <p className="font-body-md text-body-md text-on-surface font-medium">
-                Completed: Communicated strictly in 5-7-5 syllable Haikus on Discord for 24 hours.
+                Spoke only in haiku for 24 hours.
               </p>
               {" "}
               <div className="flex items-center justify-between pt-1">
                 <span className="font-label-sm text-label-sm text-on-surface-variant font-mono">
-                  Discord Bot Verified
+                  Chat confirmed
                 </span>
                 {" "}
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
-                  0 Violations
+                  No slipups
                 </span>
               </div>
             </div>

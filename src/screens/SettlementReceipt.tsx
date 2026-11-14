@@ -69,7 +69,7 @@ export default function SettlementReceipt() {
         {/* Breadcrumb Navigation */}
         {" "}
         <nav className="flex items-center gap-space-xs text-on-surface-variant font-label-md text-label-md">
-          <Link className="hover:text-primary transition-colors" href="/bets/8842">
+          <Link className="hover:text-primary transition-colors" href="/bets">
             Bets
           </Link>
           {" "}
@@ -90,7 +90,7 @@ export default function SettlementReceipt() {
           </span>
           {" "}
           <span className="ml-2 px-space-xs py-0.5 rounded-full bg-surface-container-high text-on-surface text-label-sm font-label-sm uppercase">
-            Strava Auto-Oracle
+            Auto checked
           </span>
         </nav>
         {" "}
@@ -120,17 +120,17 @@ export default function SettlementReceipt() {
                 </span>
                 {" "}
                 <span>
-                  Settled automatically via Strava Webhook at 11:42 AM EST
+                  Auto decided at 11:42 AM
                 </span>
               </div>
               {" "}
               <div className="flex items-center gap-space-xs">
                 <span className="px-space-xs py-0.5 rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm uppercase tracking-wide">
-                  Final Arbitrated Settlement
+                  Final result
                 </span>
                 {" "}
                 <span className="font-label-sm text-label-sm text-on-surface-variant font-mono">
-                  HASH: 9a7b...4102
+                  Receipt #8704
                 </span>
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function SettlementReceipt() {
               <div className="lg:col-span-8 flex flex-col gap-space-xs">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded bg-primary-container text-on-primary font-label-md text-label-md font-bold uppercase tracking-wider">
-                    Official Ruling
+                    Result
                   </span>
                   {" "}
                   <span className="text-on-surface-variant font-label-sm text-label-sm">
@@ -149,12 +149,12 @@ export default function SettlementReceipt() {
                   </span>
                 </div>
                 {" "}
-                <h1 className="font-display-lg text-display-lg text-primary tracking-tight font-black uppercase drop-shadow-[0_0_24px_rgba(16,230,104,0.35)]">
-                  SAM WINS 🏆 — 150 REP PTS PAID OUT
+                <h1 className="font-display-lg text-display-lg text-primary tracking-tight font-black uppercase drop-shadow-[0_0_24px_rgba(52,211,153,0.17)]">
+                  Sam wins! 🏆 +150 pts
                 </h1>
                 {" "}
                 <p className="font-body-lg text-body-lg text-on-surface font-medium max-w-2xl">
-                  Wager:{" "}
+                  The bet:{" "}
                   <span className="text-tertiary italic">
                     "Sam breaks 4:00:00 marathon time in Austin"
                   </span>
@@ -165,21 +165,21 @@ export default function SettlementReceipt() {
               {" "}
               <div className="lg:col-span-4 flex flex-col items-start lg:items-end justify-center">
                 <div className="w-full lg:w-auto p-space-md rounded-xl bg-surface-container-high shadow-md flex items-center gap-space-md">
-                  <div className="stamp-in w-16 h-16 rounded-xl border-4 border-secondary bg-secondary-container/60 flex items-center justify-center text-secondary font-display-lg text-display-lg font-black shadow-[0_0_24px_rgba(255,77,109,0.5)]">
+                  <div className="stamp-in w-16 h-16 rounded-xl border-4 border-secondary bg-secondary-container/60 flex items-center justify-center text-secondary font-display-lg text-display-lg font-black shadow-[0_0_24px_rgba(251,113,133,0.25)]">
                     L
                   </div>
                   {" "}
                   <div className="flex flex-col min-w-0">
                     <span className="font-label-xs text-label-sm text-secondary uppercase font-bold tracking-wider">
-                      Penalty Triggered
+                      Dare unlocked
                     </span>
                     {" "}
                     <span className="font-headline-sm text-headline-sm text-on-surface truncate font-bold">
-                      JAKE TAKES THE L 🤡
+                      Jake takes the L 😅
                     </span>
                     {" "}
                     <span className="font-body-sm text-body-sm text-secondary-fixed-dim font-medium">
-                      Dare Status: UNLOCKED &amp; ACTIVE
+                      His dare is now due
                     </span>
                   </div>
                 </div>
@@ -193,7 +193,7 @@ export default function SettlementReceipt() {
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
                 {" "}
                 <span>
-                  Target: &lt; 4:00:00
+                  Goal: under 4 hours
                 </span>
               </div>
               {" "}
@@ -203,7 +203,7 @@ export default function SettlementReceipt() {
                 </span>
                 {" "}
                 <span>
-                  Official Chip: 03:54:12
+                  Finished: 3:54:12
                 </span>
               </div>
               {" "}
@@ -213,7 +213,7 @@ export default function SettlementReceipt() {
                 </span>
                 {" "}
                 <span>
-                  Total Pool: 375 REP
+                  375 pts in play
                 </span>
               </div>
               {" "}
@@ -223,7 +223,7 @@ export default function SettlementReceipt() {
                 </span>
                 {" "}
                 <span>
-                  Oracle Accuracy: 99.8%
+                  99.8% sure
                 </span>
               </div>
             </div>
@@ -246,12 +246,12 @@ export default function SettlementReceipt() {
                   </span>
                   {" "}
                   <span className="font-headline-sm text-headline-sm text-on-surface">
-                    Oracle Verification Chain
+                    How sure is the Bookie?
                   </span>
                 </div>
                 {" "}
                 <span className="font-label-sm text-label-sm uppercase px-space-xs py-0.5 rounded bg-tertiary/10 text-tertiary font-bold tracking-wider">
-                  Zero Contradictions
+                  All sources agree
                 </span>
               </div>
               {" "}
@@ -260,7 +260,7 @@ export default function SettlementReceipt() {
               <div className="flex flex-col gap-space-xs">
                 <div className="flex justify-between items-baseline">
                   <span className="font-label-md text-label-md text-on-surface-variant">
-                    Multi-Source Verification Engine
+                    Checked 3 sources
                   </span>
                   {" "}
                   <span className="font-headline-lg text-headline-lg font-bold text-tertiary drop-shadow-[0_0_12px_rgba(211,189,255,0.4)]">
@@ -269,20 +269,20 @@ export default function SettlementReceipt() {
                 </div>
                 {" "}
                 <div className="w-full h-3 rounded-full bg-surface-container-lowest overflow-clip p-0.5">
-                  <div className="h-full rounded-full bg-gradient-to-r from-primary via-tertiary to-tertiary-fixed shadow-[0_0_14px_rgba(157,108,255,0.6)]" style={{ width: "99.8%" }}></div>
+                  <div className="h-full rounded-full bg-gradient-to-r from-primary via-tertiary to-tertiary-fixed shadow-[0_0_14px_rgba(167,139,250,0.3)]" style={{ width: "99.8%" }}></div>
                 </div>
                 {" "}
                 <div className="flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant pt-1">
                   <span>
-                    Strava Webhook API
+                    Running app
                   </span>
                   {" "}
                   <span>
-                    Chip RFID Gun Time
+                    Race timing chip
                   </span>
                   {" "}
                   <span>
-                    Geofence Finish Node
+                    Finish line location
                   </span>
                 </div>
               </div>
@@ -297,14 +297,14 @@ export default function SettlementReceipt() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-space-xs">
                     <span className="px-2 py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm font-bold uppercase tracking-wider">
-                      [BOT_ARBITER_v4.2]
+                      AI Bookie
                     </span>
                     {" "}
-                    <span className="w-2 h-2 rounded-full bg-tertiary animate-ping"></span>
+                    <span className="w-2 h-2 rounded-full bg-tertiary"></span>
                   </div>
                   {" "}
                   <span className="font-label-sm text-label-sm text-tertiary">
-                    Decided in 410ms
+                    Decided instantly
                   </span>
                 </div>
                 {" "}
@@ -321,11 +321,11 @@ export default function SettlementReceipt() {
                     <span className="font-mono text-primary font-bold">
                       3:54:12
                     </span>
-                    , shaving nearly 6 minutes off the target sub-4 marker. Meanwhile, Jake's confident group-chat thesis that Sam would{" "}
+                    , 6 minutes under goal. Jake said he'd{" "}
                     <span className="text-secondary italic">
-                      ‘absolutely cramp at Mile 18 from over-hydrating on electrolyte gummies’
+                      ‘cramp at mile 18’
                     </span>
-                    {" "}has officially aged like room-temperature oat milk."
+                    . He did not."
                   </p>
                   {" "}
                   <p className="text-on-surface">
@@ -337,7 +337,7 @@ export default function SettlementReceipt() {
                     <span className="px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-label-sm text-label-sm font-bold">
                       Sub-4 Demon
                     </span>
-                    . Jake forfeits all claims and immediately owes the locked penalty dare.
+                    . Jake owes his dare.
                   </p>
                 </div>
                 {" "}
@@ -358,7 +358,7 @@ export default function SettlementReceipt() {
                   </div>
                   {" "}
                   <p className="font-headline-sm text-headline-sm text-on-surface font-semibold">
-                    "Order pizza in sweaty post-marathon gym clothes and eat the entire large box on Instagram Live."
+                    "Eat a whole pizza on a live stream."
                   </p>
                   {" "}
                   <div className="flex items-center gap-space-xs text-body-sm text-body-sm text-on-surface-variant pt-1">
@@ -367,7 +367,7 @@ export default function SettlementReceipt() {
                     </span>
                     {" "}
                     <span>
-                      Must provide public broadcast link to squad within 48 hours or forfeit additional 100 PTS.
+                      Due in 48 hours.
                     </span>
                   </div>
                 </div>
@@ -384,12 +384,12 @@ export default function SettlementReceipt() {
                   </span>
                   {" "}
                   <span className="font-headline-sm text-headline-sm text-on-surface">
-                    Reputation Payout Ledger
+                    Who got what
                   </span>
                 </div>
                 {" "}
                 <span className="font-label-sm text-label-sm text-on-surface-variant font-mono">
-                  Block #74198
+                  Points
                 </span>
               </div>
               {" "}
@@ -414,18 +414,18 @@ export default function SettlementReceipt() {
                       </div>
                       {" "}
                       <span className="font-body-sm text-body-sm text-on-surface-variant">
-                        Primary Wager Placer
+                        Made the bet
                       </span>
                     </div>
                   </div>
                   {" "}
                   <div className="flex flex-col items-end">
-                    <span className="font-headline-md text-headline-md text-primary font-bold drop-shadow-[0_0_8px_rgba(16,230,104,0.4)]">
+                    <span className="font-headline-md text-headline-md text-primary font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.2)]">
                       +150 PTS
                     </span>
                     {" "}
                     <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      New Balance: 1,840 PTS
+                      Now 1,840 pts
                     </span>
                   </div>
                 </div>
@@ -445,12 +445,12 @@ export default function SettlementReceipt() {
                         </span>
                         {" "}
                         <span className="px-1.5 py-0.2 rounded-full bg-tertiary-container/30 text-tertiary font-label-sm text-label-sm font-bold">
-                          Side Stake
+                          Side bet
                         </span>
                       </div>
                       {" "}
                       <span className="font-body-sm text-body-sm text-on-surface-variant">
-                        Backed Sub-4 at 1.5x odds
+                        Backed Sam at 1.5x
                       </span>
                     </div>
                   </div>
@@ -461,7 +461,7 @@ export default function SettlementReceipt() {
                     </span>
                     {" "}
                     <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      New Balance: 920 PTS
+                      Now 920 pts
                     </span>
                   </div>
                 </div>
@@ -481,12 +481,12 @@ export default function SettlementReceipt() {
                         </span>
                         {" "}
                         <span className="px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold">
-                          Loser
+                          Owes a dare
                         </span>
                       </div>
                       {" "}
                       <span className="font-body-sm text-body-sm text-on-surface-variant">
-                        Sole Contrarian Backer
+                        Bet against Sam
                       </span>
                     </div>
                   </div>
@@ -514,14 +514,14 @@ export default function SettlementReceipt() {
                   </span>
                   {" "}
                   <span>
-                    Dispute Verdict (Opens Group Vote ⚖️)
+                    Disagree? Start a group vote ⚖️
                   </span>
                 </button>
                 {" "}
                 {/* Tooltip */}
                 {" "}
                 <div className="absolute bottom-full left-0 mb-2 hidden group-hover:flex px-space-sm py-1.5 rounded-lg bg-surface-container-highest text-on-surface font-body-sm text-body-sm whitespace-nowrap shadow-xl z-20">
-                  Requires 3/5 majority to overturn AI bookie
+                  Needs 3 of 5 votes
                 </div>
               </div>
               {" "}
@@ -537,7 +537,7 @@ export default function SettlementReceipt() {
               {" "}
               <button onClick={downloadProof} className="ml-auto text-on-surface-variant hover:text-on-surface font-label-md text-label-md flex items-center gap-1 transition-colors">
                 <span>
-                  Download Signed Proof JSON
+                  Download receipt
                 </span>
                 {" "}
                 <span className="material-symbols-outlined text-xs">
@@ -560,12 +560,12 @@ export default function SettlementReceipt() {
                   </span>
                   {" "}
                   <span className="font-headline-sm text-headline-sm text-on-surface">
-                    Evidence Docket
+                    Evidence
                   </span>
                 </div>
                 {" "}
                 <span className="px-space-xs py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold">
-                  4/4 Verified Proofs
+                  4 of 4 checked
                 </span>
               </div>
               {" "}
@@ -581,7 +581,7 @@ export default function SettlementReceipt() {
                     </span>
                     {" "}
                     <span className="font-label-lg text-label-lg text-on-surface font-bold">
-                      Strava Official Activity
+                      Running app activity
                     </span>
                   </div>
                   {" "}
@@ -591,16 +591,13 @@ export default function SettlementReceipt() {
                 </div>
                 {" "}
                 <p className="font-label-md text-label-md text-primary font-mono mt-1">
-                  Elapsed Time: 3:54:12 • Distance: 26.24 mi • Pace: 8:56/mi
+                  3:54:12 · 26.2 mi
                 </p>
                 {" "}
                 <div className="flex items-center justify-between pt-space-xs">
-                  <span className="text-body-sm text-body-sm text-on-surface-variant">
-                    Heart Rate Avg: 164 bpm • Cadence: 178 spm
-                  </span>
                   {" "}
                   <a className="text-primary hover:underline font-label-sm text-label-sm flex items-center gap-0.5 font-bold" href="#">
-                    View Raw Activity Data{" "}
+                    View activity{" "}
                     <span className="material-symbols-outlined text-xs">
                       north_east
                     </span>
@@ -620,7 +617,7 @@ export default function SettlementReceipt() {
                     </span>
                     {" "}
                     <span className="font-label-lg text-label-lg text-on-surface font-bold">
-                      Race Chip Timing Bib #4102
+                      Race timing chip
                     </span>
                   </div>
                   {" "}
@@ -630,16 +627,16 @@ export default function SettlementReceipt() {
                 </div>
                 {" "}
                 <p className="font-label-md text-label-md text-on-surface font-mono mt-1">
-                  Split 13.1m: 1:56:04 | Finish Gun: 3:54:12 | Official Age Group: 14th
+                  Finish 3:54:12
                 </p>
                 {" "}
                 <div className="flex items-center justify-between pt-space-xs text-body-sm text-body-sm text-on-surface-variant">
                   <span>
-                    Austin Marathon High Frequency Transponder RFID
+                    Official race results
                   </span>
                   {" "}
                   <span className="px-space-xs py-0.2 rounded bg-surface-container-lowest text-primary font-label-sm text-label-sm">
-                    Audited
+                    Verified
                   </span>
                 </div>
               </div>
@@ -656,7 +653,7 @@ export default function SettlementReceipt() {
                     </span>
                     {" "}
                     <span className="font-label-lg text-label-lg text-on-surface font-bold">
-                      Geolocation Geofence Log
+                      Finish line location
                     </span>
                   </div>
                   {" "}
@@ -666,21 +663,9 @@ export default function SettlementReceipt() {
                 </div>
                 {" "}
                 <p className="font-label-md text-label-md text-on-surface-variant font-mono mt-1">
-                  Crossed Congress Ave finish coordinates{" "}
-                  <span className="text-on-surface font-bold">
-                    [30.2672° N, 97.7431° W]
-                  </span>
+                  Matched the finish line
                 </p>
                 {" "}
-                <div className="flex items-center gap-space-xs pt-space-xs text-body-sm text-body-sm text-on-surface-variant">
-                  <span className="material-symbols-outlined text-xs text-primary">
-                    satellite_alt
-                  </span>
-                  {" "}
-                  <span>
-                    Altitude 502ft • Horizontal Accuracy ± 2.4m
-                  </span>
-                </div>
               </div>
               {" "}
               {/* Evidence Item 4: Finisher Photo with Medal */}
@@ -695,7 +680,7 @@ export default function SettlementReceipt() {
                     </span>
                     {" "}
                     <span className="font-label-lg text-label-lg text-on-surface font-bold">
-                      Finisher Photo &amp; Medal Scan
+                      Finish photo
                     </span>
                   </div>
                   {" "}
@@ -716,7 +701,7 @@ export default function SettlementReceipt() {
                       </span>
                       {" "}
                       <span>
-                        Photo Upload verified by 4 group members via Face ID
+                        4 friends confirmed this is Sam
                       </span>
                     </span>
                     {" "}
@@ -738,7 +723,7 @@ export default function SettlementReceipt() {
                   </span>
                   {" "}
                   <span className="font-headline-sm text-headline-sm text-on-surface">
-                    Community Consensus Status
+                    Group check
                   </span>
                 </div>
                 {" "}
@@ -748,7 +733,7 @@ export default function SettlementReceipt() {
               </div>
               {" "}
               <p className="font-body-md text-body-md text-on-surface-variant">
-                Dispute Window closes tomorrow at 11:42 AM EST. Any group member can request formal squad arbitration review.
+                Open for votes until tomorrow.
               </p>
               {" "}
               {/* Dynamic Voting Bar Representation */}
@@ -777,15 +762,6 @@ export default function SettlementReceipt() {
                 </div>
               </div>
               {" "}
-              <div className="flex items-center gap-space-xs pt-space-xs text-label-sm font-label-sm text-on-surface-variant">
-                <span className="material-symbols-outlined text-xs">
-                  info
-                </span>
-                {" "}
-                <span>
-                  Settlement is final and immutable unless overturned by 3/5 group consensus vote.
-                </span>
-              </div>
             </div>
             {" "}
             {/* Participant Chat Quote Quick Card */}
@@ -807,7 +783,7 @@ export default function SettlementReceipt() {
                 </div>
                 {" "}
                 <p className="font-body-sm text-body-sm text-on-surface-variant italic">
-                  "Bro his Strava pace jumped at mile 21 this is an optical illusion... I am already ordering the stuffed crust I hate all of you 😭"
+                  "Fine. Ordering the pizza 😭"
                 </p>
               </div>
             </div>

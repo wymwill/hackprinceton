@@ -16,8 +16,8 @@ export default function BetDetail() {
   const choose = (p: Exclude<Pick, null>) => {
     setPick(p);
     if (p === "pack") toast("✅ Locked: 250 PTS on The Pack. Bookie: “Easiest money of your life.”", "lime");
-    if (p === "jake") toast("🚀 Contrarian play: 250 PTS on Jake at 6x. Bookie: “I admire the delusion.”", "purple");
-    if (p === "pass") toast("🪑 You're sitting this one out. The Bookie respects cowardice.", "purple");
+    if (p === "jake") toast("🚀 Contrarian play: 250 PTS on Jake at 6x. Bookie: “Love the optimism.”", "purple");
+    if (p === "pass") toast("🪑 You're sitting this one out. No pressure, there is always the next one.", "purple");
   };
 
   const sideBet = (row: string, who: string) => {
@@ -50,7 +50,7 @@ export default function BetDetail() {
         {" "}
         <div className="flex flex-wrap items-center justify-between gap-space-sm mb-space-lg">
           <div className="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
-            <Link href="/" className="hover:text-primary transition-colors">
+            <Link href="/bets" className="hover:text-primary transition-colors">
               Bets
             </Link>
             {" "}
@@ -73,7 +73,7 @@ export default function BetDetail() {
           {" "}
           <div className="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-high shadow-sm">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+              <span className=" absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
               {" "}
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
@@ -99,12 +99,12 @@ export default function BetDetail() {
                 </span>
                 {" "}
                 <span className="font-label-sm text-label-sm text-secondary-fixed-dim bg-secondary-container/20 px-space-xs py-0.5 rounded-md">
-                  HIGH VOLATILITY
+                  Odds moving fast
                 </span>
               </div>
               {" "}
               <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight leading-tight">
-                Will Jake hit 6:00 AM Leg Day tomorrow without hitting snooze?
+                Will Jake make 6 AM leg day without snoozing?
               </h1>
               {" "}
               <div className="flex items-center gap-space-md pt-space-xs font-label-md text-label-md text-on-surface-variant">
@@ -112,7 +112,7 @@ export default function BetDetail() {
                   <span className="material-symbols-outlined text-sm text-primary">
                     groups
                   </span>
-                  {" "}6 Squad Punters
+                  {" "}6 friends betting
                 </span>
                 {" "}
                 <span>
@@ -131,7 +131,7 @@ export default function BetDetail() {
                 </span>
                 {" "}
                 <span className="text-secondary font-semibold">
-                  Punishment: Dye Beard Pink
+                  Loser's dare: dye beard pink
                 </span>
               </div>
             </div>
@@ -145,32 +145,32 @@ export default function BetDetail() {
                 </span>
                 {" "}
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold">
-                  Settlement Criteria &amp; Oracle Rules
+                  How this bet gets decided
                 </span>
               </div>
               {" "}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
                 <div className="p-space-sm rounded-lg bg-surface-container flex flex-col gap-1">
                   <span className="font-label-sm text-label-sm text-on-surface-variant font-medium">
-                    Pass Conditions
+                    Jake wins if
                   </span>
                   {" "}
                   <p className="font-body-sm text-body-sm text-on-surface">
-                    Apple Health check-in at{" "}
+                    Gym check-in at{" "}
                     <span className="text-primary font-semibold">
                       Equinox Downtown
                     </span>
-                    {" "}between 05:45 AM &amp; 06:15 AM + BeReal/Photo timestamped with the gym wall clock.
+                    {" "}by 6:15 AM.
                   </p>
                 </div>
                 {" "}
                 <div className="p-space-sm rounded-lg bg-surface-container flex flex-col gap-1">
                   <span className="font-label-sm text-label-sm text-on-surface-variant font-medium">
-                    Verification Protocol
+                    How we check
                   </span>
                   {" "}
                   <p className="font-body-sm text-body-sm text-on-surface">
-                    Connected Apple Health API background location handshake + Squad visual review poll (requires 4/6 squad signatures).
+                    His fitness app, or a group vote.
                   </p>
                 </div>
               </div>
@@ -182,7 +182,7 @@ export default function BetDetail() {
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
                 <div className="flex flex-col gap-1">
                   <span className="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant">
-                    Live Payout Rate
+                    Current odds
                   </span>
                   {" "}
                   <div className="flex items-baseline gap-space-xs">
@@ -191,21 +191,21 @@ export default function BetDetail() {
                     </span>
                     {" "}
                     <span className="font-label-lg text-label-lg text-secondary-fixed-dim font-bold">
-                      (+500)
+                      pays 6x
                     </span>
                     {" "}
                     <span className="font-body-sm text-body-sm text-on-surface-variant pl-space-xs">
-                      Against Jake
+                      if you back Jake
                     </span>
                   </div>
                   {" "}
                   <div className="flex items-center gap-space-xs pt-1 font-label-sm text-label-sm text-on-surface-variant">
                     <span>
-                      Implied Odds:
+                      Chance:
                     </span>
                     {" "}
                     <span className="text-secondary font-bold">
-                      14.3% Jake
+                      14% yes
                     </span>
                     {" "}
                     <span>
@@ -213,7 +213,7 @@ export default function BetDetail() {
                     </span>
                     {" "}
                     <span className="text-primary font-bold">
-                      85.7% The Pack
+                      86% no
                     </span>
                   </div>
                 </div>
@@ -223,18 +223,18 @@ export default function BetDetail() {
                 <div className="flex flex-col gap-1 w-full md:w-56">
                   <div className="flex justify-between font-label-sm text-label-sm">
                     <span className="text-primary font-bold">
-                      Pack 85.7%
+                      No 86%
                     </span>
                     {" "}
                     <span className="text-secondary font-bold">
-                      Jake 14.3%
+                      Yes 14%
                     </span>
                   </div>
                   {" "}
                   <div className="h-2.5 w-full bg-surface-container-lowest rounded-full overflow-clip flex">
-                    <div className="h-full bg-primary-container shadow-[0_0_12px_rgba(16,230,104,0.5)] transition-all duration-500" style={{ width: "85.7%" }}></div>
+                    <div className="h-full bg-primary-container shadow-[0_0_12px_rgba(52,211,153,0.25)] transition-all duration-500" style={{ width: "85.7%" }}></div>
                     {" "}
-                    <div className="h-full bg-secondary-container shadow-[0_0_12px_rgba(172,0,55,0.4)] transition-all duration-500" style={{ width: "14.3%" }}></div>
+                    <div className="h-full bg-secondary-container shadow-[0_0_12px_rgba(190,60,90,0.2)] transition-all duration-500" style={{ width: "14.3%" }}></div>
                   </div>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export default function BetDetail() {
               {" "}
               <div className="flex flex-col gap-space-sm pt-space-xs">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
-                  <button onClick={() => choose("pack")} disabled={pick !== null} className={`flex items-center justify-center gap-space-xs py-space-md px-space-lg rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_24px_rgba(16,230,104,0.35)] hover:shadow-[0_0_32px_rgba(16,230,104,0.6)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:hover:scale-100 ${pick && pick !== "pack" ? "opacity-40 shadow-none" : ""}`}>
+                  <button onClick={() => choose("pack")} disabled={pick !== null} className={`flex items-center justify-center gap-space-xs py-space-md px-space-lg rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_24px_rgba(52,211,153,0.17)] hover:shadow-[0_0_32px_rgba(52,211,153,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:hover:scale-100 ${pick && pick !== "pack" ? "opacity-40 shadow-none" : ""}`}>
                     <span>
                       {pick === "pack" ? "Taken · 250 PTS on The Pack" : "Take the Bet"}
                     </span>
@@ -271,7 +271,7 @@ export default function BetDetail() {
                     </span>
                     {" "}
                     <span className="font-label-md text-label-md font-bold">
-                      Contrarian Dare Play:
+                      Feeling lucky?
                     </span>
                     {" "}
                     <span className="font-body-sm text-body-sm text-on-surface-variant">
@@ -280,7 +280,7 @@ export default function BetDetail() {
                   </div>
                   {" "}
                   <span className="font-label-md text-label-md font-bold text-secondary">
-                    6.0x Payout Multiplier →
+                    pays 6x →
                   </span>
                 </button>
               </div>
@@ -292,11 +292,11 @@ export default function BetDetail() {
               <div className="flex flex-wrap items-center justify-between gap-space-xs">
                 <div className="flex flex-col">
                   <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold">
-                    Live Slip Volatility Telemetry
+                    Odds history
                   </span>
                   {" "}
                   <span className="font-headline-sm text-headline-sm text-on-surface">
-                    Odds Real-Time Crash Timeline
+                    How the odds changed overnight
                   </span>
                 </div>
                 {" "}
@@ -313,7 +313,7 @@ export default function BetDetail() {
               {/* Custom SVG Data Chart */}
               {" "}
               <div className="relative w-full h-48 bg-surface-container-lowest rounded-xl p-space-md overflow-clip flex flex-col justify-between">
-                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#77ff93_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#34d399_1px,transparent_1px)] [background-size:16px_16px]"></div>
                 {" "}
                 <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 600 130">
                   {/* Gridlines */}
@@ -328,9 +328,9 @@ export default function BetDetail() {
                   {" "}
                   <defs>
                     <linearGradient id="crashGlow" x1="0%" x2="0%" y1="0%" y2="100%">
-                      <stop offset="0%" stopColor="#ffb2b8" stopOpacity="0.35"></stop>
+                      <stop offset="0%" stopColor="#fda4af" stopOpacity="0.35"></stop>
                       {" "}
-                      <stop offset="100%" stopColor="#ffb2b8" stopOpacity="0.0"></stop>
+                      <stop offset="100%" stopColor="#fda4af" stopOpacity="0.0"></stop>
                     </linearGradient>
                   </defs>
                   {" "}
@@ -338,7 +338,7 @@ export default function BetDetail() {
                   {" "}
                   {/* Trajectory Path */}
                   {" "}
-                  <path d="M 0,30 L 140,32 L 280,30 L 320,60 L 410,110 L 600,118" fill="none" stroke="#ffb2b8" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
+                  <path d="M 0,30 L 140,32 L 280,30 L 320,60 L 410,110 L 600,118" fill="none" stroke="#fda4af" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
                   {" "}
                   {/* Highlight Nodes */}
                   {" "}
@@ -352,43 +352,34 @@ export default function BetDetail() {
                 <div className="relative z-10 flex justify-between items-end pt-2">
                   <div className="flex flex-col">
                     <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      21:00 PM
+                      9:00 PM
                     </span>
                     {" "}
                     <span className="font-label-sm text-label-sm text-primary font-bold">
-                      2.00 (Even)
+                      50% chance
                     </span>
                   </div>
                   {" "}
                   <div className="hidden sm:flex flex-col items-center bg-surface-container-high px-space-xs py-0.5 rounded shadow">
                     <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                      11:00 PM: Jake says "I'm locked in"
+                      11 PM: Jake says "I'm locked in"
                     </span>
                   </div>
                   {" "}
                   <div className="flex flex-col items-end">
                     <div className="bg-secondary-container px-space-xs py-0.5 rounded shadow-md mb-1">
                       <span className="font-label-sm text-label-sm text-on-secondary font-bold">
-                        1:30 AM: In Valorant queue
+                        1:30 AM: still gaming
                       </span>
                     </div>
                     {" "}
                     <span className="font-label-sm text-label-sm text-secondary font-bold">
-                      6.00 Crash
+                      14% chance
                     </span>
                   </div>
                 </div>
               </div>
               {" "}
-              <div className="flex items-center gap-space-xs text-on-surface-variant font-body-sm text-body-sm">
-                <span className="material-symbols-outlined text-xs">
-                  info
-                </span>
-                {" "}
-                <span>
-                  Odds automatically updated through API-detected activity spikes on Jake's linked Steam &amp; Discord profiles.
-                </span>
-              </div>
             </div>
             {" "}
             {/* Backers & Side Hustles Section */}
@@ -401,12 +392,12 @@ export default function BetDetail() {
                   </span>
                   {" "}
                   <span className="font-headline-sm text-headline-sm text-on-surface">
-                    Squad Side Hustles
+                    Side bets
                   </span>
                 </div>
                 {" "}
                 <span className="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface-variant font-bold">
-                  2 Active Props · back either side
+                  Pick a side
                 </span>
               </div>
               {" "}
@@ -431,7 +422,7 @@ export default function BetDetail() {
                       </span>
                       {" "}
                       <span className="font-body-sm text-body-sm text-on-surface-variant">
-                        Jake wakes up after 9:00 AM strictly
+                        Jake sleeps past 9 AM
                       </span>
                     </div>
                   </div>
@@ -465,7 +456,7 @@ export default function BetDetail() {
                       </span>
                       {" "}
                       <span className="font-body-sm text-body-sm text-on-surface-variant">
-                        Jake posts "sick" excuse in Discord before 8 AM
+                        Jake calls in "sick" by 8 AM
                       </span>
                     </div>
                   </div>
@@ -487,15 +478,15 @@ export default function BetDetail() {
           <div className="flex flex-col gap-space-lg min-w-0">
             {/* AI Bookie Arbiter Callout Card */}
             {" "}
-            <div className="p-space-lg rounded-xl bg-surface-container-high shadow-[0_0_20px_-2px_rgba(157,108,255,0.35)] flex flex-col gap-space-sm relative overflow-clip">
+            <div className="p-space-lg rounded-xl bg-surface-container-high shadow-[0_0_20px_-2px_rgba(167,139,250,0.17)] flex flex-col gap-space-sm relative overflow-clip">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-space-xs">
                   <span className="font-label-sm text-label-sm px-space-xs py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container font-bold uppercase tracking-wider">
-                    [BOT_ARBITER]
+                    AI Bookie
                   </span>
                   {" "}
                   <span className="font-label-md text-label-md text-tertiary font-semibold">
-                    The AI Bookie's Take
+                    Why these odds?
                   </span>
                 </div>
                 {" "}
@@ -505,16 +496,16 @@ export default function BetDetail() {
               </div>
               {" "}
               <p className="font-body-sm text-body-sm text-on-surface italic leading-relaxed pt-space-xs">
-                “Our predictive model scanned Jake's Discord status (
+                “Online at (
                 <span className="text-tertiary font-semibold">
-                  In Game: Valorant, 1:14 AM
+                  1:14 AM, mid game
                 </span>
-                ) and historical biometric rest recovery. Historically, whenever Jake queues competitive past midnight, his wake-up latency increases by 184 minutes. Odds moved from 2.5:1 to 6.0:1. Bet accordingly, but bring tissues for Jake.”
+                ). Late nights mean late mornings.”
               </p>
               {" "}
               <div className="flex items-center justify-between pt-space-xs">
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
-                  Algorithm Model v4.1
+                  Based on Jake's last 9 bets
                 </span>
                 {" "}
                 <div className="flex items-center gap-1 font-label-md text-label-md text-primary font-bold">
@@ -523,7 +514,7 @@ export default function BetDetail() {
                   </span>
                   {" "}
                   <span>
-                    Confidence: 94.2%
+                    94% sure
                   </span>
                 </div>
               </div>
@@ -534,11 +525,11 @@ export default function BetDetail() {
             <div className="p-space-md rounded-xl bg-surface-container-low shadow-sm flex flex-col gap-space-sm">
               <div className="flex items-center justify-between">
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold">
-                  Live Settlement Telemetry
+                  Checked automatically
                 </span>
                 {" "}
                 <div className="flex items-center gap-1 font-label-sm text-label-sm text-primary">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
                   {" "}Syncing
                 </div>
               </div>
@@ -556,11 +547,11 @@ export default function BetDetail() {
                 {" "}
                 <div className="flex flex-col truncate">
                   <span className="font-label-md text-label-md text-on-surface font-semibold truncate">
-                    Apple Health &amp; Strava Handshake
+                    Fitness apps connected
                   </span>
                   {" "}
                   <span className="font-body-sm text-body-sm text-on-surface-variant truncate">
-                    Equinox Geofence: 50m radius • Sync: 12m ago
+                    Gym location check · synced 12m ago
                   </span>
                 </div>
               </div>
@@ -571,11 +562,11 @@ export default function BetDetail() {
             <div className="p-space-lg rounded-xl bg-surface-container shadow-sm flex flex-col gap-space-md">
               <div className="flex items-center justify-between">
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold">
-                  Subject Profile
+                  Jake's track record
                 </span>
                 {" "}
                 <span className="font-label-sm text-label-sm text-secondary font-bold">
-                  TARGET
+                  On the hook
                 </span>
               </div>
               {" "}
@@ -625,14 +616,14 @@ export default function BetDetail() {
               {" "}
               <div className="p-space-sm rounded-lg bg-surface-container-lowest flex items-center justify-between font-label-sm text-label-sm">
                 <span className="text-on-surface-variant">
-                  Claimed Attendance:{" "}
+                  Says he goes:{" "}
                   <strong className="text-on-surface">
                     80%
                   </strong>
                 </span>
                 {" "}
                 <span className="text-secondary font-bold">
-                  Actual: 25% 📉
+                  Actually goes: 25%
                 </span>
               </div>
             </div>
@@ -642,11 +633,11 @@ export default function BetDetail() {
             <div className="p-space-lg rounded-xl bg-surface-container-low shadow-sm flex flex-col gap-space-md">
               <div className="flex items-center justify-between">
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold">
-                  The Syndicate
+                  Who's betting no
                 </span>
                 {" "}
                 <span className="font-label-sm text-label-sm text-primary font-bold">
-                  5 PUNTERS
+                  5 friends
                 </span>
               </div>
               {" "}
@@ -679,7 +670,7 @@ export default function BetDetail() {
                   </span>
                   {" "}
                   <span className="font-label-sm text-label-sm text-on-surface-variant">
-                    Collective Accuracy
+                    usually right
                   </span>
                 </div>
               </div>
