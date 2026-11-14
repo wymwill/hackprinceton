@@ -38,7 +38,7 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
             {!p.total ? "–" : binary ? yes.pct : top!.pct}
             {p.total > 0 && <small>%</small>}
           </div>
-          <div className="cap">{!p.total ? (binary ? "no coins yet" : `${bet.outcomes.length} options`) : binary ? "of pool on yes" : `of pool on ${top!.label}`}</div>
+          <div className="cap">{!p.total ? (binary ? "no coins yet" : `${bet.outcomes.length} ${bet.kind === "range" ? "ranges" : "options"}`) : binary ? "of pool on yes" : `of pool on ${top!.label}`}</div>
         </div>
       </div>
       <PoolBar bet={bet} />
@@ -82,13 +82,18 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
         </div>
       ) : bet.status === "open" && isParticipant(s, me) ? (
         <Link to={href} className="settled pick">
-          <span>{mine ? "Add to your pick" : `Pick one of ${bet.outcomes.length}`}</span>
+          <span>{mine ? "Add to your pick" : bet.kind === "range" ? `Pick one of ${bet.outcomes.length} ranges` : `Pick one of ${bet.outcomes.length}`}</span>
           <span>Bet →</span>
         </Link>
       ) : bet.status === "resolved" ? (
         <div className="settled">
           <span>
-            {bet.outcomeId ? (
+            {bet.kind === "range" && bet.resultValue != null ? (
+              <>
+                Result <b>{resultText(bet)}</b>
+                {bet.refunded && <span className="dim"> · refunded</span>}
+              </>
+            ) : bet.outcomeId ? (
               <>
                 Result <OutcomeTag bet={bet} id={bet.outcomeId} />
                 {bet.refunded && <span className="dim"> · refunded</span>}

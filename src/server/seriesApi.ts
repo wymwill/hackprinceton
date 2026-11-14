@@ -134,8 +134,19 @@ export const outcomeRef = (body: Record<string, unknown>) => {
 export const text = (v: unknown) => (typeof v === "string" ? v : "");
 /** A list of strings, or undefined when the field is missing (so the SQL default applies). */
 export const texts = (v: unknown) => (Array.isArray(v) ? v.map(text) : undefined);
-/** The fields that describe a bet's outcomes: { outcomes?: string[], tieRule? }. Missing outcomes = YES/NO. */
+/** A JSON number as-is; anything else (including numeric strings) as null, so the SQL decides. */
+export const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+/**
+ * The fields that describe a bet's outcomes:
+ *   multiple choice: { outcomes: string[], tieRule? }; nothing = YES/NO;
+ *   range: { kind: "range", ranges: [{ lower, upper }] (null = open end), unit?, decimals? }.
+ */
 export const betShape = (body: Record<string, unknown>) => ({
   p_outcomes: texts(body.outcomes) ?? null,
   p_tie_rule: typeof body.tieRule === "string" ? body.tieRule : null,
+  p_kind: typeof body.kind === "string" ? body.kind : null,
+  // Passed through as JSON; _bs_clean_ranges checks every bound.
+  p_ranges: Array.isArray(body.ranges) ? body.ranges : null,
+  p_unit: typeof body.unit === "string" ? body.unit : null,
+  p_decimals: num(body.decimals),
 });

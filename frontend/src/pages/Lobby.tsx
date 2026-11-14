@@ -181,7 +181,11 @@ export default function Lobby({ s }: { s: Series }) {
                         <span className="bright">{b.question}</span>
                       </span>
                       <span className="hint">
-                        {b.kind === "binary" ? "Yes / No" : `${b.outcomes.map((o) => o.label).join(" · ")} — ${b.tieRule === "refund" ? "tie refunds" : "tie: first listed wins"}`}
+                        {b.kind === "binary"
+                          ? "Yes / No"
+                          : b.kind === "range"
+                            ? `Range${b.unit ? ` in ${b.unit}` : ""}: ${b.outcomes.map((o) => o.label).join(" · ")}`
+                            : `${b.outcomes.map((o) => o.label).join(" · ")} — ${b.tieRule === "refund" ? "tie refunds" : "tie: first listed wins"}`}
                       </span>
                     </span>
                     {isHost && (

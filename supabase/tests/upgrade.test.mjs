@@ -103,3 +103,45 @@ test("0009 turns existing bets into YES/NO bets with outcome ids, and they keep 
   assert.equal(edited.kind, "MULTI");
   await t.close();
 });
+
+// Migration 0010 (range bets) runs on a project that already has YES/NO and multiple-choice bets.
+test("0010 keeps YES/NO and multiple-choice bets working and adds range bets", async () => {
+  const t = await createDb({ upTo: "202611140010" });
+  const [host, friend, third] = await Promise.all(["Host 9", "Friend 9", "Third 9"].map((n) => t.user(n)));
+  // Made with the 0009 functions.
+  const [s] = await host.rpc("create_bet_series", {
+    p_title: "Before 0010", p_description: "", p_planned_bet_count: 3, p_initial_bankroll: 1000, p_loser_count: 1,
+    p_stake_mode: "MONEY", p_questions: [], p_settings: { minContribution: 5, betCreation: "during" },
+    p_bets: [{ question: "Who wins the bake-off?", outcomes: ["Ann", "Bo", "Cy"], tieRule: "first_listed" }, { question: "Will it rain?" }],
+  });
+  for (const p of [friend, third]) await p.rpc("join_bet_series", { p_series_id: s.id });
+  for (const p of [host, friend, third]) await p.rpc("set_series_ready", { p_series_id: s.id, p_ready: true });
+  await host.rpc("start_bet_series", { p_series_id: s.id });
+  const read = async () => (await host.rpc("my_series_state"))[0].my_series_state.series.find((x) => x.id === s.id);
+  let v = await read();
+  const [mc, yn] = v.bets;
+  const o = Object.fromEntries(mc.outcomes.map((x) => [x.label, x.id]));
+  await friend.rpc("place_series_wager", { p_series_id: s.id, p_bet_id: mc.id, p_outcome: o.Bo, p_amount: 100 });
+  await third.rpc("place_series_wager", { p_series_id: s.id, p_bet_id: mc.id, p_outcome: o.Cy, p_amount: 50 });
+  await friend.rpc("place_series_wager", { p_series_id: s.id, p_bet_id: yn.id, p_outcome: "YES", p_amount: 40 });
+  await third.rpc("place_series_wager", { p_series_id: s.id, p_bet_id: yn.id, p_outcome: "NO", p_amount: 40 });
+  await host.rpc("finish_series_bet", { p_series_id: s.id, p_bet_id: yn.id, p_outcome: "NO", p_cancel: false });
+
+  await t.migrate();
+
+  v = await read();
+  assert.deepEqual(v.bets.map((b) => [b.kind, b.unit, b.decimals, b.resultValue]), [["multi", null, null, null], ["binary", null, null, null]]);
+  assert.ok(v.bets[0].outcomes.every((x) => x.lower === null && x.upper === null));
+  // The open multiple-choice bet still takes a tie under its old rule, via the same call.
+  const [r] = await host.rpc("finish_series_bet", { p_series_id: s.id, p_bet_id: mc.id, p_outcome: null, p_cancel: false, p_tied: [o.Cy, o.Bo] });
+  assert.equal(r.finish_series_bet.outcomeId, o.Bo);
+  v = await read();
+  assert.deepEqual(Object.fromEntries(v.standings.map((x) => [x.userId, x.coins])), { [friend.id]: 1010, [third.id]: 990, [host.id]: 1000 });
+  // And range bets work in the same series.
+  const [rb] = await host.rpc("create_series_bet", {
+    p_series_id: s.id, p_question: "High tomorrow?", p_kind: "range", p_unit: "°F", p_decimals: 0,
+    p_ranges: [{ lower: null, upper: 60 }, { lower: 60, upper: 70 }, { lower: 70, upper: null }],
+  });
+  assert.equal(rb.kind, "RANGE");
+  await t.close();
+});

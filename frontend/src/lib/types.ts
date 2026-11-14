@@ -1,7 +1,7 @@
 /**
  * What the Bet Series API sends from GET /api/series/state, already in the
  * shape the screens use. The SQL that builds it is `_bs_series_json` in
- * supabase/migrations/202611140009_multi_outcome_bets.sql (first written in 0007).
+ * supabase/migrations/202611140010_range_bets.sql (first written in 0007; ranges added in 0010).
  */
 
 export type Id = string;
@@ -12,8 +12,11 @@ export type Tiebreak = "first" | "random";
 export type BetCreation = "upfront" | "during";
 /** Legacy YES/NO side names. Bets now use outcome ids; see Outcome. */
 export type Side = "yes" | "no";
-/** "binary" = YES/NO (the default). "multi" = 2 to 10 outcomes the host named. */
-export type BetKind = "binary" | "multi";
+/**
+ * "binary" = YES/NO (the default). "multi" = 2 to 10 outcomes the host named.
+ * "range" = 2 to 10 numerical ranges; the host enters the measured value and the range holding it wins.
+ */
+export type BetKind = "binary" | "multi" | "range";
 /** What a multiple-choice bet does if the host reports a tie. Fixed before betting. */
 export type TieRule = "refund" | "first_listed";
 
@@ -27,6 +30,9 @@ export type Outcome = {
   pool: number;
   /** Players with coins on it. */
   backers: number;
+  /** Range bets: lower ≤ x < upper. Null = open-ended. Absent or null on other bets. */
+  lower?: number | null;
+  upper?: number | null;
 };
 
 export type Settings = {
@@ -94,8 +100,13 @@ export type Bet = {
   position: number;
   kind: BetKind;
   tieRule: TieRule;
-  /** In the order the host listed them. YES/NO bets have YES then NO. */
+  /** In the order the host listed them. YES/NO bets have YES then NO; range bets go low to high. */
   outcomes: Outcome[];
+  /** Range bets: the unit (°F, points, $…) and decimal places for bounds and the result. */
+  unit?: string | null;
+  decimals?: number | null;
+  /** Range bets: the value the host entered when settling. */
+  resultValue?: number | null;
   status: BetStatus;
   openedAt?: string | null;
   closedAt?: string | null;
@@ -185,4 +196,18 @@ export type BetDraft = {
   kind: BetKind;
   outcomes: { id?: Id; label: string }[];
   tieRule: TieRule;
+  range: RangeDraft;
+};
+
+/**
+ * A range bet as the host builds it: boundaries in order, plus whether the first range
+ * is open below and the last open above. Ranges are the gaps between boundaries, so they
+ * can't overlap or leave holes. Boundaries are kept as typed so editing feels natural.
+ */
+export type RangeDraft = {
+  unit: string;
+  decimals: number;
+  cuts: string[];
+  openBelow: boolean;
+  openAbove: boolean;
 };
