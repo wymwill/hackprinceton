@@ -15,7 +15,10 @@
     "create:demo-users": "node scripts/create-demo-users.mjs",
     "test:outcomes-local": "node scripts/e2e-outcomes-local.mjs",
     "test:ranges-local": "node scripts/e2e-ranges-local.mjs",
-    "test:chat-local": "node scripts/e2e-chat-local.mjs"
+    "test:chat-local": "node scripts/e2e-chat-local.mjs",
+    "test:house": "node --conditions=react-server --experimental-strip-types --test tests/house.test.mjs",
+    "test:house-local": "node scripts/e2e-house-local.mjs",
+    "test:house-ui": "playwright test --config=playwright.house.config.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",
@@ -26,6 +29,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.14",
+    "@playwright/test": "^1.65.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

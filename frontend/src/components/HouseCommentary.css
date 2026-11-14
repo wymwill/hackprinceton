@@ -1,0 +1,29 @@
+.house-card {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--red);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  min-width: 0;
+}
+.house-card.house-upset { border-left-color: var(--amber); }
+.house-top, .house-identity, .house-actions, .house-muted { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.house-top, .house-muted { justify-content: space-between; }
+.house-identity strong { color: var(--bright); font-family: var(--display); font-size: 17px; }
+.house-mark { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 7px; background: var(--red-soft); color: var(--red-hi); font-weight: 800; }
+.house-source, .house-event { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+.house-source { color: var(--dim); }
+.house-event { color: var(--red-hi); margin-top: 12px; }
+.house-upset .house-event { color: var(--amber); }
+.house-card p { color: var(--fg); font-size: 14px; line-height: 1.65; margin-top: 6px; max-width: 90ch; overflow-wrap: anywhere; }
+.house-actions button { color: var(--dim); font-size: 12px; padding: 8px 4px; min-height: 36px; }
+.house-actions button:hover { color: var(--bright); }
+.house-muted { color: var(--dim); font-size: 12px; margin-bottom: 16px; }
+@media (max-width: 600px) {
+  .house-card { padding: 12px; }
+  .house-top { gap: 2px; }
+  .house-actions { margin-left: auto; }
+  .house-actions button { min-height: 44px; padding-inline: 6px; }
+  .house-source { font-size: 9px; }
+}
