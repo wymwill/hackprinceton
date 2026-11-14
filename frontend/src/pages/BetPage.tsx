@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ConfirmButton, OutcomeTag, Panel, Pill, PoolBar, Who } from "../components/ui.tsx";
+import { HouseCommentary } from "../components/HouseCommentary.tsx";
 import { balances, findOutcome, isParticipant, labelOf, leader, payoutIfWins, resultText, shares, TIE_RULE_TEXT, withdrawUntil } from "../lib/rules.ts";
 import { ago, countdown, fmt, signed, useNow } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
@@ -339,6 +340,8 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
         </div>
         )}
       </section>
+
+      <HouseCommentary series={s} bet={bet} />
 
       <div className="grid2">
         <div className="col">
