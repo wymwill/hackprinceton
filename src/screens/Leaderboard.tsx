@@ -2,16 +2,21 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import Avatar from "@/components/Avatar";
 import { useBookie } from "@/components/BookieProvider";
+import { initials } from "@/lib/bets/format";
+import type { UserView } from "@/lib/bets/types";
 
 type Tab = "week" | "season" | "all";
 const TABS: { id: Tab; label: string }[] = [
   { id: "week", label: "This Week" },
-  { id: "season", label: "Season 2 (Active)" },
-  { id: "all", label: "All Time" },
+  { id: "season", label: "Balance" },
+  { id: "all", label: "All-Time Net" },
 ];
+const POOL_LABEL: Record<Tab, string> = { week: "WEEK NET", season: "BALANCE", all: "ALL-TIME NET" };
 
 type Row = {
+  id: string;
   name: string;
   initials: string;
   avatar?: string;
@@ -20,20 +25,44 @@ type Row = {
   titleTone: "lime" | "coral" | "purple" | "plain" | "shame";
   tone: "top" | "me" | "plain" | "shame";
   points: Record<Tab, number>;
-  win: Record<Tab, number>;
-  streak: string;
+  win: number;
+  record: string;
+  streak: number;
   streakLabel: string;
-  dares: string;
+  atRisk: number;
 };
 
-const ROWS: Row[] = [
-  { name: "Sam Vance", initials: "SV", avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB0ObL4uTPqFS4txG6ZuRflfr9mq1Im56UOQvA01Bo965DAG63KqJlCpsX8RtLUnOi-qdU-9r5tsDfAUY3lDzdcZUK3utxNW0_Yt3VdjMzLGhE9w4dgx563d5Z8VLhxp75drECHLal3wkSwg-Cp9VLvCbSolAQAg6CseI_g-ZSldQ5me8O3Sr3h6Hpj-KJ7h03KzxQMKwx0VAqSzV8jAmyX2hQNmd42dFNFs5sILtM-", title: "The Oracle", titleTone: "lime", tone: "top", points: { week: 420, season: 3850, all: 9120 }, win: { week: 100, season: 85, all: 79 }, streak: "7W", streakLabel: "🔥 7W", dares: "0 Owed" },
-  { name: "Alex Chen", initials: "AC", avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDXqjQVEmPxVQjx8C7lhiDRONmwyDcVXEUUNnkWmgWBnlnQubK1sZr4KOLMOdPAXhkvjtlkHX3MdV2EnsE9cT-2iQ0zisSX1rmPbMAchgkzfHYqhuw3NBuYKuiF84z6qYvjDUKx3EnJPWDVfOnMRUpFt6o0YTicN9H2NrsVcExbCF0AB4YCKR8FXG_tRollUK1Yfdh49U0rMOdku-282T1uzfIoKxvc6c9jLV6OgmXJ", me: true, title: "The Contrarian", titleTone: "coral", tone: "me", points: { week: 380, season: 3210, all: 8470 }, win: { week: 75, season: 68, all: 64 }, streak: "3W", streakLabel: "🔥 3W", dares: "1 Done" },
-  { name: "Priya Sharma", initials: "PS", avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCKRmPUwUlFh7okGbu1YK0cLExx-6Mqgy7YNQG2yyKINVIXgp8iV2AEl-DFF4tmUPBIaD69s4FzCcJgL5FPyfuuMbQ-f8hO4F1siNQ51JUJ4YWH3eVLW09Im0uV1t9BQU09TQYFAJne7ehnWJ4wpe-ZtIN-iWCGRPZ8QN49Hl_lFbGbe3OeCLDhlNWMJ1tMy5e9ibBgD1S5C5MmBr0k-xUUkOSvOcxl9ChZaG0WzOwp", title: "Statistical Menace", titleTone: "purple", tone: "plain", points: { week: 310, season: 2740, all: 7010 }, win: { week: 67, season: 61, all: 63 }, streak: "1W", streakLabel: "1W", dares: "2 Done" },
-  { name: "Marcus Reed", initials: "MR", title: "The Wildcard", titleTone: "plain", tone: "plain", points: { week: 290, season: 2150, all: 5880 }, win: { week: 50, season: 52, all: 55 }, streak: "1L", streakLabel: "1L", dares: "1 Owed" },
-  { name: "David K.", initials: "DK", title: "Safe Bet Dave", titleTone: "plain", tone: "plain", points: { week: 150, season: 1820, all: 4200 }, win: { week: 50, season: 49, all: 51 }, streak: "2L", streakLabel: "2L", dares: "0 Owed" },
-  { name: "Jake Miller", initials: "JM", title: "🙃 Eternal Optimist", titleTone: "shame", tone: "shame", points: { week: -60, season: 640, all: 1150 }, win: { week: 0, season: 21, all: 24 }, streak: "5L", streakLabel: "💀 5L Streak", dares: "3 Owed" },
-];
+const TITLE_TONES = ["lime", "purple", "coral"] as const;
+
+/** Leaderboard rows from live balances and settled bets, ranked by the selected tab. */
+function toRows(users: UserView[], me: string, tab: Tab): Row[] {
+  const sorted = [...users]
+    .map((u) => ({
+      u,
+      points: { week: u.stats.netWeek, season: u.balance, all: u.stats.net },
+    }))
+    .sort((a, b) => b.points[tab] - a.points[tab] || b.u.balance - a.u.balance);
+  return sorted.map(({ u, points }, i) => {
+    const last = i === sorted.length - 1 && sorted.length > 3;
+    const s = u.stats.streak;
+    return {
+      id: u.id,
+      name: u.name,
+      initials: initials(u.name),
+      avatar: u.avatar,
+      me: u.id === me,
+      title: u.title,
+      titleTone: last ? "shame" : (TITLE_TONES[i] ?? "plain"),
+      tone: last ? "shame" : u.id === me ? "me" : i === 0 ? "top" : "plain",
+      points,
+      win: u.stats.settled ? Math.round((u.stats.wins / u.stats.settled) * 100) : 0,
+      record: `${u.stats.wins}-${u.stats.losses}`,
+      streak: s,
+      streakLabel: s === 0 ? "–" : s > 0 ? `${s >= 3 ? "🔥 " : ""}${s}W` : `${s <= -3 ? "💀 " : ""}${-s}L`,
+      atRisk: u.atRisk,
+    };
+  });
+}
 
 const ROW_STYLE = {
   top: { row: "hover:bg-surface-container transition-colors", rank: "bg-primary/10 text-primary" },
@@ -50,10 +79,9 @@ const TITLE_STYLE = {
 };
 
 export default function Leaderboard() {
-  const { toast } = useBookie();
+  const { toast, state } = useBookie();
   const [tab, setTab] = useState<Tab>("season");
-  const rows = ROWS;
-  const pts = (name: string) => ROWS.find((r) => r.name === name)!.points[tab].toLocaleString();
+  const rows = state ? toRows(state.users, state.me, tab) : [];
 
   return (
     <main className="relative pt-16 bg-surface min-h-screen w-full px-gutter-desktop py-space-lg">
@@ -101,224 +129,8 @@ export default function Leaderboard() {
           </div>
         </section>
         {" "}
-        {/* The Podium: Top 3 Friends Grid */}
-        {" "}
-        <section className="relative w-full mb-space-xl pt-space-lg">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md items-end max-w-5xl mx-auto">
-            {/* 2nd Place: Left Pedestal (Alex Chen) */}
-            {" "}
-            <div className="order-2 md:order-1 flex flex-col items-center group">
-              <div className="relative mb-3 flex flex-col items-center">
-                <span className="px-space-xs py-0.5 rounded-full bg-surface-bright text-on-surface font-label-sm text-label-sm uppercase tracking-wider mb-2 font-bold shadow-sm">
-                  Rank #2
-                </span>
-                {" "}
-                <div className="relative w-20 h-20 rounded-2xl overflow-clip p-0.5 bg-gradient-to-b from-surface-bright via-surface-container to-surface-container-low shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                  <img className="w-full h-full object-cover rounded-xl" alt="Portrait photo of Alex, a sharp young Asian male with headphones around neck smiling confidently in a high-tech athletic club gym, cinematic cool moody rim lighting and emerald neon highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCU3uFX9czaIb94h9TzN0Shg7RQOlQwtGpbLE7Lei6h60pIcL3-hgPxyyb1OTanVjGHBzF-3Neb3gPczi3K-4fV3hrXjHBSEPy4hGBtY-TdEJmorWkXFRYzGMEQC3_lxobXR7f6bi9bzKmR3n2GIa8pmjSVV5lfHvFjlhIdhjFnHVnj_8qhdLq7euAfhdktXYv8AJEJxeeMXBQP67v-Ef5GPPvPgCxz1U-T6xsfdpaE" />
-                </div>
-                {" "}
-                <span className="absolute -bottom-2 px-2 py-0.5 rounded-md bg-surface-container-highest text-on-surface font-label-sm text-label-sm font-bold shadow">
-                  SILVER
-                </span>
-              </div>
-              {" "}
-              <div className="w-full bg-surface-container-low rounded-t-2xl p-space-md flex flex-col items-center text-center shadow-lg transition-transform group-hover:-translate-y-1">
-                <div className="flex items-center gap-1">
-                  <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                    Alex Chen
-                  </span>
-                  {" "}
-                  <span className="font-label-sm text-label-sm text-primary font-bold">
-                    (You)
-                  </span>
-                </div>
-                {" "}
-                <span className="font-label-md text-label-md text-secondary-fixed-dim uppercase tracking-wider mt-0.5">
-                  The Contrarian
-                </span>
-                {" "}
-                <div className="my-space-sm w-full py-1.5 px-3 rounded-lg bg-surface-container-lowest flex items-center justify-between">
-                  <span className="font-label-sm text-label-sm text-on-surface-variant">
-                    {tab === "week" ? "WEEK" : tab === "all" ? "ALL-TIME" : "SEASON"} POOL
-                  </span>
-                  {" "}
-                  <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                    {pts("Alex Chen")}{" "}
-                    <span className="text-xs text-primary font-mono">
-                      PTS
-                    </span>
-                  </span>
-                </div>
-                {" "}
-                <div className="w-full grid grid-cols-2 gap-1 text-left">
-                  <div className="p-1.5 rounded bg-surface-container-high/60 flex flex-col">
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      WIN RATE
-                    </span>
-                    {" "}
-                    <span className="font-label-md text-label-md text-on-surface font-semibold">
-                      68.4%{" "}
-                      <span className="text-[10px] text-on-surface-variant">
-                        (16-7)
-                      </span>
-                    </span>
-                  </div>
-                  {" "}
-                  <div className="p-1.5 rounded bg-surface-container-high/60 flex flex-col">
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      HOT STREAK
-                    </span>
-                    {" "}
-                    <span className="font-label-md text-label-md text-primary font-bold flex items-center gap-0.5">
-                      🔥 3 Wins
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {" "}
-            {/* 1st Place: Center Pedestal (Sam Vance) */}
-            {" "}
-            <div className="order-1 md:order-2 flex flex-col items-center group -mt-4">
-              {/* Floating Gold Halo & Crown */}
-              {" "}
-              <div className="relative mb-3 flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-tertiary-container/30 flex items-center justify-center text-xl mb-1 shadow-[0_0_24px_rgba(211,189,255,0.7)] animate-bounce">
-                  👑
-                </div>
-                {" "}
-                <div className="relative w-24 h-24 rounded-2xl overflow-clip p-1 bg-gradient-to-tr from-primary via-tertiary to-primary-container shadow-[0_0_30px_rgba(52,211,153,0.23)]">
-                  <img className="w-full h-full object-cover rounded-xl" alt="Confident charismatic athletic man with buzzcut and sharp gaze in dark sports gym jersey standing under golden and mint green overhead stadium spotlights, hyper-realistic, dramatic rim lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMGHDydx1hSfHzkHOhvbVwEb4BeK4MCPnQ68l_RCeZKQlw2xQXfrO6TtqCwuA8UhBcVMXrD4Cy4f_Vt8RnVdBJekzJwWgsWsCty-EdtucH-3q4l77DzAOdLYzBk34Hy-5orgS_5n-Ye4OMvaL2zLmCgg_lavAafAxwjSjy0QApT7UUBbjqKWwXCxy8WNOLRwvyRsYWzAlbrTjrQnnWHsaRxQdbM1eZDHfeGY3b6K1q" />
-                </div>
-                {" "}
-                <span className="absolute -bottom-2 px-3 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-extrabold uppercase shadow-[0_0_12px_rgba(52,211,153,0.3)]">
-                  CHAMPION
-                </span>
-              </div>
-              {" "}
-              <div className="w-full bg-surface-container rounded-t-2xl p-space-md pb-space-lg flex flex-col items-center text-center shadow-2xl relative overflow-clip transition-transform group-hover:-translate-y-1.5">
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 bg-primary/10 blur-2xl pointer-events-none rounded-full"></div>
-                {" "}
-                <h2 className="font-headline-md text-headline-md text-on-surface font-bold tracking-tight">
-                  Sam Vance
-                </h2>
-                {" "}
-                <span className="font-label-md text-label-md text-primary font-bold uppercase tracking-wider mt-0.5">
-                  The Oracle
-                </span>
-                {" "}
-                <div className="my-space-md w-full py-2 px-4 rounded-xl bg-surface-container-lowest flex items-center justify-between shadow-inner">
-                  <span className="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase">
-                    REPUTATION
-                  </span>
-                  {" "}
-                  <span className="font-headline-lg text-headline-lg text-primary font-bold">
-                    {pts("Sam Vance")}{" "}
-                    <span className="text-xs text-on-surface font-mono">
-                      PTS
-                    </span>
-                  </span>
-                </div>
-                {" "}
-                <div className="w-full grid grid-cols-2 gap-2 text-left">
-                  <div className="p-2 rounded-lg bg-surface-container-high flex flex-col">
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      WIN RATIO
-                    </span>
-                    {" "}
-                    <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                      84.6%
-                    </span>
-                    {" "}
-                    <span className="font-label-sm text-label-sm text-primary font-semibold">
-                      22W — 4L
-                    </span>
-                  </div>
-                  {" "}
-                  <div className="p-2 rounded-lg bg-surface-container-high flex flex-col">
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      ON A ROLL
-                    </span>
-                    {" "}
-                    <span className="font-headline-sm text-headline-sm text-primary font-bold">
-                      🔥 7 Wins
-                    </span>
-                    {" "}
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      Active Run
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {" "}
-            {/* 3rd Place: Right Pedestal (Priya Sharma) */}
-            {" "}
-            <div className="order-3 md:order-3 flex flex-col items-center group">
-              <div className="relative mb-3 flex flex-col items-center">
-                <span className="px-space-xs py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider mb-2 font-bold">
-                  Rank #3
-                </span>
-                {" "}
-                <div className="relative w-20 h-20 rounded-2xl overflow-clip p-0.5 bg-gradient-to-b from-secondary-container via-surface-container to-surface-container-low shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                  <img className="w-full h-full object-cover rounded-xl" alt="Athletic South Asian woman with sleek high ponytail and intelligent focused gaze wearing black fitness gear in ambient moody violet gym locker area with soft neon studio lights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaTeMMEHRj8Y4FI3EfdT8pvWUdxo-raIqsWJVi8P-3ts4e-9Hy2oTlHmKrrWdU_d4nFVPtlc-kWfAKRbB89OcmkvaSfh-iFqliyflThVnVZYnoV1CYmNE-V_l2t4etEQF9NYIi0pdvztY08vA2R3JTUXd9VL6dnTNDdI9YlNneyncncc5_-UP6TXeVHUWSaCYsnz4lMMOrRftnkwoudsItEP_v2QibY-wi84DRtHld" />
-                </div>
-                {" "}
-                <span className="absolute -bottom-2 px-2 py-0.5 rounded-md bg-surface-container-highest text-secondary-fixed-dim font-label-sm text-label-sm font-bold shadow">
-                  BRONZE
-                </span>
-              </div>
-              {" "}
-              <div className="w-full bg-surface-container-low rounded-t-2xl p-space-md flex flex-col items-center text-center shadow-lg transition-transform group-hover:-translate-y-1">
-                <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                  Priya Sharma
-                </span>
-                {" "}
-                <span className="font-label-md text-label-md text-tertiary-fixed-dim uppercase tracking-wider mt-0.5">
-                  Statistical Menace
-                </span>
-                {" "}
-                <div className="my-space-sm w-full py-1.5 px-3 rounded-lg bg-surface-container-lowest flex items-center justify-between">
-                  <span className="font-label-sm text-label-sm text-on-surface-variant">
-                    {tab === "week" ? "WEEK" : tab === "all" ? "ALL-TIME" : "SEASON"} POOL
-                  </span>
-                  {" "}
-                  <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                    {pts("Priya Sharma")}{" "}
-                    <span className="text-xs text-secondary-fixed-dim font-mono">
-                      PTS
-                    </span>
-                  </span>
-                </div>
-                {" "}
-                <div className="w-full grid grid-cols-2 gap-1 text-left">
-                  <div className="p-1.5 rounded bg-surface-container-high/60 flex flex-col">
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      WIN RATE
-                    </span>
-                    {" "}
-                    <span className="font-label-md text-label-md text-on-surface font-semibold">
-                      61.2%{" "}
-                      <span className="text-[10px] text-on-surface-variant">
-                        (14-9)
-                      </span>
-                    </span>
-                  </div>
-                  {" "}
-                  <div className="p-1.5 rounded bg-surface-container-high/60 flex flex-col">
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      CURRENT FORM
-                    </span>
-                    {" "}
-                    <span className="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-0.5">
-                      ⚡ 1 Win
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* The Podium: top 3 from live standings */}
+        <Podium rows={rows} tab={tab} />
         {" "}
         {/* Bottom Section: Ranked Table (~65%) & Rivalries/Roasts (~35%) */}
         {" "}
@@ -338,7 +150,7 @@ export default function Leaderboard() {
               </div>
               {" "}
               <span className="font-label-sm text-label-sm text-on-surface-variant">
-                6 friends
+                {rows.length} friends
               </span>
             </div>
             {" "}
@@ -367,21 +179,19 @@ export default function Leaderboard() {
                       Streak
                     </th>
                     <th className="py-3 px-space-sm rounded-r-lg text-right">
-                      Dares
+                      In play
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y-0">
                   {rows.map((r, i) => (
-                    <tr key={r.name} className={ROW_STYLE[r.tone].row}>
+                    <tr key={r.id} className={ROW_STYLE[r.tone].row}>
                       <td className="py-3 px-space-sm font-label-md text-label-md font-bold">
                         <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md ${ROW_STYLE[r.tone].rank}`}>#{i + 1}</span>
                       </td>
                       <td className="py-3 px-space-sm">
                         <div className="flex items-center gap-space-xs">
-                          <div className={`w-7 h-7 rounded-lg overflow-clip flex items-center justify-center font-label-sm font-bold ${r.tone === "shame" ? "bg-secondary-container/40 text-secondary" : "bg-surface-container-highest text-on-surface-variant"}`}>
-                            {r.avatar ? <img className="w-full h-full object-cover" alt={r.name} src={r.avatar} /> : r.initials}
-                          </div>
+                          <Avatar name={r.name} src={r.avatar} size={28} />
                           <span className={`font-headline-sm text-sm font-bold ${r.tone === "shame" ? "text-secondary" : "text-on-surface"}`}>
                             {r.name}
                             {r.me && <span className="text-primary font-mono text-xs"> (You)</span>}
@@ -395,13 +205,14 @@ export default function Leaderboard() {
                         {r.points[tab].toLocaleString()}
                       </td>
                       <td className="py-3 px-space-sm text-center">
-                        <span className={`font-label-md text-label-md font-bold ${r.win[tab] >= 70 ? "text-primary" : r.win[tab] < 30 ? "text-secondary" : "text-on-surface"}`}>{r.win[tab]}%</span>
+                        <span className={`font-label-md text-label-md font-bold ${r.win >= 70 ? "text-primary" : r.win < 30 && r.record !== "0-0" ? "text-secondary" : "text-on-surface"}`}>{r.win}%</span>
+                        <span className="text-[10px] text-on-surface-variant"> ({r.record})</span>
                       </td>
                       <td className="py-3 px-space-sm text-center">
-                        <span className={`font-label-sm text-label-sm font-semibold whitespace-nowrap ${r.streak.startsWith("L") || r.streak.includes("L") ? "text-secondary" : "text-primary"}`}>{r.streakLabel}</span>
+                        <span className={`font-label-sm text-label-sm font-semibold whitespace-nowrap ${r.streak < 0 ? "text-secondary" : r.streak > 0 ? "text-primary" : "text-on-surface-variant"}`}>{r.streakLabel}</span>
                       </td>
-                      <td className={`py-3 px-space-sm text-right font-label-sm text-label-sm font-bold ${r.dares.includes("Owed") && !r.dares.startsWith("0") ? "text-secondary" : r.dares.includes("Done") ? "text-primary" : "text-on-surface-variant"}`}>
-                        {r.tone === "shame" ? <span className="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-bold whitespace-nowrap">{r.dares}</span> : r.dares}
+                      <td className="py-3 px-space-sm text-right font-label-sm text-label-sm font-bold text-on-surface-variant">
+                        {r.atRisk ? `${r.atRisk.toLocaleString()} pts` : "–"}
                       </td>
                     </tr>
                   ))}
@@ -594,5 +405,86 @@ export default function Leaderboard() {
       </div>
       {" "}
     </main>
+  );
+}
+
+const MEDAL = [
+  { order: "order-1 md:order-2 -mt-4", badge: "CHAMPION", rank: "Rank #1", size: 96 },
+  { order: "order-2 md:order-1", badge: "SILVER", rank: "Rank #2", size: 80 },
+  { order: "order-3 md:order-3", badge: "BRONZE", rank: "Rank #3", size: 80 },
+];
+
+/** Top three friends, champion in the middle. */
+function Podium({ rows, tab }: { rows: Row[]; tab: Tab }) {
+  return (
+    <section className="relative w-full mb-space-xl pt-space-lg">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md items-end max-w-5xl mx-auto">
+        {rows.slice(0, 3).map((r, i) => {
+          const m = MEDAL[i];
+          const first = i === 0;
+          return (
+            <div key={r.id} className={`${m.order} flex flex-col items-center group`}>
+              <div className="relative mb-3 flex flex-col items-center">
+                {first ? (
+                  <div className="w-10 h-10 rounded-full bg-tertiary-container/30 flex items-center justify-center text-xl mb-1 shadow-[0_0_24px_rgba(211,189,255,0.7)] animate-bounce">
+                    👑
+                  </div>
+                ) : (
+                  <span className="px-space-xs py-0.5 rounded-full bg-surface-bright text-on-surface font-label-sm text-label-sm uppercase tracking-wider mb-2 font-bold shadow-sm">
+                    {m.rank}
+                  </span>
+                )}
+                <div
+                  className={`relative rounded-2xl overflow-clip p-1 ${
+                    first
+                      ? "bg-gradient-to-tr from-primary via-tertiary to-primary-container shadow-[0_0_30px_rgba(52,211,153,0.23)]"
+                      : "bg-gradient-to-b from-surface-bright via-surface-container to-surface-container-low shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+                  }`}
+                >
+                  <Avatar name={r.name} src={r.avatar} size={m.size - 8} className="rounded-xl!" />
+                </div>
+                <span
+                  className={`absolute -bottom-2 px-2 py-0.5 rounded-md font-label-sm text-label-sm font-bold shadow ${
+                    first ? "bg-primary-container text-on-primary rounded-full" : "bg-surface-container-highest text-on-surface"
+                  }`}
+                >
+                  {m.badge}
+                </span>
+              </div>
+              <div
+                className={`w-full rounded-t-2xl p-space-md flex flex-col items-center text-center shadow-lg transition-transform group-hover:-translate-y-1 ${
+                  first ? "bg-surface-container pb-space-lg" : "bg-surface-container-low"
+                }`}
+              >
+                <div className="flex items-center gap-1">
+                  <span className="font-headline-sm text-headline-sm text-on-surface font-bold">{r.name}</span>
+                  {r.me && <span className="font-label-sm text-label-sm text-primary font-bold">(You)</span>}
+                </div>
+                <span className="font-label-md text-label-md text-secondary-fixed-dim uppercase tracking-wider mt-0.5">{r.title}</span>
+                <div className="my-space-sm w-full py-1.5 px-3 rounded-lg bg-surface-container-lowest flex items-center justify-between">
+                  <span className="font-label-sm text-label-sm text-on-surface-variant">{POOL_LABEL[tab]}</span>
+                  <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                    {tab !== "season" && r.points[tab] > 0 ? "+" : ""}
+                    {r.points[tab].toLocaleString()} <span className="text-xs text-primary font-mono">PTS</span>
+                  </span>
+                </div>
+                <div className="w-full grid grid-cols-2 gap-1 text-left">
+                  <div className="p-1.5 rounded bg-surface-container-high/60 flex flex-col">
+                    <span className="font-label-sm text-label-sm text-on-surface-variant">WIN RATE</span>
+                    <span className="font-label-md text-label-md text-on-surface font-semibold">
+                      {r.win}% <span className="text-[10px] text-on-surface-variant">({r.record})</span>
+                    </span>
+                  </div>
+                  <div className="p-1.5 rounded bg-surface-container-high/60 flex flex-col">
+                    <span className="font-label-sm text-label-sm text-on-surface-variant">STREAK</span>
+                    <span className={`font-label-md text-label-md font-bold ${r.streak < 0 ? "text-secondary" : "text-primary"}`}>{r.streakLabel}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
