@@ -144,3 +144,23 @@ export function recordsFromViews(bets: BetView[]): SettledRecord[] {
       : []
   );
 }
+
+/**
+ * Insert an estimate in time order (after anything at the same instant). Estimates
+ * are stamped with when their inputs were read, so a slow model call that finishes
+ * late can't jump ahead of a newer estimate. Returns true if it became the latest.
+ */
+export function insertByTime<T extends { at: string }>(list: T[], item: T) {
+  let i = list.length;
+  while (i > 0 && list[i - 1].at > item.at) i--;
+  list.splice(i, 0, item);
+  return i === list.length - 1;
+}
+
+/** Scale chances to whole numbers that add up to exactly 100 (each at least 1). */
+export function normalizeChances(chances: number[]) {
+  const total = chances.reduce((a, b) => a + b, 0) || 1;
+  const scaled = chances.map((c) => Math.max(1, Math.round((c / total) * 100)));
+  scaled[scaled.indexOf(Math.max(...scaled))] += 100 - scaled.reduce((a, b) => a + b, 0);
+  return scaled;
+}

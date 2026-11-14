@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { liveStatus, useBookie } from "../BookieProvider";
 import Avatar from "../Avatar";
+import BookieLineCard from "../BookieLineCard";
 import BookieMark, { UncertaintyMeter } from "./BookieMark";
 import { sideTone } from "./TradePanel";
 import { aiP, aiSource, payoutMultiple } from "@/lib/bets/market";
@@ -66,6 +67,9 @@ export default function MarketCard({ bet, now, onPick }: { bet: BetView; now: nu
           <UncertaintyMeter level={bet.odds.uncertainty} compact />
         </div>
       )}
+
+      {/* The Bookie's opening line: "thinking" while the agent runs, then its roast or take */}
+      {status !== "settled" && <BookieLineCard bet={bet} compact />}
 
       {/* Outcomes */}
       {binary ? (

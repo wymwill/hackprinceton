@@ -64,6 +64,10 @@ export type OddsEstimate = {
   citedEvidenceIds: string[];
   /** Set when Claude was asked but failed, so this is the history-only fallback. */
   fallbackReason?: string;
+  /** How Claude produced it: the opening-line Deep Agent, or a single structured call (later updates). */
+  via?: "deep-agent" | "structured";
+  /** The opening line's roast, when the Deep Agent set it. */
+  roast?: string;
 };
 
 export type Evidence = {
@@ -125,6 +129,21 @@ export type AuditEntry = {
   refs?: string[];
 };
 
+/**
+ * The AI Bookie's opening line on a bet. Advisory only: payouts still come from
+ * the pool, so this never moves points. `chances` lines up with `outcomes`.
+ */
+export type BookieLine = {
+  status: "thinking" | "ready";
+  /** "ai" when the agent answered, "formula" when it fell back to track records alone. */
+  source?: "ai" | "formula";
+  chances?: number[];
+  take?: string;
+  roast?: string;
+  model?: string;
+  at: string;
+};
+
 export type BetView = {
   id: string;
   groupId: string;
@@ -150,6 +169,8 @@ export type BetView = {
   evidence: Evidence[];
   reviews: Review[];
   audit: AuditEntry[];
+  /** The AI Bookie's opening line (Deep Agent), with its take and roast. Advisory only. */
+  bookie?: BookieLine;
 };
 
 export type UserStats = {

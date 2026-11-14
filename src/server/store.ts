@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { AuditEntry, Entry, OddsEstimate, Outcome, Receipt, Review } from "@/lib/bets/types";
+import type { AuditEntry, BookieLine, Entry, OddsEstimate, Outcome, Receipt, Review } from "@/lib/bets/types";
 
 /**
  * Bookie's persistence: one JSON file on disk, written atomically.
@@ -34,6 +34,8 @@ export type Bet = {
   receiptId?: string;
   subjectId?: string;
   odds: OddsEstimate[];
+  /** The AI Bookie's opening line (see src/server/ai/bookie.ts). Never moves points. */
+  bookie?: BookieLine;
 };
 
 /** Stored evidence. Images live on disk next to the database; `file` is relative to it. */

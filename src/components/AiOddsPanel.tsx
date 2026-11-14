@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { aiP, aiSource } from "@/lib/bets/market";
+import { TRIGGER_TEXT, aiP, aiSource, openingEstimate } from "@/lib/bets/market";
 import { ago, useNow } from "@/lib/bets/format";
 import type { BetView } from "@/lib/bets/types";
 import { useBookie } from "./BookieProvider";
@@ -23,6 +23,9 @@ export default function AiOddsPanel({ bet }: { bet: BetView }) {
   const stats = [...bet.oddsHistory].reverse().find((o) => o.source === "stats");
   const cited = new Set(est.citedFactIds);
   const evidenceCount = bet.evidence.filter((e) => est.citedEvidenceIds.includes(e.id)).length;
+  const opening = openingEstimate(bet);
+  const first = bet.outcomes[0];
+  const moved = opening && opening.id !== est.id ? { from: aiP(bet, first.id, opening), to: aiP(bet, first.id, est) } : null;
 
   const rerun = async () => {
     setBusy(true);
@@ -43,6 +46,15 @@ export default function AiOddsPanel({ bet }: { bet: BetView }) {
         <span className="ml-auto font-label-sm text-[11px] text-on-surface-variant">updated {ago(est.at, now || Date.parse(est.at))}</span>
       </div>
 
+      <p className="font-label-sm text-label-sm text-on-surface-variant">
+        {TRIGGER_TEXT[est.trigger]}.
+        {moved && (
+          <>
+            {" "}
+            Opened at <b className="text-tertiary">{moved.from}%</b> {first.label}, now <b className="text-tertiary">{moved.to}%</b>.
+          </>
+        )}
+      </p>
       <p className="font-body-md text-body-md text-on-surface">{est.explanation}</p>
 
       {src.fallback && "reason" in src && (
