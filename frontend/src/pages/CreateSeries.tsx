@@ -10,8 +10,8 @@ import type { BetDraft, Mode, Settings } from "../lib/types.ts";
 
 const MODES: { mode: Mode; letter: string; blurb: string }[] = [
   { mode: "money", letter: "A", blurb: "Real money. Preview only." },
-  { mode: "pledge", letter: "B", blurb: "Each player pledges a favor." },
-  { mode: "pool", letter: "C", blurb: "Winners pick from a shared pool." },
+  { mode: "pledge", letter: "B", blurb: "Each player pledges a punishment." },
+  { mode: "pool", letter: "C", blurb: "Winners pick from a shared punishment pool." },
 ];
 
 function Seg<T extends string | number | boolean>({
@@ -163,16 +163,16 @@ export default function CreateSeries() {
                 </>
               )}
               {st.mode === "pledge" && (
-                <p className="hint">Each player writes their favor in the lobby.</p>
+                <p className="hint">Each player writes their punishment in the lobby.</p>
               )}
               {st.mode === "pool" && (
                 <div className="two-col">
                   <label className="field">
-                    <span>Favors per player</span>
+                    <span>Punishments per player</span>
                     <input className="input" type="number" min={1} max={5} value={st.favorsPerPlayer} onChange={(e) => set("favorsPerPlayer", Number(e.target.value))} />
                   </label>
                   <div className="field">
-                    <span>Favor pool</span>
+                    <span>Punishment pool</span>
                     <Seg
                       value={st.exclusivePool}
                       onChange={(v) => set("exclusivePool", v)}
@@ -183,7 +183,7 @@ export default function CreateSeries() {
                     />
                   </div>
                   <p className="hint" style={{ gridColumn: "1 / -1" }}>
-                    1st picks for last, 2nd for second-to-last. {st.exclusivePool ? "Each favor is used once." : "Favors can repeat."}
+                    1st picks for last, 2nd for second-to-last. {st.exclusivePool ? "Each punishment is used once." : "Punishments can repeat."}
                   </p>
                 </div>
               )}
