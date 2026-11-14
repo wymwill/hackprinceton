@@ -2,7 +2,8 @@ import { useState } from "react";
 import { standings } from "../lib/rules.ts";
 import { fmt, signed } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "../lib/types.ts";
+import type { Bet, BetDraft, Series } from "../lib/types.ts";
+import OutcomeEditor, { newDraft, outcomeProblem } from "./OutcomeEditor.tsx";
 import { Modal, Who } from "./ui.tsx";
 
 /** Ranked by settled coins; the dashed line marks where the bottom X start. */
@@ -39,29 +40,58 @@ export function StandingsTable({ s, compact = false }: { s: Series; compact?: bo
   );
 }
 
-export function NewBetModal({ s, onClose }: { s: Series; onClose: () => void }) {
+/**
+ * Write a bet, or edit a draft one (`bet`). YES/NO or multiple choice. Drafts can
+ * change freely; once betting on a bet opens, its outcomes lock.
+ */
+export function NewBetModal({ s, bet, onClose }: { s: Series; bet?: Bet; onClose: () => void }) {
   const { api } = useStore();
-  const [q, setQ] = useState("");
+  const [draft, setDraft] = useState<BetDraft>(() =>
+    bet
+      ? {
+          question: bet.question,
+          kind: bet.kind,
+          outcomes: bet.kind === "multi" ? bet.outcomes.map((o) => ({ id: o.id, label: o.label })) : [{ label: "" }, { label: "" }],
+          tieRule: bet.tieRule,
+        }
+      : newDraft()
+  );
   const left = s.settings.betCount - s.bets.length;
+  const problem = draft.question.trim().length < 3 ? "Write the question (at least 3 characters)." : outcomeProblem(draft);
+  const opensNow = !bet && s.status !== "lobby";
   return (
-    <Modal kicker={s.status === "lobby" ? "Write a bet" : "New bet · opens now"} title="YES or NO?" onClose={onClose}>
+    <Modal kicker={bet ? "Edit draft bet" : s.status === "lobby" ? "Write a bet" : "New bet · opens now"} title={bet ? "Edit bet" : "New bet"} onClose={onClose}>
       <form
         className="stack"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (await api.addBet(s.id, q, s.status === "lobby" ? "Bet written." : "Bet is open.")) onClose();
+          if (problem) return;
+          const ok = bet
+            ? await api.updateBet(s.id, bet.id, draft, "Bet updated.")
+            : await api.addBet(s.id, draft, s.status === "lobby" ? "Bet written." : "Bet is open.");
+          if (ok) onClose();
         }}
       >
         <label className="field">
           <span>Question</span>
-          <textarea className="input" value={q} onChange={(e) => setQ(e.target.value)} maxLength={300} placeholder="Placeholder placeholder?" autoFocus />
+          <textarea
+            className="input"
+            value={draft.question}
+            onChange={(e) => setDraft({ ...draft, question: e.target.value })}
+            maxLength={300}
+            placeholder={draft.kind === "multi" ? "Who will score highest on the midterm?" : "Will Sam hit the gym 5 times this week?"}
+            autoFocus
+          />
         </label>
+        <OutcomeEditor value={draft} onChange={setDraft} idPrefix={bet ? `edit-${bet.id}` : "new-bet"} />
         <p className="hint">
-          {left} of {s.settings.betCount} bet{s.settings.betCount === 1 ? "" : "s"} left to write. You decide the result
-          later, even if you're playing.
+          {bet
+            ? "Players see the changes right away. Once betting on this bet opens, its outcomes can't change."
+            : `${left} of ${s.settings.betCount} bet${s.settings.betCount === 1 ? "" : "s"} left to write. You decide the result later, even if you're playing.`}
+          {opensNow && " This bet opens as soon as you add it, so its outcomes lock immediately."}
         </p>
-        <button className="btn primary" disabled={q.trim().length < 3}>
-          {s.status === "lobby" ? "Add to series" : "Open bet"}
+        <button className="btn primary" disabled={!!problem} title={problem ?? undefined}>
+          {bet ? "Save changes" : s.status === "lobby" ? "Add to series" : "Open bet"}
         </button>
       </form>
     </Modal>

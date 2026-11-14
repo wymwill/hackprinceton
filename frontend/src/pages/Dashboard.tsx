@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { NewBetModal, StandingsTable } from "../components/Standings.tsx";
-import { ConfirmButton, Empty, Panel, Pill, PoolBar } from "../components/ui.tsx";
-import { balances, isParticipant, pools, standings } from "../lib/rules.ts";
+import { ConfirmButton, Empty, OutcomeTag, Panel, Pill, PoolBar } from "../components/ui.tsx";
+import { balances, isParticipant, leader, resultText, shares, standings } from "../lib/rules.ts";
 import { ago, fmt, ordinal, signed } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Bet, Series } from "../lib/types.ts";
@@ -17,7 +17,10 @@ const STATUS: Record<Bet["status"], string> = {
 
 export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
   const { me } = useStore();
-  const p = pools(bet);
+  const p = shares(bet);
+  const top = leader(bet);
+  const binary = bet.kind === "binary";
+  const yes = p.list[0];
   const mine = bet.wagers.find((w) => w.userId === me);
   const result = bet.results?.find((r) => r.userId === me);
   const href = `/s/${s.id}/bets/${bet.id}`;
@@ -30,15 +33,25 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
             <Link to={href}>{bet.question}</Link>
           </h3>
         </div>
-        <div className="chance">
+        <div className="chance" title="Share of the coins in the pool, not a probability">
           <div className="v">
-            {p.yesPct}
-            <small>%</small>
+            {!p.total ? "–" : binary ? yes.pct : top!.pct}
+            {p.total > 0 && <small>%</small>}
           </div>
-          <div className="cap">on yes</div>
+          <div className="cap">{!p.total ? (binary ? "no coins yet" : `${bet.outcomes.length} options`) : binary ? "of pool on yes" : `of pool on ${top!.label}`}</div>
         </div>
       </div>
       <PoolBar bet={bet} />
+      {!binary && (
+        <ul className="ochips" aria-label="Outcomes and their share of the pool">
+          {p.list.map((o) => (
+            <li key={o.id} style={{ "--oc": o.color } as CSSProperties}>
+              <span className="lbl">{o.label}</span>
+              <span className="num">{p.total ? `${o.pct}%` : "–"}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="meta">
         <span>
           Pool <b>{fmt(p.total)}</b>
@@ -49,7 +62,7 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
         <span>
           {mine ? (
             <>
-              You <b className={mine.side === "yes" ? "yes-t" : "no-t"}>{fmt(mine.amount)} {mine.side.toUpperCase()}</b>
+              You <b className="num">{fmt(mine.amount)}</b> <OutcomeTag bet={bet} id={mine.outcomeId} />
             </>
           ) : (
             <>
@@ -58,23 +71,30 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
           )}
         </span>
       </div>
-      {bet.status === "open" && isParticipant(s, me) ? (
+      {bet.status === "open" && isParticipant(s, me) && binary ? (
         <div className="yn">
-          <Link className="y" to={`${href}?side=yes`}>
-            Yes <span className="num">{fmt(p.yes)}</span>
+          <Link className="y" to={`${href}?outcome=${p.list[0].id}`}>
+            Yes <span className="num">{fmt(p.list[0].pool)}</span>
           </Link>
-          <Link className="n" to={`${href}?side=no`}>
-            No <span className="num">{fmt(p.no)}</span>
+          <Link className="n" to={`${href}?outcome=${p.list[1].id}`}>
+            No <span className="num">{fmt(p.list[1].pool)}</span>
           </Link>
         </div>
+      ) : bet.status === "open" && isParticipant(s, me) ? (
+        <Link to={href} className="settled pick">
+          <span>{mine ? "Add to your pick" : `Pick one of ${bet.outcomes.length}`}</span>
+          <span>Bet →</span>
+        </Link>
       ) : bet.status === "resolved" ? (
         <div className="settled">
           <span>
-            {bet.outcome ? (
+            {bet.outcomeId ? (
               <>
-                Result <b className={bet.outcome === "yes" ? "yes-t" : "no-t"}>{bet.outcome.toUpperCase()}</b>
+                Result <OutcomeTag bet={bet} id={bet.outcomeId} />
                 {bet.refunded && <span className="dim"> · refunded</span>}
               </>
+            ) : bet.tiedOutcomeIds?.length ? (
+              `${resultText(bet)} · refunded`
             ) : (
               "One-sided · refunded"
             )}
