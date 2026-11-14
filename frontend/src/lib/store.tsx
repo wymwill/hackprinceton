@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import SignIn from "../pages/SignIn.tsx";
+import { rangesOf } from "./ranges.ts";
 import { supabase } from "./supabase.ts";
 import type { AppState, BetDraft, Db, Id, Me, Series, Settings } from "./types.ts";
 
@@ -47,11 +48,16 @@ type Act = <T = unknown>(method: "POST" | "PATCH" | "DELETE", path: string, body
 
 export type CreateSeriesInput = { name: string; description: string; settings: Settings; bets: BetDraft[] };
 
+/** The range part of a draft as the API wants it. */
+const rangeBody = (d: BetDraft) => ({ kind: "range", ranges: rangesOf(d.range), unit: d.range.unit.trim(), decimals: d.range.decimals });
+
 /** A draft as the API wants it. YES/NO bets send no outcomes. */
 const betBody = (d: BetDraft) =>
-  d.kind === "multi"
-    ? { question: d.question.trim(), outcomes: d.outcomes.map((o) => o.label.trim()), tieRule: d.tieRule }
-    : { question: d.question.trim() };
+  d.kind === "range"
+    ? { question: d.question.trim(), ...rangeBody(d) }
+    : d.kind === "multi"
+      ? { question: d.question.trim(), outcomes: d.outcomes.map((o) => o.label.trim()), tieRule: d.tieRule }
+      : { question: d.question.trim() };
 
 const STAKE_MODE: Record<Settings["mode"], string> = { pool: "SHARED_FAVOR_POOL", pledge: "PLEDGE", money: "MONEY" };
 
@@ -100,9 +106,11 @@ function makeApi(act: Act) {
       act(
         "PATCH",
         b(id, betId),
-        d.kind === "multi"
-          ? { question: d.question.trim(), kind: "multi", outcomes: d.outcomes.map((o) => ({ id: o.id, label: o.label.trim() })), tieRule: d.tieRule }
-          : { question: d.question.trim(), kind: "binary" },
+        d.kind === "range"
+          ? { question: d.question.trim(), ...rangeBody(d) }
+          : d.kind === "multi"
+            ? { question: d.question.trim(), kind: "multi", outcomes: d.outcomes.map((o) => ({ id: o.id, label: o.label.trim() })), tieRule: d.tieRule }
+            : { question: d.question.trim(), kind: "binary" },
         ok
       ),
     removeDraftBet: (id: Id, betId: Id, ok?: string) => act("DELETE", b(id, betId), undefined, ok),
@@ -113,6 +121,8 @@ function makeApi(act: Act) {
     resolveBet: (id: Id, betId: Id, outcomeId: Id, ok?: string) => act("POST", `${b(id, betId)}/resolve`, { outcomeId }, ok),
     /** Multiple-choice only: these outcomes tied. The bet's tie rule decides the result. */
     resolveTie: (id: Id, betId: Id, tiedOutcomeIds: Id[], ok?: string) => act("POST", `${b(id, betId)}/resolve`, { tiedOutcomeIds }, ok),
+    /** Range bets: the measured value. The server picks the range holding it. */
+    resolveValue: (id: Id, betId: Id, value: number, ok?: string) => act("POST", `${b(id, betId)}/resolve`, { value }, ok),
     cancelBet: (id: Id, betId: Id, ok?: string) => act("POST", `${b(id, betId)}/cancel`, undefined, ok),
     completeSeries: (id: Id, ok?: string) => act("POST", `${s(id)}/complete`, undefined, ok),
     chooseFavor: (id: Id, loserId: Id, favorId: Id, ok?: string) => act("POST", `${s(id)}/favors/assign`, { loserId, favorId }, ok),

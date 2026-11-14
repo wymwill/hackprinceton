@@ -1,6 +1,6 @@
 # Alea
 
-Friend groups compete over a **series** of bets with virtual coins: YES/NO, or multiple choice with 2 to 10 outcomes the host names. Whoever finishes at the bottom owes a favor: one they pledged, or one the winners pick from a shared pool. No money moves.
+Friend groups compete over a **series** of bets with virtual coins: YES/NO, multiple choice with 2 to 10 outcomes the host names, or numerical ranges ("tomorrow's high: below 60°F, 60–64°F, …") settled by entering the measured value. Whoever finishes at the bottom owes a favor: one they pledged, or one the winners pick from a shared pool. No money moves.
 
 - **Screens:** `frontend/`, a React app (Vite, React Router). See [frontend/README.md](frontend/README.md).
 - **API:** the Next.js app in `src/app/api/series`, which calls Supabase.
@@ -49,6 +49,7 @@ npm run typecheck        # Next app and frontend
 npm run lint
 npm run test:series-sql      # the SQL rules, on an in-memory Postgres (incl. multiple-choice bets and the 0009 upgrade)
 npm run test:outcomes-local  # multiple-choice bets over HTTP, against the local Supabase stand-in (see the script header)
+npm run test:ranges-local    # numerical range bets over HTTP, same setup
 npm run test:series          # API end to end against the real Supabase project (needs .supabase-test-secret)
 ```
 

@@ -4,6 +4,7 @@ import { ConfirmButton, OutcomeTag, Panel, Pill, PoolBar, Who } from "../compone
 import { balances, findOutcome, isParticipant, labelOf, leader, payoutIfWins, resultText, shares, TIE_RULE_TEXT, withdrawUntil } from "../lib/rules.ts";
 import { ago, countdown, fmt, signed, useNow } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
+import { fmtValue, parseNum, rangeFor, rangeRule } from "../lib/ranges.ts";
 import type { Bet, Id, Series } from "../lib/types.ts";
 
 /** YES/NO keep their yes/no styling; other outcomes use their own color (--oc). */
@@ -82,7 +83,10 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
               disabled={!!mine && mine.outcomeId !== o.id}
               onClick={() => setPick(o.id)}
             >
-              <span className="lbl">{o.label}</span>
+              <span className="lbl">
+                {o.label}
+                {bet.kind === "range" && <small className="rule">{rangeRule(o.lower ?? null, o.upper ?? null, bet.unit ?? "", bet.decimals ?? 0)}</small>}
+              </span>
               <span className="num">{total ? `${o.pct}%` : "–"}</span>
             </button>
           ))}
@@ -178,6 +182,53 @@ function TieReport({ s, bet }: { s: Series; bet: Bet }) {
   );
 }
 
+/** Range bets: the host types the measured value; the range holding it wins. No picking by hand. */
+function RangeSettle({ s, bet }: { s: Series; bet: Bet }) {
+  const { api } = useStore();
+  const [raw, setRaw] = useState("");
+  const unit = bet.unit ?? "";
+  const decimals = bet.decimals ?? 0;
+  const value = parseNum(raw);
+  const tooPrecise = value !== null && (raw.trim().split(".")[1] ?? "").length > decimals;
+  const hit = value !== null && !tooPrecise ? rangeFor(bet, value) : undefined;
+  const shown = value !== null ? fmtValue(value, unit, decimals) : "";
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <label className="field">
+        <span>Actual result{unit ? ` (${unit})` : ""}</span>
+        <input
+          className="input"
+          inputMode="decimal"
+          value={raw}
+          placeholder={decimals ? (72).toFixed(decimals) : "72"}
+          onChange={(e) => setRaw(e.target.value)}
+          aria-describedby={`settle-${bet.id}`}
+        />
+      </label>
+      <p id={`settle-${bet.id}`} className={value === null || tooPrecise ? "hint" : hit ? "hint" : "hint warn"} role="status">
+        {raw.trim() === ""
+          ? `Enter the measured number${decimals ? ` to ${decimals} decimal place${decimals === 1 ? "" : "s"}` : ""}. The matching range is picked automatically.`
+          : value === null
+            ? "That isn't a number."
+            : tooPrecise
+              ? `This bet is measured to ${decimals} decimal place${decimals === 1 ? "" : "s"}.`
+              : hit
+                ? <>
+                    {shown} falls in <b>{hit.label}</b>.
+                  </>
+                : `${shown} is outside every range, so everyone gets their coins back.`}
+      </p>
+      <ConfirmButton
+        className="btn"
+        disabled={value === null || tooPrecise}
+        label={value === null || tooPrecise ? "Settle" : `Settle at ${shown}`}
+        confirm={hit ? `Confirm ${shown} → ${hit.label}` : `Confirm ${shown} (refund everyone)`}
+        onConfirm={() => api.resolveValue(s.id, bet.id, value!, hit ? `Result ${shown}: ${hit.label} wins.` : `Result ${shown}: outside every range, coins returned.`)}
+      />
+    </div>
+  );
+}
+
 function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
   const { api } = useStore();
   if (bet.status !== "open" && bet.status !== "closed") return null;
@@ -191,10 +242,13 @@ function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
             <button type="button" className="btn" onClick={() => api.lockBet(s.id, bet.id, "Betting locked.")}>
               Lock betting
             </button>
-            <p className="hint">Stops new wagers. If every coin is on one outcome, locking refunds them right away.</p>
+            <p className="hint">Stops new wagers. If every coin is on one {bet.kind === "range" ? "range" : "outcome"}, locking refunds them right away.</p>
           </>
         )}
         <span className="cap">Resolve: what happened?</span>
+        {bet.kind === "range" ? (
+          <RangeSettle s={s} bet={bet} />
+        ) : (
         <div className={binary ? "resolve-grid" : "resolve-list"}>
           {list.map((o, i) => (
             <ConfirmButton
@@ -207,7 +261,8 @@ function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
             />
           ))}
         </div>
-        {!binary && <TieReport s={s} bet={bet} />}
+        )}
+        {bet.kind === "multi" && <TieReport s={s} bet={bet} />}
         <ConfirmButton
           className="btn danger"
           label="Cancel bet"
@@ -240,7 +295,8 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
             <Pill kind={bet.status}>{bet.status === "closed" ? "Betting locked" : bet.status}</Pill>
             <span className="cap">
               Bet {index} of {s.settings.betCount}
-              {!binary && ` · ${bet.outcomes.length} options`}
+              {bet.kind === "multi" && ` · ${bet.outcomes.length} options`}
+              {bet.kind === "range" && ` · ${bet.outcomes.length} ranges${bet.unit ? ` in ${bet.unit}` : ""}`}
             </span>
           </span>
           <h1 style={{ marginTop: 14 }}>{bet.question}</h1>
@@ -265,7 +321,13 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
               </span>
             )}
           </div>
-          {!binary && <p className="hint" style={{ marginTop: 8 }}>{TIE_RULE_TEXT[bet.tieRule]}</p>}
+          {bet.kind === "multi" && <p className="hint" style={{ marginTop: 8 }}>{TIE_RULE_TEXT[bet.tieRule]}</p>}
+          {bet.kind === "range" && (
+            <p className="hint" style={{ marginTop: 8 }}>
+              Each range includes its lower number and stops just before the next. The host enters the measured result
+              {bet.decimals ? ` (to ${bet.decimals} decimal place${bet.decimals === 1 ? "" : "s"})` : ""} and the range holding it wins.
+            </p>
+          )}
         </div>
         {(bet.status === "open" || bet.status === "closed") && (
         <div className="readout" title="Share of the coins in the pool, not a probability">
@@ -286,7 +348,14 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
                 {winner ? winner.label : tied.length ? "Tie" : "Refunded"}
               </span>
               <span className="lead">
-                {tied.length
+                {bet.kind === "range" && bet.resultValue != null
+                  ? `Result: ${fmtValue(Number(bet.resultValue), bet.unit ?? "", bet.decimals ?? 0)}. ` +
+                    (!winner
+                      ? "That's outside every range, so every coin went back."
+                      : bet.refunded
+                        ? "Nobody was on another range, so every coin went back."
+                        : "Winners split the pool in proportion to their stakes.")
+                  : tied.length
                   ? bet.outcomeId
                     ? `${tied.map((id) => labelOf(bet, id)).join(" and ")} tied. ${labelOf(bet, bet.outcomeId)} was listed first, so it wins.` +
                       (bet.refunded ? " Nobody was on it alone, so every coin went back." : "")
