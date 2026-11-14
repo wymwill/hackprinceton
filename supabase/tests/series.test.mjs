@@ -155,6 +155,32 @@ describe("the lobby", () => {
     assert.equal(v.members.find((m) => m.userId === ben.id).ready, false);
   });
 
+  test("pledge mode: changing or taking back a pledge un-readies everyone, so nobody starts on stakes they didn't see", async () => {
+    const p = await create(ana, { mode: "PLEDGE" });
+    await join(ben, p.id);
+    await join(cat, p.id);
+    for (const who of [ana, ben, cat]) await favor(who, p.id, `${who.name}'s pledge`);
+    for (const who of [ana, ben, cat]) await ready(who, p.id);
+    assert.ok((await view(ana, p.id)).members.every((m) => m.ready));
+
+    // Ben swaps his pledge at the last minute: everyone has to look again.
+    await favor(ben, p.id, "Something much easier");
+    let v = await view(ana, p.id);
+    assert.ok(v.members.every((m) => !m.ready));
+    assert.match(v.activity[0].text, /Ben changed their pledge to "Something much easier"\. Everyone needs to say ready again/);
+    await rejects(start(ana, p.id), "not_ready");
+
+    // Everyone re-readies; then Cat takes hers back: same again.
+    for (const who of [ana, ben, cat]) await ready(who, p.id);
+    const catFavor = (await view(cat, p.id)).favors.find((f) => f.authorId === cat.id);
+    await cat.rpc("withdraw_series_favor", { p_favor_id: catFavor.id });
+    v = await view(ana, p.id);
+    assert.ok(v.members.every((m) => !m.ready));
+    assert.match(v.activity[0].text, /Cat took back their pledge/);
+    // Every pledge shows who made it.
+    assert.deepEqual(v.favors.map((f) => [f.authorId, f.text]).sort(), [[ana.id, "Ana's pledge"], [ben.id, "Something much easier"]].sort());
+  });
+
   test("pledge mode replaces your one pledge; money mode has no favors", async () => {
     const p = await create(ana, { mode: "PLEDGE" });
     await favor(ana, p.id, "First pledge");

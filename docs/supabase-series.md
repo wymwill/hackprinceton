@@ -24,7 +24,7 @@ Never use the `service_role` / secret key in either app. Only `scripts/e2e-serie
 
 ## Set up the project
 
-1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0010_range_bets.sql` (numerical ranges) is the newest; `0009_multi_outcome_bets.sql` adds multiple-choice bets, and `0007_full_bet_series_rules.sql` holds most of the rules. Each upgrades existing data in place: 0007 for data made with 0001–0006, 0009 turns every existing bet into a YES/NO bet with outcome ids, and 0010 leaves existing bets as they are (all tested in `supabase/tests/upgrade.test.mjs`).
+1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0011_pledge_changes_reset_ready.sql` is the newest; `0009_multi_outcome_bets.sql` adds multiple-choice bets, `0010_range_bets.sql` numerical ranges, and `0007_full_bet_series_rules.sql` holds most of the rules. Each upgrades existing data in place: 0007 for data made with 0001–0006, 0009 turns every existing bet into a YES/NO bet with outcome ids, and 0010 leaves existing bets as they are (all tested in `supabase/tests/upgrade.test.mjs`).
 2. **Turn on sign-in methods** (Authentication → Sign In / Providers). Email with password works with no setup. For Google, follow `docs/supabase-setup.md`.
 3. **Allow the redirect URLs** (Authentication → URL Configuration): add `http://localhost:3000/**`, and `https://<your-domain>/**` once deployed.
 4. Run it:
@@ -67,7 +67,7 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
 ## Rules the SQL enforces
 
 - **Modes.** Shared favor pool (C), self-pledged favors (B), real money (A, recorded only, nothing is charged).
-- **Lobby.** Joining is idempotent. The host can kick and players can leave until start. In a shared pool each player adds 1 to `favorsPerPlayer` favors. Any change to the pool resets everyone's ready. Ready requires your own favor, and in a shared pool it agrees to every favor in it.
+- **Lobby.** Joining is idempotent. The host can kick and players can leave until start. In a shared pool each player adds 1 to `favorsPerPlayer` favors. Any change to the pool, or to anyone's pledge in pledge mode, resets everyone's ready (0011), and the activity feed says who changed what. Every favor shows who added or pledged it. Ready requires your own favor, and in a shared pool it agrees to every favor in it.
 - **Start.** Blockers, in order:
   - at least 2 players;
   - a shared pool needs 2X players, other modes more than X;
