@@ -107,6 +107,18 @@ async function emptyPhase() {
   const code = s.group.inviteCode;
   const code1 = (await p1.state(g1id)).group.inviteCode;
   check("invite codes are 8 characters", /^[A-HJ-NP-Z2-9]{8}$/.test(code1), code1);
+
+  // Invite links: /join/<code> previews the group before anyone joins.
+  const pv = await p4.state(); // p4 isn't in any group yet
+  const preview = await fetch(`${BASE}/api/invites/${code1}`, { headers: { cookie: "bwf_user=p4" } }).then((r) => r.json().then((j) => ({ status: r.status, ...j })));
+  check("an invite preview shows the group to a non member", preview.status === 200 && preview.result.name === "Tokens Club" && preview.result.alreadyMember === false && preview.result.members.length === 1, preview);
+  check("previewing an invite doesn't join the group", (await p4.state()).groups.length === pv.groups.length);
+  const lower = await fetch(`${BASE}/api/invites/${code1.toLowerCase()}`, { headers: { cookie: "bwf_user=p4" } });
+  check("invite codes in links aren't case sensitive", lower.status === 200);
+  const ownPreview = await fetch(`${BASE}/api/invites/${code1}`, { headers: { cookie: "bwf_user=p1" } }).then((r) => r.json());
+  check("the preview knows when you're already in", ownPreview.result?.alreadyMember === true, ownPreview);
+  check("a bad invite code gives 404", (await fetch(`${BASE}/api/invites/NOPE2345`)).status === 404);
+  check("the join page loads", (await fetch(`${BASE}/join/${code1}`)).status === 200);
   await p3.post("/api/groups/join", { code: code1 });
   const again = await p3.post("/api/groups/join", { code: code1 });
   check("joining twice gives 409 already_member", again.status === 409 && again.error.code === "already_member", again);

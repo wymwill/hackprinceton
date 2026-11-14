@@ -184,7 +184,7 @@ export default function AppProvider({ children }: { children: React.ReactNode })
           onClose={() => setModal(null)}
           onCreated={(id) => {
             setModal(null);
-            toast("Group created. Share the invite code from Settings.");
+            toast("Group created. Tap Invite to share the link.");
             router.push(`/g/${id}`);
           }}
         />
