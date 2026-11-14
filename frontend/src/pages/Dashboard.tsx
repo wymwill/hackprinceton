@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { NewBetModal, StandingsTable } from "../components/Standings.tsx";
 import { ConfirmButton, Empty, Panel, Pill, PoolBar } from "../components/ui.tsx";
-import { balances, endSeries, isParticipant, pools, standings } from "../lib/engine.ts";
+import { balances, isParticipant, pools, standings } from "@rules/engine.ts";
 import { ago, fmt, ordinal, signed } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Bet, Series } from "../lib/types.ts";
+import type { Bet, Series } from "@rules/types.ts";
 
 const STATUS: Record<Bet["status"], string> = {
   draft: "Draft",
@@ -91,7 +91,7 @@ export default function Dashboard({ s }: { s: Series }) {
   const { me } = useStore();
   const [filter, setFilter] = useState<Filter>("open");
   const [writing, setWriting] = useState(false);
-  const { run } = useStore();
+  const { api } = useStore();
   const isHost = s.hostId === me;
   const playing = isParticipant(s, me);
   const bal = playing ? balances(s).get(me)! : undefined;
@@ -189,7 +189,7 @@ export default function Dashboard({ s }: { s: Series }) {
                   label="End series now"
                   confirm="End and rank everyone?"
                   disabled={unsettled > 0}
-                  onConfirm={() => run((d, m, now) => endSeries(d, m, s.id, now), "Series over.")}
+                  onConfirm={() => api.endSeries(s.id, "Series over.")}
                 />
                 {unsettled > 0 && <p className="hint">Resolve or cancel {unsettled} open bet{unsettled === 1 ? "" : "s"} before ending early.</p>}
               </div>

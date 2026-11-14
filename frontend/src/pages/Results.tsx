@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { StandingsTable } from "../components/Standings.tsx";
 import { Panel, Pill, Who } from "../components/ui.tsx";
-import { chooseFavor, markFavorDone, standings } from "../lib/engine.ts";
+import { standings } from "@rules/engine.ts";
 import { MODE_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "../lib/types.ts";
+import type { Series } from "@rules/types.ts";
 
 function Podium({ s }: { s: Series }) {
   const rows = standings(s).slice(0, 3);
@@ -28,7 +28,7 @@ function Podium({ s }: { s: Series }) {
 }
 
 function PoolPicks({ s }: { s: Series }) {
-  const { me, run, name } = useStore();
+  const { me, api, name } = useStore();
   const list = s.assignments ?? [];
   const taken = new Set(list.map((a) => a.favorId).filter(Boolean));
   const nextUp = s.settings.exclusivePool ? list.find((a) => !a.favorId) : undefined;
@@ -67,7 +67,7 @@ function PoolPicks({ s }: { s: Series }) {
                         type="button"
                         className="favor-chip"
                         disabled={s.settings.exclusivePool && taken.has(f.id)}
-                        onClick={() => run((d, m, t) => chooseFavor(d, m, s.id, a.loserId, f.id, t), `Picked for ${name(a.loserId)}.`)}
+                        onClick={() => api.chooseFavor(s.id, a.loserId, f.id, `Picked for ${name(a.loserId)}.`)}
                       >
                         {f.text}
                       </button>
@@ -88,7 +88,7 @@ function PoolPicks({ s }: { s: Series }) {
 }
 
 function OwedFavors({ s }: { s: Series }) {
-  const { me, run } = useStore();
+  const { me, api } = useStore();
   const list = s.assignments ?? [];
   return (
     <Panel label="Favors owed">
@@ -104,7 +104,7 @@ function OwedFavors({ s }: { s: Series }) {
             {a.done ? (
               <span className="pill open">Done</span>
             ) : a.loserId === me && a.text ? (
-              <button type="button" className="btn sm primary" onClick={() => run((d, m, t) => markFavorDone(d, m, s.id, t), "Favor marked done.")}>
+              <button type="button" className="btn sm primary" onClick={() => api.favorDone(s.id, "Favor marked done.")}>
                 Mark done
               </button>
             ) : (

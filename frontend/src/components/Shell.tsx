@@ -1,9 +1,9 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
-import { addUser, balances, isParticipant, joinByCode, standings } from "../lib/engine.ts";
+import { balances, isParticipant, standings } from "@rules/engine.ts";
 import { STATUS_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Db, Id, Series } from "../lib/types.ts";
+import type { Db, Id, Series } from "@rules/types.ts";
 import { ConfirmButton, Modal, Toasts } from "./ui.tsx";
 
 /** Series this person hosts, plays in, or has been invited to. */
@@ -11,16 +11,16 @@ export const mySeries = (db: Db, me: Id) =>
   db.series.filter((s) => s.hostId === me || s.members.some((m) => m.userId === me));
 
 export function JoinModal({ onClose }: { onClose: () => void }) {
-  const { run } = useStore();
+  const { api } = useStore();
   const nav = useNavigate();
   const [code, setCode] = useState("");
   return (
     <Modal kicker="Join a series" title="Enter the invite code" onClose={onClose}>
       <form
         className="stack"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          const s = run((db, me, now) => joinByCode(db, me, code, now), "You're in. Review the rules in the lobby.");
+          const s = await api.joinByCode(code, "You're in. Review the rules in the lobby.");
           if (s) {
             onClose();
             nav(`/s/${s.id}`);
@@ -108,7 +108,7 @@ function SeriesSwitcher({ current }: { current?: Series }) {
 }
 
 function WhoAmI() {
-  const { db, me, setMe, run, reset } = useStore();
+  const { db, me, setMe, api, reset } = useStore();
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   return (
@@ -124,9 +124,9 @@ function WhoAmI() {
       {adding ? (
         <form
           className="row"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            const u = run((d) => addUser(d, name), `Added ${name.trim()}.`);
+            const u = await api.addUser(name, `Added ${name.trim()}.`);
             if (u) {
               setMe(u.id);
               setName("");

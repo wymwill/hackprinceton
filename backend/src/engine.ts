@@ -547,29 +547,40 @@ export function standings(s: Series): Standing[] {
 
 // ---------- the end ----------
 
+/**
+ * How each mode turns the final order into what the losers owe. To add a new
+ * way of assigning favors, add an entry here (and a Mode value in types.ts).
+ * `picking: true` means players still have to choose before the series is done.
+ */
+export const ASSIGNERS: Record<Series["settings"]["mode"], (s: Series, order: Id[], x: number) => { assignments: Assignment[]; picking: boolean }> = {
+  // Mode B: the bottom X do the favor they pledged.
+  pledge: (s, order, x) => ({
+    picking: false,
+    assignments: order.slice(order.length - x).map((loserId) => {
+      const f = s.favors.find((f) => f.authorId === loserId);
+      return { loserId, favorId: f?.id, text: f?.text, done: false };
+    }),
+  }),
+  // Mode C: rank 1 picks for last place, rank 2 for second-to-last, and so on.
+  pool: (_s, order, x) => ({
+    picking: true,
+    assignments: Array.from({ length: x }, (_, i) => ({ loserId: order[order.length - 1 - i], chooserId: order[i], done: false })),
+  }),
+  // Mode A: the bottom X owe the money contribution (recorded only).
+  money: (_s, order, x) => ({
+    picking: false,
+    assignments: order.slice(order.length - x).map((loserId) => ({ loserId, done: false })),
+  }),
+};
+
 function finish(db: Db, s: Series, now: number) {
   const order = standings(s).map((r) => r.userId);
-  const n = order.length;
-  const x = Math.min(s.settings.losers, n);
+  const x = Math.min(s.settings.losers, order.length);
+  const { assignments, picking } = ASSIGNERS[s.settings.mode](s, order, x);
   s.finalOrder = order;
   s.finishedAt = iso(now);
-  const losers = order.slice(n - x);
-  let assignments: Assignment[];
-  if (s.settings.mode === "pledge") {
-    assignments = losers.map((loserId) => {
-      const f = s.favors.find((x) => x.authorId === loserId);
-      return { loserId, favorId: f?.id, text: f?.text, done: false };
-    });
-    s.status = "finished";
-  } else if (s.settings.mode === "pool") {
-    // Rank 1 picks for last place, rank 2 for second-to-last, and so on.
-    assignments = Array.from({ length: x }, (_, i) => ({ loserId: order[n - 1 - i], chooserId: order[i], done: false }));
-    s.status = "assigning";
-  } else {
-    assignments = losers.map((loserId) => ({ loserId, done: false }));
-    s.status = "finished";
-  }
   s.assignments = assignments;
+  s.status = picking ? "assigning" : "finished";
   log(s, now, `Series over. ${nameOf(db, order[0])} finished first.`);
 }
 

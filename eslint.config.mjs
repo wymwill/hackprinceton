@@ -14,8 +14,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // The standalone Vite frontend has its own toolchain.
+    // The standalone Bet Series frontend and backend have their own toolchains.
     "frontend/**",
+    "backend/**",
   ]),
 ]);
 
