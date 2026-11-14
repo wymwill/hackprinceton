@@ -20,12 +20,7 @@
     "types": [
       "vite/client",
       "node"
-    ],
-    "paths": {
-      "@rules/*": [
-        "../backend/src/*"
-      ]
-    }
+    ]
   },
   "include": [
     "src"

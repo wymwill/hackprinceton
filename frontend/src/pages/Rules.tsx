@@ -1,7 +1,7 @@
 import { Panel, Who } from "../components/ui.tsx";
 import { MODE_LABEL, STATUS_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "@rules/types.ts";
+import type { Series } from "../lib/types.ts";
 
 export function RulesList({ s }: { s: Series }) {
   const { name } = useStore();
@@ -46,11 +46,17 @@ export function RulesList({ s }: { s: Series }) {
       <ul className="hint" style={{ paddingLeft: 18, display: "grid", gap: 4 }}>
         <li>Pick YES or NO and wager coins. You can add more coins to your side any time betting is open.</li>
         <li>Winners split the whole pool in proportion to their stakes.</li>
-        <li>If everyone is on one side, or the host cancels, everyone gets their coins back.</li>
+        <li>If everyone is on one side, or the host cancels, everyone gets their coins back. Locking a one-sided bet refunds it at once.</li>
         <li>The host decides each result, even when they're playing.</li>
         <li>The leaderboard only moves when a bet is resolved.</li>
         {st.mode === "pledge" && <li>The bottom {st.losers} do the favor they pledged.</li>}
-        {st.mode === "pool" && <li>1st picks a favor for last place, 2nd for second-to-last, and so on.</li>}
+        {st.mode === "pool" && (
+          <>
+            <li>Every player agrees to each favor in the pool before betting starts ("I'm ready" agrees to all of them).</li>
+            <li>1st picks a favor for last place, 2nd for second-to-last, and so on, only from favors that player agreed to.</li>
+            <li>A favor isn't owed until the loser accepts it. If they decline, the winner picks another.</li>
+          </>
+        )}
         {st.mode === "money" && <li>The bottom {st.losers} owe the real-money contribution (not processed in this demo).</li>}
       </ul>
     </div>
@@ -76,7 +82,7 @@ export default function Rules({ s }: { s: Series }) {
             {s.members.map((m) => (
               <div key={m.userId} className="person">
                 <Who id={m.userId} />
-                <span className="cap">{m.userId === s.hostId ? "Host" : m.status === "invited" ? "Invited" : "Player"}</span>
+                <span className="cap">{m.userId === s.hostId ? (m.plays ? "Host · playing" : "Host · not playing") : "Player"}</span>
               </div>
             ))}
           </div>

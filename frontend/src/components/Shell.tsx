@@ -1,14 +1,16 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
-import { balances, isParticipant, standings } from "@rules/engine.ts";
+import { balances, isParticipant, participantIds, standings } from "../lib/rules.ts";
 import { STATUS_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Db, Id, Series } from "@rules/types.ts";
-import { ConfirmButton, Modal, Toasts } from "./ui.tsx";
+import type { Db, Series } from "../lib/types.ts";
+import { Avatar, Modal, Toasts } from "./ui.tsx";
 
-/** Series this person hosts, plays in, or has been invited to. */
-export const mySeries = (db: Db, me: Id) =>
-  db.series.filter((s) => s.hostId === me || s.members.some((m) => m.userId === me));
+/** Series this person is in (the server only sends those). */
+export const mySeries = (db: Db) => db.series;
+
+/** "ABC123", or an invite link ending in /join/ABC123. */
+export const codeFrom = (input: string) => (input.trim().match(/\/join\/([A-Za-z0-9]+)\/?$/)?.[1] ?? input).trim().toUpperCase();
 
 export function JoinModal({ onClose }: { onClose: () => void }) {
   const { api } = useStore();
@@ -20,7 +22,7 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
         className="stack"
         onSubmit={async (e) => {
           e.preventDefault();
-          const s = await api.joinByCode(code, "You're in. Review the rules in the lobby.");
+          const s = await api.joinByCode(codeFrom(code), "You're in. Review the rules in the lobby.");
           if (s) {
             onClose();
             nav(`/s/${s.id}`);
@@ -28,19 +30,19 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
         }}
       >
         <label className="field">
-          <span>Invite code</span>
+          <span>Invite code or link</span>
           <input
             className="input"
             value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            onChange={(e) => setCode(e.target.value)}
             placeholder="ABC123"
-            maxLength={12}
+            maxLength={200}
             autoFocus
             style={{ letterSpacing: "0.24em", fontSize: 18 }}
           />
         </label>
-        <p className="hint">The host can see the code in their lobby. You can join until betting starts.</p>
-        <button className="btn primary" disabled={code.trim().length < 4}>
+        <p className="hint">The host can see the code and link in their lobby. You can join until betting starts.</p>
+        <button className="btn primary" disabled={codeFrom(code).length < 4}>
           Join series
         </button>
       </form>
@@ -49,11 +51,11 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
 }
 
 function SeriesSwitcher({ current }: { current?: Series }) {
-  const { db, me } = useStore();
+  const { db } = useStore();
   const [open, setOpen] = useState(false);
   const [joining, setJoining] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const list = mySeries(db, me);
+  const list = mySeries(db);
 
   useEffect(() => {
     if (!open) return;
@@ -80,7 +82,7 @@ function SeriesSwitcher({ current }: { current?: Series }) {
             <Link key={s.id} to={`/s/${s.id}`} className={s.id === current?.id ? "on" : ""} onClick={() => setOpen(false)}>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
               <span className="cap" style={{ fontSize: 9.5 }}>
-                {s.members.find((m) => m.userId === me)?.status === "invited" ? "Invited" : STATUS_LABEL[s.status]}
+                {STATUS_LABEL[s.status]}
               </span>
             </Link>
           ))}
@@ -107,44 +109,26 @@ function SeriesSwitcher({ current }: { current?: Series }) {
   );
 }
 
-function WhoAmI() {
-  const { db, me, setMe, api, reset } = useStore();
-  const [adding, setAdding] = useState(false);
-  const [name, setName] = useState("");
+/** Who's signed in, and the way out. */
+function Account() {
+  const { me, meUser, signOut } = useStore();
   return (
     <div className="whoami">
-      <span className="cap">Playing as</span>
-      <select value={me} onChange={(e) => setMe(e.target.value)} aria-label="Playing as">
-        {db.users.map((u) => (
-          <option key={u.id} value={u.id}>
-            {u.name}
-          </option>
-        ))}
-      </select>
-      {adding ? (
-        <form
-          className="row"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const u = await api.addUser(name, `Added ${name.trim()}.`);
-            if (u) {
-              setMe(u.id);
-              setName("");
-              setAdding(false);
-            }
-          }}
-        >
-          <input className="input text" style={{ padding: "6px 8px" }} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" autoFocus />
-          <button className="btn sm">Add</button>
-        </form>
-      ) : (
-        <div className="row between">
-          <button type="button" className="btn ghost sm" onClick={() => setAdding(true)}>
-            + Add player
-          </button>
-          <ConfirmButton className="btn ghost sm" label="Reset" confirm="Reset all?" onConfirm={reset} />
-        </div>
-      )}
+      <span className="cap">Signed in as</span>
+      <span className="who">
+        <Avatar id={me} />
+        <span style={{ minWidth: 0 }}>
+          <b className="bright">{meUser.name}</b>
+          {meUser.email && (
+            <span className="dim" style={{ display: "block", fontSize: 12, overflow: "hidden", textOverflow: "ellipsis" }}>
+              {meUser.email}
+            </span>
+          )}
+        </span>
+      </span>
+      <button type="button" className="btn ghost sm" onClick={signOut}>
+        Sign out
+      </button>
     </div>
   );
 }
@@ -179,7 +163,7 @@ function Sidebar({ current }: { current?: Series }) {
         </nav>
       )}
       <div className="grow" />
-      <WhoAmI />
+      <Account />
     </aside>
   );
 }
@@ -194,7 +178,7 @@ function TopBar({ crumbs, current }: { crumbs: Crumb[]; current?: Series }) {
     const st = standings(current).find((r) => r.userId === me)!;
     status = (
       <span className="op">
-        <b className="num">{fmt(b.available)}</b> coins free · <b>{ordinal(st.rank)}</b> of {current.members.length}
+        <b className="num">{fmt(b.available)}</b> coins free · <b>{ordinal(st.rank)}</b> of {participantIds(current).length}
       </span>
     );
   }

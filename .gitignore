@@ -46,3 +46,9 @@ next-env.d.ts
 # Local secrets. Copy .env.example to .env.local and fill it in.
 !.env.example
 .gstack/
+
+# Supabase CLI cache and local-only Supabase secrets (scripts/e2e-series.mjs, scripts/create-demo-users.mjs)
+/supabase/.temp/
+/.supabase-token*
+/.supabase-test-secret
+/.supabase-demo-users.csv
