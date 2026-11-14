@@ -2,20 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useApp } from "./AppProvider";
-import BookieMark from "./BookieMark";
 import { amount } from "./ui";
 
-const AI_LABEL = {
-  claude: { text: "Live", cls: "bg-tertiary-container/15 text-tertiary ring-tertiary-container/40", dot: "bg-tertiary animate-pulse" },
-  stub: { text: "Test stub", cls: "bg-tertiary-container/10 text-tertiary ring-tertiary-container/30", dot: "bg-tertiary/60" },
-  off: { text: "History only", cls: "bg-surface-container-high text-on-surface-variant ring-outline-variant/40", dot: "bg-outline" },
-};
-
-/** Top bar: menu (mobile), the Bookie's status, the Playing as switcher. */
+/** Top bar: menu (mobile) and the Playing as switcher. */
 export default function Header() {
   const router = useRouter();
   const { state, member, switchUser, navOpen, setNavOpen, open } = useApp();
-  const ai = AI_LABEL[state?.ai.mode ?? "off"];
 
   return (
     <header className="fixed top-0 left-0 lg:left-[260px] right-0 h-16 bg-surface/85 backdrop-blur-xl z-30 flex items-center gap-3 px-4 lg:px-gutter-desktop">
@@ -27,16 +19,6 @@ export default function Header() {
       <span className="lg:hidden font-display italic text-[20px] text-on-surface truncate">{state?.group?.name ?? "Alea"}</span>
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
-        {state && (
-          <span
-            className={`hidden sm:inline-flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full ring-1 font-label-sm text-label-sm ${ai.cls}`}
-            title={state.ai.mode === "claude" ? `The Bookie is using ${state.ai.model}` : state.ai.mode === "off" ? "No Anthropic API key: the Bookie uses history only and never recommends a result" : "Deterministic stand in for tests"}
-          >
-            <BookieMark size="xs" label={false} />
-            <span className={`w-1.5 h-1.5 rounded-full ${ai.dot}`} aria-hidden />
-            {ai.text}
-          </span>
-        )}
         {state && (
           <label className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-surface-container-high font-label-sm text-label-sm text-on-surface-variant">
             <span className="hidden md:inline whitespace-nowrap">Playing as</span>

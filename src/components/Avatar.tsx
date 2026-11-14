@@ -2,7 +2,7 @@ import { initials } from "@/lib/format";
 
 // A stable colour per name, so friends are easy to tell apart.
 const HUES = [
-  "bg-[#e8503c]/25 text-[#ffb3a6] ring-[#e8503c]/50",
+  "bg-[#ff5f1f]/25 text-[#ffb3a6] ring-[#ff5f1f]/50",
   "bg-[#ffc76e]/20 text-[#ffd99c] ring-[#ffc76e]/45",
   "bg-[#7d8cff]/25 text-[#c4cdff] ring-[#7d8cff]/50",
   "bg-[#3ccf9a]/20 text-[#9ff0d0] ring-[#3ccf9a]/45",
@@ -19,6 +19,7 @@ export default function Avatar({ name, src, size = 28, className = "" }: { name:
   ) : (
     <span
       aria-label={name}
+      translate="no"
       style={style}
       className={`rounded-full shrink-0 flex items-center justify-center ring-1 font-bold ${hue(name)} ${className}`}
     >

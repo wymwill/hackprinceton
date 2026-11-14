@@ -11,7 +11,7 @@ export function appIcon(size: number) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#e8503c",
+          background: "#ff5f1f",
           color: "#ffffff",
           fontSize: size * 0.62,
           fontStyle: "italic",
