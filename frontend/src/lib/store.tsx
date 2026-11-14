@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import SignIn from "../pages/SignIn.tsx";
+import { punishmentCopy } from "./format.ts";
 import { rangesOf } from "./ranges.ts";
 import { supabase } from "./supabase.ts";
 import type { AppState, BetDraft, Db, Id, Me, Series, Settings } from "./types.ts";
@@ -42,7 +43,7 @@ export async function request<T>(method: string, path: string, body?: unknown): 
     throw new ApiError(0, "Can't reach the server.");
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, data?.error?.message ?? `The server said ${res.status}.`, data?.error?.code);
+  if (!res.ok) throw new ApiError(res.status, punishmentCopy(data?.error?.message ?? `The server said ${res.status}.`), data?.error?.code);
   return (data as { result: T }).result;
 }
 
@@ -128,8 +129,6 @@ function makeApi(act: Act) {
     cancelBet: (id: Id, betId: Id, ok?: string) => act("POST", `${b(id, betId)}/cancel`, undefined, ok),
     completeSeries: (id: Id, ok?: string) => act("POST", `${s(id)}/complete`, undefined, ok),
     chooseFavor: (id: Id, loserId: Id, favorId: Id, ok?: string) => act("POST", `${s(id)}/favors/assign`, { loserId, favorId }, ok),
-    respondToFavor: (assignmentId: Id, accept: boolean, ok?: string) =>
-      act("POST", `/series/assignments/${encodeURIComponent(assignmentId)}/respond`, { accept }, ok),
     favorDone: (id: Id, ok?: string) => act("POST", `${s(id)}/favor-done`, undefined, ok),
   };
 }

@@ -402,7 +402,7 @@ describe("the end", () => {
     assert.equal(v.assignments.length, 1);
   });
 
-  test("shared pool: rank 1 picks for last, in order, from favors the loser agreed to; decline means pick again", async () => {
+  test("shared pool: winners pick agreed punishments in order; the picks are owed immediately", async () => {
     const r = await running([ana, ben, cat, dan], { bets: 1, losers: 2, ensureBets: 1, settings: { exclusivePool: true } });
     // Ana +200, Ben +100, Dan -100, Cat -200  =>  order Ana, Ben, Dan, Cat.
     const b = r.bets[0];
@@ -417,24 +417,16 @@ describe("the end", () => {
     assert.deepEqual(v.assignments.map((a) => [a.chooserId, a.loserId, a.status]), [[ana.id, cat.id, "picking"], [ben.id, dan.id, "picking"]]);
     const fav = (name) => v.favors.find((f) => f.text === `favor from ${name}`).id;
     await rejects(ben.rpc("assign_series_favor", { p_series_id: r.id, p_loser_id: dan.id, p_favor_id: fav("Ana") }), "picks_in_order", /Ana picks first/);
-    await rejects(ben.rpc("assign_series_favor", { p_series_id: r.id, p_loser_id: cat.id, p_favor_id: fav("Ana") }), "not_winner", /Ana picks this favor/);
+    await rejects(ben.rpc("assign_series_favor", { p_series_id: r.id, p_loser_id: cat.id, p_favor_id: fav("Ana") }), "not_winner", /Ana picks this punishment/);
     await ana.rpc("assign_series_favor", { p_series_id: r.id, p_loser_id: cat.id, p_favor_id: fav("Ben") });
     await rejects(ana.rpc("assign_series_favor", { p_series_id: r.id, p_loser_id: cat.id, p_favor_id: fav("Dan") }), "already_picked");
     await rejects(ben.rpc("assign_series_favor", { p_series_id: r.id, p_loser_id: dan.id, p_favor_id: fav("Ben") }), "favor_taken");
-    // Cat declines; Ana picks again.
-    v = await view(cat, r.id);
-    const catA = v.assignments.find((a) => a.loserId === cat.id);
-    await rejects(dan.rpc("respond_series_favor_assignment", { p_assignment_id: catA.id, p_accept: true }), "assignment_not_pending");
-    await cat.rpc("respond_series_favor_assignment", { p_assignment_id: catA.id, p_accept: false });
-    await rejects(cat.rpc("mark_series_favor_done", { p_series_id: r.id }), "not_accepted");
-    await ana.rpc("assign_series_favor", { p_series_id: r.id, p_loser_id: cat.id, p_favor_id: fav("Dan") });
-    await cat.rpc("respond_series_favor_assignment", { p_assignment_id: catA.id, p_accept: true });
-    await ben.rpc("assign_series_favor", { p_series_id: r.id, p_loser_id: dan.id, p_favor_id: fav("Ben") });
+    await ben.rpc("assign_series_favor", { p_series_id: r.id, p_loser_id: dan.id, p_favor_id: fav("Dan") });
     v = await view(ana, r.id);
     assert.equal(v.status, "finished");
     await cat.rpc("mark_series_favor_done", { p_series_id: r.id });
     v = await view(ana, r.id);
-    assert.deepEqual(v.assignments.map((a) => [a.text, a.status, a.done]), [["favor from Dan", "accepted", true], ["favor from Ben", "pending", false]]);
+    assert.deepEqual(v.assignments.map((a) => [a.text, a.status, a.done]), [["favor from Ben", "accepted", true], ["favor from Dan", "accepted", false]]);
   });
 
   test("a favor the loser never agreed to can't be picked for them", async () => {
