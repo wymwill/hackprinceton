@@ -3,7 +3,7 @@ import { Shell } from "../components/Shell.tsx";
 import { StandingsTable } from "../components/Standings.tsx";
 import { Empty, Panel } from "../components/ui.tsx";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "../lib/types.ts";
+import type { Series } from "@rules/types.ts";
 import BetPage from "./BetPage.tsx";
 import Dashboard from "./Dashboard.tsx";
 import Lobby from "./Lobby.tsx";

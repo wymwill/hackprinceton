@@ -2,17 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { NewBetModal } from "../components/Standings.tsx";
 import { ConfirmButton, Panel, Pill, Who } from "../components/ui.tsx";
-import {
-  isParticipant, joinSeries, kickMember, leaveSeries, removeDraftBet, removeFavor, setReady, startBlockers, startSeries,
-  submitFavor,
-} from "../lib/engine.ts";
+import { isParticipant, startBlockers } from "@rules/engine.ts";
 import { ago } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "../lib/types.ts";
+import type { Series } from "@rules/types.ts";
 import { RulesList } from "./Rules.tsx";
 
 function Favors({ s }: { s: Series }) {
-  const { me, run } = useStore();
+  const { me, api } = useStore();
   const [text, setText] = useState("");
   const pledge = s.settings.mode === "pledge";
   const playing = isParticipant(s, me);
@@ -29,9 +26,9 @@ function Favors({ s }: { s: Series }) {
         {canAdd && (
           <form
             className="row"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              if (run((d, m, now) => submitFavor(d, m, s.id, text, now), pledge ? "Favor pledged." : "Added to the pool.")) setText("");
+              if (await api.submitFavor(s.id, text, pledge ? "Favor pledged." : "Added to the pool.")) setText("");
             }}
           >
             <input className="input text" value={text} onChange={(e) => setText(e.target.value)} maxLength={120} placeholder="Placeholder placeholder" />
@@ -49,7 +46,7 @@ function Favors({ s }: { s: Series }) {
                 <span className="dim"> · {f.authorId === me ? "you" : pledge ? "pledged" : "added"}</span>
               </span>
               {f.authorId === me && (
-                <button type="button" className="btn ghost sm" onClick={() => run((d, m) => removeFavor(d, m, s.id, f.id))}>
+                <button type="button" className="btn ghost sm" onClick={() => api.removeFavor(s.id, f.id)}>
                   Remove
                 </button>
               )}
@@ -62,7 +59,7 @@ function Favors({ s }: { s: Series }) {
 }
 
 export default function Lobby({ s }: { s: Series }) {
-  const { db, me, run, toast } = useStore();
+  const { db, me, api, toast } = useStore();
   const nav = useNavigate();
   const [writing, setWriting] = useState(false);
   const isHost = s.hostId === me;
@@ -105,7 +102,7 @@ export default function Lobby({ s }: { s: Series }) {
       {!member && (
         <p className="notice">
           <b>You're not in this series.</b>{" "}
-          <button type="button" className="btn sm primary" onClick={() => run((d, m, now) => joinSeries(d, m, s.id, now), "You're in.")}>
+          <button type="button" className="btn sm primary" onClick={() => api.joinSeries(s.id, "You're in.")}>
             Join
           </button>
         </p>
@@ -113,7 +110,7 @@ export default function Lobby({ s }: { s: Series }) {
       {member?.status === "invited" && (
         <p className="notice">
           <b>You're invited.</b> Review the rules below, then join.{" "}
-          <button type="button" className="btn sm primary" onClick={() => run((d, m, now) => joinSeries(d, m, s.id, now), "You're in.")}>
+          <button type="button" className="btn sm primary" onClick={() => api.joinSeries(s.id, "You're in.")}>
             Join
           </button>
         </p>
@@ -130,7 +127,7 @@ export default function Lobby({ s }: { s: Series }) {
                   <input
                     type="checkbox"
                     checked={member!.ready}
-                    onChange={(e) => run((d, m) => setReady(d, m, s.id, e.target.checked), e.target.checked ? "You're ready." : undefined)}
+                    onChange={(e) => api.setReady(s.id, e.target.checked, e.target.checked ? "You're ready." : undefined)}
                   />
                   <span>
                     I've read the rules{s.settings.mode === "money" ? "" : " and agree to do a favor from this lobby if I finish in the bottom " + s.settings.losers}
@@ -159,7 +156,7 @@ export default function Lobby({ s }: { s: Series }) {
                       <span className="bright">{b.question}</span>
                     </span>
                     {isHost && (
-                      <button type="button" className="btn ghost sm" onClick={() => run((d, m) => removeDraftBet(d, m, s.id, b.id))}>
+                      <button type="button" className="btn ghost sm" onClick={() => api.removeDraftBet(s.id, b.id)}>
                         Remove
                       </button>
                     )}
@@ -196,7 +193,7 @@ export default function Lobby({ s }: { s: Series }) {
                       )}
                       {s.settings.mode === "pool" && plays && m.status === "joined" && <span className="cap">{favors} favor{favors === 1 ? "" : "s"}</span>}
                       {isHost && !host && (
-                        <ConfirmButton className="btn ghost sm danger" label="Kick" confirm="Sure?" onConfirm={() => run((d, a, now) => kickMember(d, a, s.id, m.userId, now), "Player removed.")} />
+                        <ConfirmButton className="btn ghost sm danger" label="Kick" confirm="Sure?" onConfirm={() => api.kick(s.id, m.userId, "Player removed.")} />
                       )}
                     </span>
                   </div>
@@ -210,8 +207,8 @@ export default function Lobby({ s }: { s: Series }) {
                   className="btn ghost sm"
                   label="Leave series"
                   confirm="Leave?"
-                  onConfirm={() => {
-                    if (run((d, m, now) => (leaveSeries(d, m, s.id, now), true), "You left the series.")) nav("/");
+                  onConfirm={async () => {
+                    if (await api.leaveSeries(s.id, "You left the series.")) nav("/");
                   }}
                 />
               </>
@@ -240,7 +237,7 @@ export default function Lobby({ s }: { s: Series }) {
                   label="Start betting"
                   confirm="Lock rules and start?"
                   disabled={blockers.length > 0}
-                  onConfirm={() => run((d, m, now) => startSeries(d, m, s.id, now), "Betting is live.")}
+                  onConfirm={() => api.start(s.id, "Betting is live.")}
                 />
               </div>
             </Panel>

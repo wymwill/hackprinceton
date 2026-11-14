@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { pools } from "../lib/engine.ts";
+import { pools } from "@rules/engine.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Bet, Id } from "../lib/types.ts";
+import type { Bet, Id } from "@rules/types.ts";
 
 export function Panel({
   label, right, children, className = "", bodyClass = "pbody",
