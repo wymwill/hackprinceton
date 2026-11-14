@@ -1,7 +1,12 @@
-import MarketsHome from "@/screens/MarketsHome";
+import { Suspense } from "react";
+import Home from "@/screens/Home";
 
-export const metadata = { title: "Markets · Betting with Friends" };
+export const metadata = { title: "Betting with Friends" };
 
 export default function Page() {
-  return <MarketsHome />;
+  return (
+    <Suspense>
+      <Home />
+    </Suspense>
+  );
 }

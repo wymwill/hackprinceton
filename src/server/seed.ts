@@ -1,105 +1,149 @@
 import "server-only";
-import { addEvidence, createBet, joinBet, settleBet } from "./bets";
-import type { Db, User } from "./store";
+import { baselineEstimate } from "@/lib/markets/baseline";
+import type { DareSpec, Outcome, Side } from "@/lib/markets/types";
+import { createGroup, joinGroup } from "./groups";
+import { aiQueue, applyBookieEstimate, createMarket, postEvidence, settle, settledRecords, trade } from "./markets";
+import type { Db } from "./store";
 
-const AVATARS = {
-  alex: "https://lh3.googleusercontent.com/aida-public/AB6AXuDOeWV3t9vUJQPkILV1TjOmSrtL2qlgAPx-DuMZYXJIFhKLtfwQ3b7Oqk7cfUDX_UkSZt7IMRH2NW9bZu2C-d5eQ1VRyTBOr1gBUqkX40IeaN4EY6YXYNW7Jg4nniY-0YwLLxBxCmrN_X6EkxohTK5FgeTNgRFSirJhmbWrwYq-ATNEgG-_kSzu84U-fXG_DZWB6n44n-7GStg9S8aO8_vWYRRUCeY7bIzVu09cYxP9",
-  sam: "https://lh3.googleusercontent.com/aida-public/AB6AXuB0ObL4uTPqFS4txG6ZuRflfr9mq1Im56UOQvA01Bo965DAG63KqJlCpsX8RtLUnOi-qdU-9r5tsDfAUY3lDzdcZUK3utxNW0_Yt3VdjMzLGhE9w4dgx563d5Z8VLhxp75drECHLal3wkSwg-Cp9VLvCbSolAQAg6CseI_g-ZSldQ5me8O3Sr3h6Hpj-KJ7h03KzxQMKwx0VAqSzV8jAmyX2hQNmd42dFNFs5sILtM-",
-  priya: "https://lh3.googleusercontent.com/aida-public/AB6AXuCKRmPUwUlFh7okGbu1YK0cLExx-6Mqgy7YNQG2yyKINVIXgp8iV2AEl-DFF4tmUPBIaD69s4FzCcJgL5FPyfuuMbQ-f8hO4F1siNQ51JUJ4YWH3eVLW09Im0uV1t9BQU09TQYFAJne7ehnWJ4wpe-ZtIN-iWCGRPZ8QN49Hl_lFbGbe3OeCLDhlNWMJ1tMy5e9ibBgD1S5C5MmBr0k-xUUkOSvOcxl9ChZaG0WzOwp",
+/**
+ * Starting data. `demo` is a friend group with real history, so the Bookie has
+ * something to reason about (Jake is 2 for 7 on fitness). `empty` is four
+ * players and no groups.
+ */
+
+const empty = (): Db => ({
+  version: 2,
+  users: [],
+  groups: [],
+  memberships: [],
+  markets: [],
+  trades: [],
+  picks: [],
+  ledger: [],
+  receipts: [],
+  evidence: [],
+  reviews: [],
+  aiLog: [],
+  dares: [],
+  dareVotes: [],
+});
+
+const HOUR = 3600_000;
+const DAY = 24 * HOUR;
+
+type Past = {
+  host: string;
+  q: string;
+  subject?: string;
+  cat: string;
+  daysAgo: number;
+  trades: [string, Side, number][];
+  outcome: Outcome;
+  dare?: DareSpec;
+  roast?: string;
 };
 
-const USERS: User[] = [
-  { id: "alex", name: "Alex Chen", title: "The Contrarian", avatar: AVATARS.alex, startingBalance: 1420 },
-  { id: "sam", name: "Sam Vance", title: "The Oracle", avatar: AVATARS.sam, startingBalance: 1500 },
-  { id: "priya", name: "Priya Sharma", title: "Statistical Menace", avatar: AVATARS.priya, startingBalance: 1200 },
-  { id: "marcus", name: "Marcus Reed", title: "The Wildcard", startingBalance: 1000 },
-  { id: "david", name: "David K.", title: "Safe Bet Dave", startingBalance: 900 },
-  { id: "elena", name: "Elena Rostova", title: "The Closer", startingBalance: 1100 },
-  { id: "jake", name: "Jake Miller", title: "🙃 Eternal Optimist", startingBalance: 600 },
+const PAST: Past[] = [
+  { host: "sam", q: "Will Jake hit the gym 4 times this week?", subject: "jake", cat: "fitness", daysAgo: 40, trades: [["alex", "no", 120], ["priya", "yes", 80]], outcome: "no", roast: "Priya believed in Jake. Priya has learned." },
+  { host: "alex", q: "Will Jake run a 5K under 30 minutes?", subject: "jake", cat: "fitness", daysAgo: 35, trades: [["marcus", "no", 150], ["jake", "yes", 100]], outcome: "yes", roast: "Marcus bet against cardio and cardio won." },
+  { host: "priya", q: "Will Jake make Saturday spin class?", subject: "jake", cat: "fitness", daysAgo: 30, trades: [["sam", "no", 100], ["elena", "yes", 60]], outcome: "no" },
+  { host: "marcus", q: "Will Jake do 100 pushups in one day?", subject: "jake", cat: "fitness", daysAgo: 26, trades: [["alex", "no", 90], ["jake", "yes", 120]], outcome: "yes" },
+  { host: "sam", q: "Will Jake make 6 AM leg day on Monday?", subject: "jake", cat: "fitness", daysAgo: 21, trades: [["priya", "no", 140], ["marcus", "yes", 70]], outcome: "no", roast: "Jake's alarm went off. Jake did not." },
+  { host: "elena", q: "Will Sam be in bed by midnight all week?", subject: "sam", cat: "sleep", daysAgo: 18, trades: [["jake", "no", 80], ["alex", "yes", 100]], outcome: "yes" },
+  { host: "alex", q: "Will Jake stretch every day this week?", subject: "jake", cat: "fitness", daysAgo: 14, trades: [["elena", "no", 100], ["sam", "no", 60]], outcome: "no" },
+  { host: "marcus", q: "Will Priya ship her portfolio site this weekend?", subject: "priya", cat: "work", daysAgo: 10, trades: [["sam", "yes", 110], ["jake", "no", 90]], outcome: "yes" },
+  { host: "priya", q: "Will Jake hit the gym on Friday night?", subject: "jake", cat: "fitness", daysAgo: 8, trades: [["jake", "yes", 150], ["alex", "no", 120]], outcome: "no", dare: { kind: "preset", text: "50 burpees on camera" }, roast: "Jake bet on himself. Bold. Wrong, but bold." },
+  { host: "elena", q: "Will Marcus cook dinner 3 nights in a row?", subject: "marcus", cat: "food", daysAgo: 5, trades: [["marcus", "yes", 130], ["priya", "no", 100]], outcome: "no", dare: { kind: "custom", text: "Cook the group dinner, filmed start to finish" }, roast: "Marcus, the microwave is not a stove." },
+  { host: "jake", q: "Will Elena reply to the group chat within an hour?", subject: "elena", cat: "social", daysAgo: 3, trades: [["elena", "yes", 100], ["sam", "no", 120]], outcome: "no", dare: { kind: "preset", text: "Post an apology in the chat" }, roast: "Elena read it. Elena did not reply. Classic." },
 ];
 
-const HOUR = 3_600_000;
-
-/** First-run data: a few bets at different points in the lifecycle so every screen has something to show. */
-export function seed(): Db {
-  const db: Db = { version: 1, users: USERS, bets: [], entries: [], ledger: [], receipts: [], evidence: [], reviews: [], audit: [] };
+function demo(): Db {
+  const db = empty();
   const now = Date.now();
-  const at = (h: number) => new Date(now + h * HOUR);
-  const iso = (h: number) => at(h).toISOString();
+  db.users = [
+    { id: "alex", name: "Alex" },
+    { id: "sam", name: "Sam" },
+    { id: "priya", name: "Priya" },
+    { id: "marcus", name: "Marcus" },
+    { id: "elena", name: "Elena" },
+    { id: "jake", name: "Jake" },
+  ];
+  const start = new Date(now - 60 * DAY);
+  const group = createGroup(db, "alex", { name: "The Boyz Gym Arc", emoji: "🔥", mode: "tokens", startingBalance: 1000 }, start, "demo");
+  for (const u of db.users.slice(1)) joinGroup(db, u.id, group.inviteCode, start);
 
-  /** A small Yes/No bet that's already settled, so the odds model has real history to read. */
-  const past = (subjectId: string, proposition: string, category: string, yes: boolean, daysAgo: number, creator: string, against: string) => {
-    const t = -daysAgo * 24;
-    const b = createBet(db, creator, { proposition, outcomes: ["Yes", "No"], deadline: iso(t + 10), stake: 20, pick: 1, category, subjectId }, at(t));
-    joinBet(db, against, b.id, "o1", 20, at(t + 1));
-    settleBet(db, creator, b.id, yes ? "o1" : "o2", at(t + 11));
+  for (const p of PAST) {
+    const t0 = now - p.daysAgo * DAY;
+    const m = createMarket(db, p.host, group.id, { question: p.q, subjectId: p.subject, category: p.cat, deadline: new Date(t0 + 12 * HOUR).toISOString(), dare: p.dare }, new Date(t0));
+    p.trades.forEach(([u, side, amount], i) => trade(db, u, m.id, { action: "buy", side, amount }, new Date(t0 + (i + 1) * HOUR)));
+    const r = settle(db, m, p.outcome, new Date(t0 + 13 * HOUR));
+    if (p.roast) r.roast = p.roast;
+    r.roastSource = "stock";
+  }
+
+  // One dare in each column: the newest is still owed, then waiting on votes, then done.
+  const dares = [...db.dares].sort((a, b) => b.dueAt.localeCompare(a.dueAt));
+  const [todo, voting, done] = [dares.find((d) => d.owedBy === "elena"), dares.find((d) => d.owedBy === "marcus"), dares.find((d) => d.owedBy === "jake")];
+  if (todo) Object.assign(todo, { status: "todo", dueAt: new Date(now + 30 * HOUR).toISOString() });
+  if (voting) Object.assign(voting, { status: "voting", dueAt: new Date(now + 20 * HOUR).toISOString(), proof: { text: "Made pasta for six. Video in the chat.", at: new Date(now - 2 * HOUR).toISOString() } });
+  if (done) Object.assign(done, { status: "done", proof: { text: "50 burpees, filmed. Never again.", at: new Date(now - 6 * DAY).toISOString() } });
+  if (voting) db.dareVotes.push({ dareId: voting.id, userId: voting.owedTo[0], vote: "approve" });
+
+  const bookie = (marketId: string, subject: string, subjectName: string, cat: string, at: number) => {
+    const base = baselineEstimate({ category: cat, subjectId: subject, subjectName, history: settledRecords(db, group.id) });
+    applyBookieEstimate(db, marketId, { ...base, source: "baseline", at: new Date(at).toISOString() });
   };
-  // Jake: 2 of 7 early-morning gym calls.
-  past("jake", "Will Jake make the 6 AM lift?", "Fitness", false, 26, "sam", "jake");
-  past("jake", "Will Jake be at the gym before 6 AM Monday?", "Fitness", true, 23, "priya", "jake");
-  past("jake", "Will Jake skip the snooze button and run at 5:30?", "Fitness", false, 20, "marcus", "jake");
-  past("jake", "Will Jake make sunrise yoga?", "Fitness", false, 16, "sam", "elena");
-  past("jake", "Will Jake hit the 6 AM spin class?", "Fitness", true, 12, "elena", "jake");
-  past("jake", "Will Jake be at the gym before 6 AM Friday?", "Fitness", false, 9, "sam", "jake");
-  past("jake", "Will Jake do the early leg day?", "Fitness", false, 6, "priya", "jake");
-  // A few others so category base rates exist.
-  past("priya", "Will Priya ship the landing page by Sunday?", "Projects", true, 18, "marcus", "priya");
-  past("david", "Will Dave bench 205 for 5?", "Fitness", true, 15, "alex", "david");
-  past("sam", "Will Sam read 50 pages a day for a week?", "Habits", true, 11, "jake", "sam");
 
-  // Settled last week, so the leaderboard and a receipt have history.
-  const marathon = createBet(
-    db,
-    "marcus",
-    { proposition: "Will Sam run the marathon in under 4 hours?", outcomes: ["Yes", "No"], deadline: iso(-30), stake: 100, pick: 1, category: "Fitness", emoji: "🏅", dare: "Run a mile in a tutu", subjectId: "sam" },
-    at(-120)
-  );
-  joinBet(db, "sam", marathon.id, "o1", 200, at(-110));
-  joinBet(db, "jake", marathon.id, "o2", 120, at(-100));
-  joinBet(db, "alex", marathon.id, "o1", 80, at(-90));
-  settleBet(db, "marcus", marathon.id, "o1", at(-28));
-
-  // Closed and waiting on Alex (the default user) to settle it.
-  const bench = createBet(
-    db,
-    "alex",
-    { proposition: "Will Dave bench 225 lbs for 5 clean reps tonight?", outcomes: ["Yes", "No"], deadline: iso(-1), stake: 150, pick: 1, category: "Fitness", emoji: "💪", dare: "50 burpees on camera", subjectId: "david" },
-    at(-6)
-  );
-  joinBet(db, "david", bench.id, "o1", 200, at(-5));
-  joinBet(db, "elena", bench.id, "o2", 80, at(-4));
-  joinBet(db, "jake", bench.id, "o1", 60, at(-3));
-  // Conflicting evidence, so a review of this bet gets flagged for a human.
-  addEvidence(db, "david", bench.id, { kind: "text", text: "Hit 225 for 5 clean reps at 8:40 PM. Elena was spotting.", claimsOutcomeId: "o1" }, at(-0.8));
-  addEvidence(db, "elena", bench.id, { kind: "text", text: "I spotted. Rep 4 stopped well above the chest and I touched the bar on rep 5. Not clean.", claimsOutcomeId: "o2" }, at(-0.7));
-
-  // Open, multi-outcome.
-  const half = createBet(
-    db,
-    "priya",
-    { proposition: "Who finishes the Brooklyn Half first?", outcomes: ["Sam", "Priya", "Marcus"], deadline: iso(24 * 6), stake: 120, pick: 1, category: "Fitness", emoji: "🏃" },
-    at(-50)
-  );
-  joinBet(db, "sam", half.id, "o1", 200, at(-40));
-  joinBet(db, "marcus", half.id, "o3", 40, at(-20));
-
-  // Open, Yes/No, closes soon.
-  const legDay = createBet(
+  // Open markets.
+  const t1 = now - 5 * HOUR;
+  const legDay = createMarket(
     db,
     "sam",
-    { proposition: "Will Jake make 6 AM leg day tomorrow without hitting snooze?", outcomes: ["Yes", "No"], deadline: iso(20), stake: 100, pick: 1, category: "Fitness", emoji: "🏋️", dare: "Dye beard pink", subjectId: "jake" },
-    at(-2)
+    group.id,
+    { question: "Will Jake make 6 AM leg day tomorrow?", rule: "Gym check in before 6:15 AM", subjectId: "jake", category: "fitness", deadline: new Date(now + 20 * HOUR).toISOString(), dare: { kind: "preset", text: "50 burpees on camera" } },
+    new Date(t1)
   );
-  joinBet(db, "jake", legDay.id, "o1", 150, at(-1.5));
-  joinBet(db, "priya", legDay.id, "o2", 50, at(-1));
+  bookie(legDay.id, "jake", "Jake", "fitness", t1 + 60_000);
+  trade(db, "priya", legDay.id, { action: "buy", side: "yes", amount: 150 }, new Date(t1 + HOUR));
+  trade(db, "marcus", legDay.id, { action: "buy", side: "no", amount: 220 }, new Date(t1 + 2 * HOUR));
+  trade(db, "alex", legDay.id, { action: "buy", side: "no", amount: 90 }, new Date(t1 + 3 * HOUR));
 
-  // Placeholder while the next bet type is being built.
-  createBet(
+  const t2 = now - 30 * HOUR;
+  const demoDay = createMarket(
+    db,
+    "priya",
+    group.id,
+    { question: "Will Elena demo her side project by Friday?", rule: "Live demo on a call with at least 3 of us", subjectId: "elena", category: "work", deadline: new Date(now + 3 * DAY).toISOString(), dare: { kind: "wheel" } },
+    new Date(t2)
+  );
+  bookie(demoDay.id, "elena", "Elena", "work", t2 + 60_000);
+  trade(db, "alex", demoDay.id, { action: "buy", side: "yes", amount: 100 }, new Date(t2 + 2 * HOUR));
+  trade(db, "jake", demoDay.id, { action: "buy", side: "no", amount: 160 }, new Date(t2 + 5 * HOUR));
+
+  // Closed, with evidence waiting for review.
+  const t3 = now - 7 * DAY;
+  const dessert = createMarket(
     db,
     "alex",
-    { proposition: "test wip", outcomes: ["Yes", "No"], deadline: iso(24 * 7), stake: 10, pick: 0, category: "Projects", emoji: "🚧" },
-    at(-0.5)
+    group.id,
+    { question: "Did Marcus skip dessert all week?", rule: "No dessert Monday through Sunday", subjectId: "marcus", category: "food", deadline: new Date(now - 2 * HOUR).toISOString(), dare: { kind: "preset", text: "Wear a shirt the group picks" } },
+    new Date(t3)
   );
+  bookie(dessert.id, "marcus", "Marcus", "food", t3 + 60_000);
+  trade(db, "sam", dessert.id, { action: "buy", side: "yes", amount: 100 }, new Date(t3 + HOUR));
+  trade(db, "jake", dessert.id, { action: "buy", side: "no", amount: 140 }, new Date(t3 + 2 * HOUR));
+  trade(db, "priya", dessert.id, { action: "buy", side: "no", amount: 80 }, new Date(t3 + 3 * HOUR));
+  postEvidence(db, "marcus", dessert.id, { kind: "text", text: "Not a single dessert since Monday. Ask my fridge.", claims: "yes" }, new Date(now - HOUR));
+  postEvidence(db, "jake", dessert.id, { kind: "text", text: "Food log for Saturday: cheesecake, one slice.", claims: "no", app: "Food log" }, new Date(now - 40 * 60_000));
 
+  aiQueue().length = 0;
   return db;
 }
+
+function emptySeed(): Db {
+  const db = empty();
+  db.users = [1, 2, 3, 4].map((n) => ({ id: `p${n}`, name: `Player ${n}` }));
+  return db;
+}
+
+export const seed = (kind: "demo" | "empty") => (kind === "empty" ? emptySeed() : demo());

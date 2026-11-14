@@ -3,23 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { GROUP, NAV } from "@/lib/data";
+import { groupNav } from "@/lib/data";
+import { useApp } from "./AppProvider";
 import Avatar from "./Avatar";
-import { useHydrated } from "@/lib/bets/format";
-import { useBookie } from "./BookieProvider";
+import GroupSwitcher from "./GroupSwitcher";
+import { amount } from "./ui";
 
 /** Left navigation. Fixed on desktop; a drawer on smaller screens. */
 export default function Sidebar() {
   const pathname = usePathname();
-  const bookie = useBookie();
-  const { openCreateBet, navOpen, setNavOpen } = bookie;
-  // The sidebar streams in behind a Suspense boundary, so it can hydrate after live
-  // data has loaded. Hold that data back until hydration finishes so the first render
-  // matches the server HTML, then show it.
-  const hydrated = useHydrated();
-  const me = hydrated ? bookie.me : null;
-  const state = hydrated ? bookie.state : null;
-  const members = state?.users ?? [];
+  const { state, me, member, navOpen, setNavOpen, open } = useApp();
+  const group = state?.group;
 
   useEffect(() => {
     if (!navOpen) return;
@@ -33,9 +27,7 @@ export default function Sidebar() {
       {navOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setNavOpen(false)} aria-hidden />}
       <aside
         id="app-nav"
-        className={`fixed left-0 top-0 h-full w-[260px] bg-surface-container-low z-50 flex flex-col justify-between p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] transition-transform lg:translate-x-0 ${
-          navOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed left-0 top-0 h-full w-[260px] bg-surface-container-low z-50 flex flex-col justify-between p-4 transition-transform lg:translate-x-0 ${navOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex flex-col gap-5">
           <div className="flex items-center justify-between">
@@ -52,65 +44,59 @@ export default function Sidebar() {
             </button>
           </div>
 
-          {/* Group identity, compact */}
-          <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-container ring-1 ring-[#3a3645]">
-            <span className="text-lg" aria-hidden>
-              {GROUP.emoji}
-            </span>
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="font-label-md text-label-md text-on-surface font-semibold truncate">{GROUP.name}</span>
-              <span className="flex items-center gap-1.5">
-                <span className="flex -space-x-1.5" aria-hidden>
-                  {members.slice(0, 5).map((u) => (
-                    <Avatar key={u.id} name={u.name} src={u.avatar} size={16} className="ring-2 ring-surface-container" />
-                  ))}
-                </span>
-                <span className="font-label-sm text-[11px] text-on-surface-variant">{members.length} friends</span>
-              </span>
-            </div>
-          </div>
+          <GroupSwitcher />
 
-          <nav aria-label="Main" className="flex flex-col gap-1">
-            {NAV.map((item) => {
-              const active = item.match(pathname);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setNavOpen(false)}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                    active ? "bg-primary-container/15 text-primary font-semibold ring-1 ring-primary-container/30" : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
-                  }`}
-                >
-                  <span className="material-symbols-outlined" aria-hidden>
-                    {item.icon}
-                  </span>
-                  <span className="font-body-md text-body-md">{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+          {group && (
+            <nav aria-label="Group" className="flex flex-col gap-1">
+              {groupNav(group.id).map((item) => {
+                const active = item.match(pathname);
+                const owed = item.label === "Dares" ? state?.dares.filter((d) => d.status === "todo" && d.owedBy === state.me).length : 0;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setNavOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                      active ? "bg-primary-container/15 text-primary font-semibold ring-1 ring-primary-container/30" : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined" aria-hidden>
+                      {item.icon}
+                    </span>
+                    <span className="font-body-md text-body-md flex-1">{item.label}</span>
+                    {!!owed && <span className="px-1.5 rounded-full bg-secondary text-on-secondary font-label-sm text-[11px]">{owed}</span>}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 pt-4">
-          <button
-            onClick={() => openCreateBet()}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(206,76,59,0.2)] hover:shadow-[0_0_28px_rgba(206,76,59,0.33)] active:scale-[0.98] transition-all"
-          >
-            + New market
-          </button>
+          {group && (
+            <button
+              onClick={() => open("new-market")}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(206,76,59,0.2)] hover:shadow-[0_0_28px_rgba(206,76,59,0.33)] active:scale-[0.98] transition-all"
+            >
+              + New market
+            </button>
+          )}
           {me && (
-            <Link href="/profile" onClick={() => setNavOpen(false)} className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-container-lowest">
+            <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-container-lowest">
               <span className="flex items-center gap-2 min-w-0">
-                <Avatar name={me.name} src={me.avatar} size={32} />
+                <Avatar name={me.name} size={32} />
                 <span className="flex flex-col min-w-0">
                   <span className="font-label-md text-label-md text-on-surface font-semibold truncate">{me.name}</span>
-                  <span className="font-label-sm text-label-sm text-secondary-fixed-dim truncate">{me.title}</span>
+                  <span className="font-label-sm text-[11px] text-on-surface-variant truncate">Playing as</span>
                 </span>
               </span>
-              <span className="shrink-0 px-2 py-0.5 rounded-full bg-surface-container-high font-label-sm text-label-sm text-primary font-bold">{me.balance.toLocaleString()} P</span>
-            </Link>
+              {member && group && (
+                <span className="shrink-0 px-2 py-0.5 rounded-full bg-surface-container-high font-num text-[12px] text-primary font-bold" title={group.mode === "tokens" ? "Your tokens" : "Your points"}>
+                  {amount(member.balance, group.mode)}
+                </span>
+              )}
+            </div>
           )}
         </div>
       </aside>

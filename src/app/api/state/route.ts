@@ -1,15 +1,9 @@
 import type { NextRequest } from "next/server";
-import { snapshot } from "@/server/bets";
-import { currentUserId, errorResponse } from "@/server/http";
-import { read } from "@/server/store";
+import { query } from "@/server/http";
+import { snapshot } from "@/server/views";
 
-/** Everything the screens need: who you are, every friend's balance and record, and every bet. */
+/** Everything the screens need. `?group=` picks the group; leave it off for just your groups. */
 export async function GET(req: NextRequest) {
-  // Read the cookie outside the try so Next's "this route is dynamic" signal isn't caught.
-  const me = currentUserId(req);
-  try {
-    return Response.json(await read((db) => snapshot(db, me)));
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const group = req.nextUrl.searchParams.get("group");
+  return query(req, (db, me) => snapshot(db, me, group));
 }

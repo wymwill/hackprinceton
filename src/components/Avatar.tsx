@@ -1,4 +1,4 @@
-import { initials } from "@/lib/bets/format";
+import { initials } from "@/lib/format";
 
 /** Friend photo, or their initials when there isn't one. */
 export default function Avatar({ name, src, size = 28, className = "" }: { name: string; src?: string; size?: number; className?: string }) {
