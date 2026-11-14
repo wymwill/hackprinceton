@@ -44,7 +44,7 @@ export default function Sidebar() {
             </button>
           </div>
 
-          <GroupSwitcher />
+          {pathname !== "/login" && <GroupSwitcher />}
 
           {group && (
             <nav aria-label="Group" className="flex flex-col gap-1">
@@ -85,10 +85,10 @@ export default function Sidebar() {
           {me && (
             <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-container-lowest">
               <span className="flex items-center gap-2 min-w-0">
-                <Avatar name={me.name} size={32} />
+                <Avatar name={me.name} src={me.avatarUrl} size={32} />
                 <span className="flex flex-col min-w-0">
                   <span className="font-label-md text-label-md text-on-surface font-semibold truncate">{me.name}</span>
-                  <span className="font-label-sm text-xs text-on-surface-variant truncate">Playing as</span>
+                  <span className="font-label-sm text-xs text-on-surface-variant truncate">{state?.auth.mode === "demo" ? "Playing as" : "Signed in"}</span>
                 </span>
               </span>
               {member && group && (

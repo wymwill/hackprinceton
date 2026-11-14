@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { NextRequest } from "next/server";
-import { cookieUserId, resolveUser } from "@/server/http";
+import { identify, userFor, type Identity } from "@/server/auth";
 import { read, UPLOAD_DIR } from "@/server/store";
 
 const notFound = () => new Response("Not found", { status: 404 });
@@ -10,14 +10,20 @@ const notFound = () => new Response("Not found", { status: 404 });
  * Serve an uploaded evidence image to members of the market's group. Ids are
  * random and the file name never comes from the request. Anyone else, or a
  * missing file, gets a plain 404 so the route doesn't reveal what exists.
+ * That includes anyone signed out.
  */
 export async function GET(req: NextRequest, ctx: RouteContext<"/api/evidence/[id]">) {
   const { id } = await ctx.params;
-  const cookie = cookieUserId(req);
+  let who: Identity;
+  try {
+    who = await identify(req);
+  } catch {
+    return notFound();
+  }
   const ev = await read((db) => {
     const e = db.evidence.find((x) => x.id === id);
     const market = e && db.markets.find((m) => m.id === e.marketId);
-    const me = resolveUser(db, cookie);
+    const me = userFor(db, who);
     const member = market && db.memberships.some((m) => m.groupId === market.groupId && m.userId === me);
     return member ? e : undefined;
   });
