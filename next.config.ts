@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  // The AI Bookie's LangChain packages are Node-only (langsmith has optional deps like `ws`),
+  // so load them with plain Node require instead of bundling them.
+  serverExternalPackages: ["deepagents", "langchain", "langsmith", "@langchain/core", "@langchain/anthropic", "@langchain/langgraph"],
   turbopack: {
     rules: {
       "*.css": {

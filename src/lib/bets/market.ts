@@ -15,14 +15,32 @@ export const aiP = (bet: BetView, outcomeId: string, est: OddsEstimate | undefin
 
 export const isBinary = (bet: BetView) => bet.outcomes.length === 2;
 
-/** Where the AI number came from, in words a judge can read at a glance. */
+/**
+ * Where the AI number came from and whether it's the opening line or a later
+ * re-estimate, in words a judge can read at a glance.
+ */
 export function aiSource(est: OddsEstimate | undefined, mode: AppState["ai"]["mode"]) {
-  if (!est) return { label: "No estimate", tone: "muted" as const, fallback: false };
-  if (est.source === "claude") return { label: `Claude · ${est.model ?? "AI"}`, tone: "ai" as const, fallback: false };
-  if (est.fallbackReason) return { label: "AI unavailable · history only", tone: "warn" as const, fallback: true, reason: est.fallbackReason };
-  if (mode === "off") return { label: "AI offline · history only", tone: "muted" as const, fallback: true };
-  return { label: "History only", tone: "muted" as const, fallback: false };
+  if (!est) return { label: "No estimate", tone: "muted" as const, fallback: false, opening: false };
+  const opening = est.trigger === "created";
+  const stage = opening ? "Opening" : "Re-estimated";
+  if (est.source === "claude") {
+    return { label: `${stage} · ${est.via === "deep-agent" ? "Deep Agent" : "Claude"}`, tone: "ai" as const, fallback: false, opening };
+  }
+  if (est.fallbackReason) return { label: `${stage} · AI unavailable`, tone: "warn" as const, fallback: true, opening, reason: est.fallbackReason };
+  if (mode === "off") return { label: `${stage} · AI offline, history only`, tone: "muted" as const, fallback: true, opening };
+  return { label: `${stage} · history only`, tone: "muted" as const, fallback: false, opening };
 }
+
+/** Why the current estimate exists. */
+export const TRIGGER_TEXT: Record<OddsEstimate["trigger"], string> = {
+  created: "Opening line, set when the bet was posted",
+  evidence: "Re-estimated after new evidence",
+  history: "Re-estimated after a related bet settled",
+  manual: "Re-estimated on request",
+};
+
+/** The opening-line estimate: the latest one stamped "created" (the agent's, if it answered). */
+export const openingEstimate = (bet: BetView) => [...bet.oddsHistory].reverse().find((o) => o.trigger === "created" && !(o.source === "stats" && bet.oddsHistory.some((x) => x.trigger === "created" && x.source === "claude")));
 
 /** Payout multiple for staking `amount` on outcome `i` right now, if nobody else joins. */
 export function payoutMultiple(bet: BetView, i: number, amount = 100) {

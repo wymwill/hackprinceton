@@ -164,7 +164,7 @@ export default function BookieProvider({ children }: { children: React.ReactNode
           onClose={() => setCreateOpen(false)}
           onPosted={(bet) => {
             setCreateOpen(false);
-            toast(`🎲 Bet posted: “${bet.proposition}”. It's in the group feed.`, "purple");
+            toast(`🎲 Market posted: “${bet.proposition}”. It's live in Markets.`, "purple");
             router.push(`/bets/${bet.id}`);
           }}
         />

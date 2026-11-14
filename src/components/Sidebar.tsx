@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
+import { useHydrated } from "@/lib/bets/format";
 import { GROUP, NAV } from "@/lib/data";
 import Avatar from "./Avatar";
 import { useBookie } from "./BookieProvider";
@@ -10,8 +11,13 @@ import { useBookie } from "./BookieProvider";
 /** Left navigation. Fixed on desktop; a drawer on smaller screens. */
 export default function Sidebar() {
   const pathname = usePathname();
-  const { openCreateBet, me, state, navOpen, setNavOpen } = useBookie();
-  const members = state?.users ?? [];
+  const { openCreateBet, me: liveMe, state, navOpen, setNavOpen } = useBookie();
+  // The sidebar streams in behind a Suspense boundary, so it can hydrate after live
+  // data has loaded. Hold back live data until hydration finishes so the first
+  // client render matches the prerendered HTML.
+  const hydrated = useHydrated();
+  const me = hydrated ? liveMe : null;
+  const members = hydrated ? (state?.users ?? []) : [];
 
   useEffect(() => {
     if (!navOpen) return;

@@ -13,7 +13,22 @@ const POOL_COLOR = "#7c8aa0";
  * per entry. Lines hold their last value until `end`. Nothing is interpolated
  * or simulated.
  */
-export default function ProbabilityChart({ ai, pool, start, end, outcome }: { ai: Point[]; pool: Point[]; start: number; end: number; outcome: string }) {
+export default function ProbabilityChart({
+  ai,
+  pool,
+  start,
+  end,
+  outcome,
+  openingAt,
+}: {
+  ai: Point[];
+  pool: Point[];
+  start: number;
+  end: number;
+  outcome: string;
+  /** Timestamp of the opening-line estimate, marked with a ring. */
+  openingAt?: number;
+}) {
   // Draw at the container's real width so labels keep their pixel size on phones.
   const ref = useRef<HTMLElement>(null);
   const [W, setW] = useState(640);
@@ -66,13 +81,31 @@ export default function ProbabilityChart({ ai, pool, start, end, outcome }: { ai
         ))}
         {ai.map((p, i) => (
           <circle key={`a${i}`} cx={x(p.t)} cy={y(p.v)} r="3.5" fill={AI_COLOR}>
-            <title>{`AI Bookie ${p.v}% · ${new Date(p.t).toLocaleString()}`}</title>
+            <title>{`${p.t === openingAt ? "Opening line" : "AI Bookie re-estimate"} ${p.v}% · ${new Date(p.t).toLocaleString()}`}</title>
           </circle>
         ))}
+        {openingAt !== undefined &&
+          ai
+            .filter((p) => p.t === openingAt)
+            .slice(-1)
+            .map((p) => {
+              // Put the label on the side away from where the line goes next.
+              const next = ai.find((q) => q.t > p.t);
+              const below = next ? next.v >= p.v : p.v > 50;
+              const ty = Math.min(H - PAD.b - 4, Math.max(PAD.t + 10, y(p.v) + (below ? 18 : -10)));
+              return (
+                <g key="opening">
+                  <circle cx={x(p.t)} cy={y(p.v)} r="7" fill="none" stroke={AI_COLOR} strokeWidth="1.5" />
+                  <text x={x(p.t) + 10} y={ty} fontSize="11" fill={AI_COLOR}>
+                    Opening {p.v}%
+                  </text>
+                </g>
+              );
+            })}
       </svg>
       <figcaption className="flex flex-wrap gap-x-4 gap-y-1 font-label-sm text-[11px] text-on-surface-variant">
         <span className="inline-flex items-center gap-1.5">
-          <span className="w-4 h-[3px] rounded" style={{ background: AI_COLOR }} /> AI Bookie estimate ({ai.length} recorded)
+          <span className="w-4 h-[3px] rounded" style={{ background: AI_COLOR }} /> AI Bookie: opening line (ringed) and re-estimates ({ai.length} recorded)
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="w-4 h-0 border-t-2 border-dashed" style={{ borderColor: POOL_COLOR }} /> Pool share ({pool.length - 1} entries)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 /**
  * Re-render on an interval so countdowns and open/closed status stay current.
@@ -19,6 +19,19 @@ export function useNow(ms = 1000) {
     };
   }, [ms]);
   return now;
+}
+
+const noopSubscribe = () => () => {};
+
+/**
+ * False while React is hydrating server HTML, true after. Use it to hold back
+ * data that only exists in the browser (the signed-in friend, live balances) so
+ * the first client render matches the prerendered HTML exactly. This matters for
+ * parts of the page inside a Suspense boundary, which can finish hydrating after
+ * /api/state has already loaded.
+ */
+export function useHydrated() {
+  return useSyncExternalStore(noopSubscribe, () => true, () => false);
 }
 
 /** "3h 48m", "6d 2h", "42s", or "Closed". */

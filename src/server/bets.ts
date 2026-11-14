@@ -1,10 +1,11 @@
 import "server-only";
-import { baselineEstimate, type SettledRecord } from "@/lib/bets/odds";
+import { baselineEstimate, insertByTime, normalizeChances, type SettledRecord } from "@/lib/bets/odds";
 import { computePayouts, impliedChances, poolsByOutcome } from "@/lib/bets/payout";
 import type {
   AppState,
   AuditEntry,
   BetStatus,
+  BookieLine,
   BetView,
   CreateBetInput,
   Entry,
@@ -82,9 +83,13 @@ export function statsEstimate(db: Db, bet: Bet, trigger: OddsEstimate["trigger"]
   return { id: newId("o"), at: now.toISOString(), source: "stats", trigger, citedEvidenceIds: [], ...base };
 }
 
-/** Record an estimate on the bet and in the audit trail. */
+/**
+ * Record an estimate on the bet and in the audit trail. Kept in time order, so an
+ * estimate computed from older data never replaces a newer one as the current
+ * estimate (`odds.at(-1)`); it's still kept in the history.
+ */
 export function addEstimate(db: Db, bet: Bet, est: OddsEstimate) {
-  bet.odds.push(est);
+  const latest = insertByTime(bet.odds, est);
   const first = bet.outcomes[0];
   const p = est.probabilities.find((x) => x.outcomeId === first.id)?.p ?? 0;
   audit(
@@ -92,10 +97,19 @@ export function addEstimate(db: Db, bet: Bet, est: OddsEstimate) {
     bet.id,
     est.source === "claude" ? "ai" : "system",
     "odds_estimated",
-    `${est.source === "claude" ? `Claude (${est.model})` : "Stats"} estimate, ${est.trigger}: ${Math.round(p * 100)}% ${first.label}, ${est.uncertainty} uncertainty.`,
-    new Date(est.at),
+    `${est.via === "deep-agent" ? `Opening line by Deep Agent (${est.model})` : est.source === "claude" ? `Claude (${est.model})` : "Stats"} estimate, ${est.trigger}: ${Math.round(p * 100)}% ${first.label}, ${est.uncertainty} uncertainty.${latest ? "" : " Arrived after a newer estimate, so it's kept in history only."}`,
+    new Date(),
     [est.id, ...est.citedEvidenceIds]
   );
+}
+
+/**
+ * The opening line when no model sets it (AI off, or the agent failed): the
+ * stored-history estimate, rounded to whole percentages. No roast.
+ */
+export function openingLineFromStats(outcomes: { id: string }[], est: OddsEstimate): BookieLine {
+  const chances = normalizeChances(outcomes.map((o) => (est.probabilities.find((p) => p.outcomeId === o.id)?.p ?? 0) * 100));
+  return { status: "ready", source: "formula", chances, take: est.explanation, at: est.at };
 }
 
 // ---------- helpers ----------
@@ -189,7 +203,10 @@ export function createBet(db: Db, userId: string, input: Partial<CreateBetInput>
   db.bets.push(bet);
   audit(db, bet.id, userId, "bet_created", `Created with ${bet.outcomes.length} outcomes, closing ${bet.deadline}.`, now);
   addEntry(db, bet, userId, bet.outcomes[pick].id, stake, now);
-  addEstimate(db, bet, statsEstimate(db, bet, "created", now));
+  const est = statsEstimate(db, bet, "created", now);
+  addEstimate(db, bet, est);
+  // History-only opening line. With Claude on, the API marks it "thinking" and the Deep Agent replaces it.
+  bet.bookie = openingLineFromStats(bet.outcomes, est);
   return bet;
 }
 
@@ -432,6 +449,7 @@ function betView(db: Db, bet: Bet, now: number): BetView {
     evidence: db.evidence.filter((e) => e.betId === bet.id).map(publicEvidence),
     reviews: db.reviews.filter((r) => r.betId === bet.id),
     audit: db.audit.filter((a) => a.betId === bet.id),
+    bookie: bet.bookie,
   };
 }
 

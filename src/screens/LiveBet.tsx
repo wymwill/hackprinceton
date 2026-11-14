@@ -6,13 +6,14 @@ import { useState } from "react";
 import AiOddsPanel from "@/components/AiOddsPanel";
 import AuditTrail from "@/components/AuditTrail";
 import Avatar from "@/components/Avatar";
+import BookieLineCard from "@/components/BookieLineCard";
 import { liveStatus, useBookie } from "@/components/BookieProvider";
 import EvidencePanel from "@/components/EvidencePanel";
 import BookieMark, { SourceChip, UncertaintyMeter } from "@/components/market/BookieMark";
 import ProbabilityChart from "@/components/market/ProbabilityChart";
 import TradePanel from "@/components/market/TradePanel";
 import SettlementReview from "@/components/SettlementReview";
-import { aiP, aiSource, timeline } from "@/lib/bets/market";
+import { aiP, aiSource, openingEstimate, timeline } from "@/lib/bets/market";
 import { ago, timeLeft, useNow } from "@/lib/bets/format";
 
 const STATUS = {
@@ -194,7 +195,17 @@ export default function LiveBet() {
                   </select>
                 )}
               </div>
-              <ProbabilityChart ai={series.ai} pool={series.pool} start={Date.parse(bet.createdAt)} end={end} outcome={bet.outcomes[chartOutcome].label} />
+              <ProbabilityChart
+                ai={series.ai}
+                pool={series.pool}
+                start={Date.parse(bet.createdAt)}
+                end={end}
+                outcome={bet.outcomes[chartOutcome].label}
+                openingAt={(() => {
+                  const o = openingEstimate(bet);
+                  return o ? Date.parse(o.at) : undefined;
+                })()}
+              />
             </div>
           </section>
         </div>
@@ -256,6 +267,7 @@ export default function LiveBet() {
 
         {/* ---------- Main column, below the fold ---------- */}
         <div className="flex flex-col gap-5 min-w-0 lg:col-start-1 lg:row-start-2">
+          <BookieLineCard bet={bet} />
           <AiOddsPanel bet={bet} />
 
           <section aria-labelledby="rules" className="rounded-2xl bg-surface-container ring-1 ring-[#2f384a] p-4 flex flex-col gap-2">

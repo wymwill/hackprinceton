@@ -1,12 +1,20 @@
 import "server-only";
-import type { OddsEstimate, Outcome, Review, ReviewIssue } from "@/lib/bets/types";
-import { BetError, addEstimate, audit, requireInvolved, statsEstimate, statusOf } from "../bets";
+import type { BookieLine, OddsEstimate, Outcome, Review, ReviewIssue } from "@/lib/bets/types";
+import { BetError, addEstimate, audit, openingLineFromStats, requireInvolved, statsEstimate, statusOf } from "../bets";
 import { newId, read, transact, type Db, type StoredEvidence } from "../store";
+import { askAgent } from "./agent";
 import { AiUnavailable, estimateOdds, reviewEvidence } from "./claude";
 import { aiMode } from "./config";
 
 /**
  * Orchestrates the AI Bookie around the bet lifecycle.
+ *
+ * - Opening line (`setOpeningLine`): a LangChain Deep Agent researches a new bet
+ *   with tools (./agent.ts). Its line is saved on the bet and recorded as the
+ *   bet's first Claude estimate.
+ * - Later updates (`refreshOdds`): a single structured Claude call when evidence
+ *   arrives or someone asks to re-estimate (./claude.ts).
+ * - Settlement (`reviewBet`): a structured Claude review of submitted evidence.
  *
  * Model calls take seconds, so they never run inside the database lock:
  * read a snapshot, call the model, validate the answer, then write it in a
@@ -88,6 +96,7 @@ export async function refreshOdds(betId: string, trigger: OddsEstimate["trigger"
       id: newId("o"),
       source: "claude",
       model,
+      via: "structured",
       probabilities: normalize(ctx.bet.outcomes, output.probabilities, base.probabilities),
       uncertainty: output.uncertainty,
       explanation: output.explanation.trim().slice(0, 600),
@@ -109,6 +118,77 @@ export async function refreshOdds(betId: string, trigger: OddsEstimate["trigger"
     addEstimate(db, bet, est);
     return est;
   });
+}
+
+// ---------- opening line (Deep Agent) ----------
+
+/** A short, user-facing reason for an agent failure (LangChain errors carry JSON, request ids and URLs). */
+function agentFailureReason(err: unknown, raw: string) {
+  if ((err as Error)?.name === "AbortError" || /abort/i.test(raw)) return "The AI took too long to answer.";
+  if (/authentication_error|invalid x-api-key|\b401\b/i.test(raw)) return "The Anthropic API key was rejected.";
+  if (/rate_limit|\b429\b/i.test(raw)) return "Rate limited by the Anthropic API. Try again shortly.";
+  if (/without submitting/i.test(raw)) return "The AI finished without setting a line.";
+  return raw.split("\n")[0].replace(/\{.*\}/, "").trim().slice(0, 140) || "The AI couldn't answer.";
+}
+
+/**
+ * Run the opening-line Deep Agent for a new bet and save its line. Called after
+ * the create response is sent. Never throws: if the agent errors or times out,
+ * the bet keeps a history-only line and the fallback reason is recorded.
+ */
+export async function setOpeningLine(betId: string) {
+  try {
+    const ctx = await read((db) => {
+      const bet = db.bets.find((b) => b.id === betId);
+      if (!bet) return null;
+      return { db: structuredClone(db), outcomes: structuredClone(bet.outcomes), base: statsEstimate(db, bet, "created", new Date()) };
+    });
+    if (!ctx) return;
+    const { base, outcomes } = ctx;
+
+    let line: BookieLine;
+    let est: OddsEstimate;
+    try {
+      const a = await askAgent({ db: ctx.db, betId, facts: base.facts, baseline: base.probabilities });
+      line = { status: "ready", source: "ai", chances: a.chances, take: a.take, roast: a.roast, model: a.model, at: new Date().toISOString() };
+      est = {
+        ...base,
+        id: newId("o"),
+        // Stamped with when the agent read its inputs, so a newer estimate stays current (see addEstimate).
+        at: base.at,
+        source: "claude",
+        model: a.model,
+        via: "deep-agent",
+        probabilities: outcomes.map((o, i) => ({ outcomeId: o.id, p: a.chances[i] / 100 })),
+        explanation: a.take,
+        roast: a.roast,
+        // The agent's take isn't tied to fact ids; the stored-history facts stay attached for provenance.
+        citedFactIds: [],
+        citedEvidenceIds: [],
+      };
+    } catch (err) {
+      const raw = err instanceof Error ? err.message : String(err);
+      console.error("[bookie] opening-line agent failed, using stored history:", raw);
+      const reason = agentFailureReason(err, raw);
+      est = { ...base, fallbackReason: reason };
+      line = openingLineFromStats(outcomes, est);
+    }
+
+    await transact((db) => {
+      const bet = db.bets.find((b) => b.id === betId);
+      if (!bet) return;
+      // Never touch a settled bet, and never replace a line that's already been set.
+      if (bet.receiptId) {
+        console.warn(`[bookie] ${betId} settled before its opening line arrived; leaving it unchanged.`);
+        return;
+      }
+      if (bet.bookie?.status !== "thinking") return;
+      bet.bookie = line;
+      addEstimate(db, bet, est);
+    });
+  } catch (err) {
+    console.error("[bookie] couldn't save the opening line:", err);
+  }
 }
 
 // ---------- evidence review ----------
