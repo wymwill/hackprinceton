@@ -88,7 +88,7 @@ export default function NewMarketModal({ onClose, onCreated }: { onClose: () => 
           <input className={input} value={rule} onChange={(e) => setRule(e.target.value)} placeholder="Gym check in before 6:15" maxLength={160} />
         </Field>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Who's it about" hint="The Bookie checks their track record.">
+          <Field label="Who's it about" hint="Uses their track record.">
             <select className={input} value={subjectId} onChange={(e) => setSubjectId(e.target.value)}>
               <option value="">Nobody in particular</option>
               {group.members.map((m) => (
@@ -123,7 +123,7 @@ export default function NewMarketModal({ onClose, onCreated }: { onClose: () => 
           {when === "custom" && <input type="datetime-local" className={input} value={custom} onChange={(e) => setCustom(e.target.value)} aria-label="Closing time" />}
         </div>
         {group.mode === "tokens" && (
-          <Field label={`Starting chance: ${chance}%`} hint="The Bookie will adjust this before anyone trades.">
+          <Field label={`Starting chance: ${chance}%`} hint="The Bookie may adjust it.">
             <input type="range" min={5} max={95} value={chance} onChange={(e) => setChance(Number(e.target.value))} className="accent-[#ce4c3b]" />
           </Field>
         )}
@@ -144,7 +144,7 @@ export default function NewMarketModal({ onClose, onCreated }: { onClose: () => 
               </button>
             ))}
             <button type="button" className={chip(dareKind === "wheel")} onClick={() => setDareKind("wheel")}>
-              🎡 Spin the wheel
+              Spin the wheel
             </button>
             <button type="button" className={chip(dareKind === "custom")} onClick={() => (setDareKind("custom"), setDareText(""))}>
               Write my own
@@ -165,7 +165,7 @@ export default function NewMarketModal({ onClose, onCreated }: { onClose: () => 
           {(dareKind === "custom" || dareKind === "bookie") && (
             <input className={input} value={dareText} onChange={(e) => setDareText(e.target.value)} placeholder="What does the loser do?" maxLength={80} aria-label="Dare" />
           )}
-          {dareKind === "wheel" && <p className="font-body-sm text-body-sm text-on-surface-variant">Picks one of the group&apos;s dares when the market settles.</p>}
+          {dareKind === "wheel" && <p className="font-body-sm text-body-sm text-on-surface-variant">Picks a group dare at the end.</p>}
         </div>
         <Button tone="primary" type="submit" disabled={busy || question.trim().length < 3 || (needsText && !dareText.trim()) || (when === "custom" && !custom)}>
           Post market

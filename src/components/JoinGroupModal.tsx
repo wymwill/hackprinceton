@@ -18,7 +18,7 @@ export default function JoinGroupModal({ onClose, onJoined }: { onClose: () => v
   return (
     <Modal title="Join with a code" onClose={onClose}>
       <form onSubmit={submit} className="flex flex-col gap-4">
-        <Field label="Invite code" hint="Ask anyone in the group. It's in their Settings.">
+        <Field label="Invite code" hint="Find it in the group's Settings.">
           <input
             className={`${input} font-num tracking-[0.3em] uppercase text-center text-lg`}
             value={code}

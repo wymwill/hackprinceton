@@ -15,7 +15,7 @@ export default function Leaderboard() {
     <div className="flex flex-col gap-5 max-w-4xl">
       <div>
         <h1 className="font-display text-headline-lg text-on-surface">Leaderboard</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">{tokens ? "Tokens on hand plus what your open positions are worth right now." : "Points from right calls. Going against the crowd pays more."}</p>
+        <p className="font-body-md text-body-md text-on-surface-variant">{tokens ? "Tokens plus open positions." : "Points from right calls."}</p>
       </div>
       <div className={`${card} overflow-x-auto`}>
         <table className="w-full font-body-md text-body-md min-w-[560px]">
@@ -33,17 +33,17 @@ export default function Leaderboard() {
           <tbody>
             {rows.map((m, i) => (
               <tr key={m.userId} className={`border-t border-[#3a3645] ${m.userId === state.me ? "bg-primary-container/[0.06]" : ""}`}>
-                <td className="p-3 font-num text-on-surface-variant">{i === 0 ? "👑" : i + 1}</td>
+                <td className="p-3 font-num text-on-surface-variant">{i + 1}</td>
                 <td className="p-3">
                   <span className="flex items-center gap-2">
                     <Avatar name={m.name} size={28} />
                     <span className="text-on-surface">{m.name}</span>
-                    {m.role === "owner" && <span className="font-label-sm text-[10px] text-on-surface-variant">owner</span>}
+                    {m.role === "owner" && <span className="font-label-sm text-xs text-on-surface-variant">owner</span>}
                   </span>
                 </td>
                 <td className="p-3 text-right">
                   <span className="font-num text-on-surface">{(tokens ? m.balance + m.positionValue : m.points).toLocaleString()}</span>
-                  {tokens && m.positionValue > 0 && <span className="block font-label-sm text-[10px] text-on-surface-variant">{m.positionValue} in play</span>}
+                  {tokens && m.positionValue > 0 && <span className="block font-label-sm text-xs text-on-surface-variant">{m.positionValue} in play</span>}
                 </td>
                 <td className="p-3 text-right font-num">
                   <span className="text-primary">{m.record.wins}</span>
@@ -51,7 +51,7 @@ export default function Leaderboard() {
                   <span className="text-secondary">{m.record.losses}</span>
                 </td>
                 <td className={`p-3 text-right font-num ${m.streak > 0 ? "text-primary" : m.streak < 0 ? "text-secondary" : "text-on-surface-variant"}`}>
-                  {m.streak > 0 ? `🔥 W${m.streak}` : m.streak < 0 ? `L${-m.streak}` : "–"}
+                  {m.streak > 0 ? `W${m.streak}` : m.streak < 0 ? `L${-m.streak}` : "–"}
                 </td>
                 <td className="p-3 text-right font-num text-on-surface">{m.dares.done}</td>
                 <td className={`p-3 text-right font-num ${m.dares.skipped ? "text-secondary" : "text-on-surface-variant"}`}>{m.dares.skipped}</td>

@@ -7,7 +7,7 @@ import { amount } from "./ui";
 
 const AI_LABEL = {
   claude: { text: "Live", cls: "bg-tertiary-container/15 text-tertiary ring-tertiary-container/40", dot: "bg-tertiary animate-pulse" },
-  stub: { text: "Test stub", cls: "bg-tertiary-container/10 text-tertiary/80 ring-tertiary-container/30", dot: "bg-tertiary/60" },
+  stub: { text: "Test stub", cls: "bg-tertiary-container/10 text-tertiary ring-tertiary-container/30", dot: "bg-tertiary/60" },
   off: { text: "History only", cls: "bg-surface-container-high text-on-surface-variant ring-outline-variant/40", dot: "bg-outline" },
 };
 

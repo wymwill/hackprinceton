@@ -17,13 +17,13 @@ export default function BookieCard({ market: m, now }: { market: MarketView; now
     <section className="rounded-2xl bg-tertiary-container/[0.07] ring-1 ring-tertiary-container/30 p-4 flex flex-col gap-3" aria-label="The Bookie's estimate">
       <div className="flex items-center justify-between gap-2">
         <BookieMark />
-        {b && <span className="font-label-sm text-[11px] text-tertiary/70">{sourceLabel(b.source)} · {ago(b.at, now)}</span>}
+        {b && <span className="font-label-sm text-xs text-tertiary">{sourceLabel(b.source)} · {ago(b.at, now)}</span>}
       </div>
       {b ? (
         <>
           <div className="flex items-end gap-3">
             <span className="font-num text-[40px] leading-none font-semibold text-tertiary">{b.chance}%</span>
-            <span className="pb-1 font-body-sm text-body-sm text-tertiary/80">
+            <span className="pb-1 font-body-sm text-body-sm text-tertiary">
               chance of Yes · likely {b.range[0]} to {b.range[1]}%
             </span>
           </div>
@@ -39,12 +39,11 @@ export default function BookieCard({ market: m, now }: { market: MarketView; now
           )}
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <Confidence level={b.uncertainty} />
-            {b.fallbackReason && <span className="font-label-sm text-[11px] text-on-surface-variant">AI unavailable, used history</span>}
+            {b.fallbackReason && <span className="font-label-sm text-xs text-on-surface-variant">AI unavailable, used history</span>}
           </div>
-          {m.tradeCount > 0 && m.status === "open" && <p className="font-label-sm text-[11px] text-tertiary/70">Shown next to the price. Once trading starts, the Bookie never moves it.</p>}
         </>
       ) : (
-        <p className={`font-body-md text-body-md text-tertiary/80 ${m.status === "open" ? "animate-pulse" : ""}`}>{m.status === "open" ? "Setting the line…" : "No line was set on this one."}</p>
+        <p className={`font-body-md text-body-md text-tertiary ${m.status === "open" ? "animate-pulse" : ""}`}>{m.status === "open" ? "Setting the line…" : "No line was set on this one."}</p>
       )}
       <div className="flex items-center gap-3">
         {m.status === "open" && (
@@ -61,7 +60,7 @@ export default function BookieCard({ market: m, now }: { market: MarketView; now
           </button>
         )}
         {m.aiLog.length > 0 && (
-          <button onClick={() => setLog(!log)} className="font-label-md text-label-md text-tertiary/80 hover:underline" aria-expanded={log}>
+          <button onClick={() => setLog(!log)} className="font-label-md text-label-md text-tertiary hover:underline" aria-expanded={log}>
             {log ? "Hide" : "Show"} the Bookie&apos;s log ({m.aiLog.length})
           </button>
         )}
@@ -71,7 +70,7 @@ export default function BookieCard({ market: m, now }: { market: MarketView; now
           {[...m.aiLog].reverse().map((a) => (
             <li key={a.id} className="flex flex-col p-2 rounded-lg bg-surface-container-lowest/60">
               <span className="text-on-surface">{a.summary}</span>
-              <span className="font-label-sm text-[11px] text-on-surface-variant">
+              <span className="font-label-sm text-xs text-on-surface-variant">
                 {sourceLabel(a.source)}
                 {a.model ? ` · ${a.model}` : ""} · {ago(a.at, now)}
               </span>

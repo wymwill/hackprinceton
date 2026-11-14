@@ -45,7 +45,7 @@ export default function CreateGroupModal({ onClose, onCreated }: { onClose: () =
             ))}
           </div>
         </div>
-        <Field label="Play for" hint={mode === "tokens" ? "Everyone gets the same starting tokens and trades Yes or No." : "No spending. Everyone makes a pick, and calling it against the crowd scores more."}>
+        <Field label="Play for" hint={mode === "tokens" ? "Everyone trades Yes or No with equal tokens." : "Everyone picks a side. Bold calls score more."}>
           <Segmented
             ariaLabel="Currency"
             value={mode}
