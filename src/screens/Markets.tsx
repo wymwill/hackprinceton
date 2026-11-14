@@ -131,7 +131,7 @@ export default function Markets() {
               role="tab"
               aria-selected={filter === f.id}
               onClick={() => setFilter(f.id)}
-              className={`px-3.5 py-1.5 rounded-full font-label-md text-label-md ring-1 ${filter === f.id ? "bg-primary-container/20 text-primary ring-primary-container/50" : "bg-surface-container text-on-surface-variant ring-[#4a4460] hover:text-on-surface"}`}
+              className={`px-3.5 py-1.5 rounded-full font-label-md text-label-md ring-1 ${filter === f.id ? "bg-primary-container/20 text-primary ring-primary-container/50" : "bg-surface-container text-on-surface-variant ring-[#333238] hover:text-on-surface"}`}
             >
               {f.label} <span className="font-num opacity-70">{counts[f.id]}</span>
             </button>
