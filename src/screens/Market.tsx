@@ -7,6 +7,7 @@ import { timeLeft, useNow } from "@/lib/format";
 import Avatar from "@/components/Avatar";
 import BookieCard from "@/components/BookieCard";
 import ChanceChart from "@/components/ChanceChart";
+import MobileTradeBar from "@/components/MobileTradeBar";
 import ResolutionPanel from "@/components/ResolutionPanel";
 import TradeTicket from "@/components/TradeTicket";
 import { useGroup } from "@/components/useGroup";
@@ -128,7 +129,7 @@ export default function Market() {
           </section>
         </div>
 
-        <aside className="flex flex-col gap-4 lg:sticky lg:top-20">
+        <aside id="trade" className="flex flex-col gap-4 lg:sticky lg:top-20 scroll-mt-20">
           {m.status === "open" &&
             (group.mode === "tokens" ? (
               <TradeTicket key={initialSide} market={m} initialSide={initialSide} />
@@ -152,6 +153,7 @@ export default function Market() {
           <BookieCard market={m} now={now} />
         </aside>
       </div>
+      {m.status === "open" && <MobileTradeBar market={m} mode={group.mode} targetId="trade" />}
     </div>
   );
 }
