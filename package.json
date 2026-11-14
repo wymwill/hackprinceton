@@ -10,7 +10,7 @@
     "postinstall": "npm --prefix frontend install --no-audit --no-fund",
     "lint": "eslint",
     "typecheck": "tsc --noEmit && npm --prefix frontend run typecheck",
-    "test:series-sql": "node --test supabase/tests/series.test.mjs supabase/tests/outcomes.test.mjs supabase/tests/ranges.test.mjs supabase/tests/upgrade.test.mjs",
+    "test:series-sql": "node --test supabase/tests/series.test.mjs supabase/tests/outcomes.test.mjs supabase/tests/ranges.test.mjs supabase/tests/upgrade.test.mjs supabase/tests/social.test.mjs",
     "test:series": "node scripts/e2e-series.mjs",
     "create:demo-users": "node scripts/create-demo-users.mjs",
     "test:outcomes-local": "node scripts/e2e-outcomes-local.mjs",
