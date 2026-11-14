@@ -22,13 +22,13 @@ export default function MarketCard({ market: m, group, now }: { market: MarketVi
   const showBookie = m.bookie && m.status !== "settled" && Math.abs(m.bookie.chance - m.chance) >= 5;
   const mine = m.positions.find((p) => p.userId === state?.me);
   const myPick = m.picks.find((p) => p.userId === state?.me);
-  const dare = m.receipt?.dareText ?? (m.dare?.kind === "wheel" ? "🎡 Wheel" : m.dare && "text" in m.dare ? m.dare.text : undefined);
+  const dare = m.receipt?.dareText ?? (m.dare?.kind === "wheel" ? "Wheel" : m.dare && "text" in m.dare ? m.dare.text : undefined);
   const outcome = m.receipt?.outcome;
 
   return (
     <article className="group relative flex flex-col gap-3 rounded-2xl bg-surface-container ring-1 ring-[#3a3645] hover:ring-outline-variant p-4 transition-colors">
       <div className="flex items-start gap-3">
-        {m.subjectId ? <Avatar name={name(m.subjectId)} size={40} className="rounded-xl!" /> : <span className="w-10 h-10 shrink-0 rounded-xl bg-surface-container-high flex items-center justify-center text-lg" aria-hidden>🎲</span>}
+        {m.subjectId ? <Avatar name={name(m.subjectId)} size={40} className="rounded-xl!" /> : <span className="w-10 h-10 shrink-0 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface-variant" aria-hidden><span className="material-symbols-outlined text-[20px]">help</span></span>}
         <h3 className="flex-1 min-w-0 font-label-lg text-[15px] leading-snug text-on-surface">
           <Link href={href} className="after:absolute after:inset-0 after:rounded-2xl hover:text-primary">
             {m.question}
@@ -40,7 +40,7 @@ export default function MarketCard({ market: m, group, now }: { market: MarketVi
           ) : (
             <>
               <span className="font-num text-[26px] font-semibold text-on-surface">{m.chance}%</span>
-              <span className="font-label-sm text-[10px] text-on-surface-variant mt-1">{group.mode === "tokens" ? "chance" : "picked Yes"}</span>
+              <span className="font-label-sm text-xs text-on-surface-variant mt-1">{group.mode === "tokens" ? "chance" : "picked Yes"}</span>
             </>
           )}
         </div>
@@ -82,13 +82,13 @@ export default function MarketCard({ market: m, group, now }: { market: MarketVi
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-2 font-label-sm text-[11px] text-on-surface-variant">
-        <span className="truncate">
+      <div className="flex items-start justify-between gap-2 font-label-sm text-xs text-on-surface-variant">
+        <span className="min-w-0">
           {group.mode === "tokens" ? `${m.volume.toLocaleString()} traded` : `${m.picks.length} picks`}
           {mine && (mine.yes > 0 || mine.no > 0) && <span className="text-primary"> · you hold {mine.yes > 0 ? `${mine.yes} Yes` : `${mine.no} No`}</span>}
-          {dare && <span className="text-secondary"> · 🔥 {dare}</span>}
+          {dare && <span className="text-secondary"> · Dare: {dare}</span>}
         </span>
-        {m.status === "open" && <span className="whitespace-nowrap">⏱ {timeLeft(m.deadline, now)}</span>}
+        {m.status === "open" && <span className="whitespace-nowrap">{timeLeft(m.deadline, now)}</span>}
       </div>
     </article>
   );

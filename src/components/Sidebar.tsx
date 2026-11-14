@@ -33,7 +33,7 @@ export default function Sidebar() {
           <div className="flex items-center justify-between">
             <Link href="/" onClick={() => setNavOpen(false)} className="flex items-center gap-2">
               <span className="w-8 h-8 rounded-xl bg-primary-container text-on-primary flex items-center justify-center text-lg" aria-hidden>
-                🎲
+                <span className="material-symbols-outlined text-[20px]">casino</span>
               </span>
               <span className="font-display italic text-[22px] leading-none text-on-surface">Betting with Friends</span>
             </Link>
@@ -65,7 +65,7 @@ export default function Sidebar() {
                       {item.icon}
                     </span>
                     <span className="font-body-md text-body-md flex-1">{item.label}</span>
-                    {!!owed && <span className="px-1.5 rounded-full bg-secondary text-on-secondary font-label-sm text-[11px]">{owed}</span>}
+                    {!!owed && <span className="px-1.5 rounded-full bg-secondary text-on-secondary font-label-sm text-xs">{owed}</span>}
                   </Link>
                 );
               })}
@@ -88,7 +88,7 @@ export default function Sidebar() {
                 <Avatar name={me.name} size={32} />
                 <span className="flex flex-col min-w-0">
                   <span className="font-label-md text-label-md text-on-surface font-semibold truncate">{me.name}</span>
-                  <span className="font-label-sm text-[11px] text-on-surface-variant truncate">Playing as</span>
+                  <span className="font-label-sm text-xs text-on-surface-variant truncate">Playing as</span>
                 </span>
               </span>
               {member && group && (

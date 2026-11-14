@@ -110,7 +110,7 @@ export const amount = (n: number, mode: "tokens" | "points") => `${n.toLocaleStr
 export function NotInGroup() {
   return (
     <Empty icon="lock" title="You're not in this group">
-      <p>Switch who you&apos;re playing as, or join with an invite code from the group menu.</p>
+      <p>Switch players or join with an invite code.</p>
     </Empty>
   );
 }

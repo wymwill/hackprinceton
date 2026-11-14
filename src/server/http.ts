@@ -23,7 +23,8 @@ export async function readJson(req: Request): Promise<Record<string, unknown>> {
   }
 }
 
-const resolveUser = (db: Db, id: string | undefined) => (id && db.users.some((u) => u.id === id) ? id : db.users[0]?.id ?? "");
+/** The cookie's user if they exist, otherwise the first user (there is no login). */
+export const resolveUser = (db: Db, id: string | undefined) => (id && db.users.some((u) => u.id === id) ? id : db.users[0]?.id ?? "");
 
 /** Run a mutation for the current user. Any AI work it queued runs after the response. */
 export async function mutate<T>(req: NextRequest, fn: (db: Db, userId: string) => T, status = 200) {
