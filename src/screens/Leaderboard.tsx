@@ -32,7 +32,7 @@ export default function Leaderboard() {
           </thead>
           <tbody>
             {rows.map((m, i) => (
-              <tr key={m.userId} className={`border-t border-[#3a3645] ${m.userId === state.me ? "bg-primary-container/[0.06]" : ""}`}>
+              <tr key={m.userId} className={`border-t border-[#433f4f] ${m.userId === state.me ? "bg-primary-container/[0.06]" : ""}`}>
                 <td className="p-3 font-num text-on-surface-variant">{i + 1}</td>
                 <td className="p-3">
                   <span className="flex items-center gap-2">

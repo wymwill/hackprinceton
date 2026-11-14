@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 /** Small shared building blocks so screens stay consistent. */
 
-export const card = "rounded-2xl bg-surface-container ring-1 ring-[#3a3645]";
+export const card = "rounded-2xl bg-surface-container ring-1 ring-[#433f4f]";
 export const label = "font-label-sm text-label-sm uppercase text-on-surface-variant";
 export const input =
   "w-full rounded-xl bg-surface-container-lowest ring-1 ring-outline-variant/60 focus:ring-primary-container px-3 py-2.5 text-on-surface placeholder:text-outline outline-none font-body-md text-body-md";

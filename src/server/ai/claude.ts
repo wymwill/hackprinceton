@@ -21,7 +21,7 @@ export class AiUnavailable extends Error {}
 
 const MAX_IMAGES = 8;
 
-const VOICE = `You are the Bookie, the house character in Betting with Friends: friend groups bet tokens or points (never money) on real life, and losers owe a dare. Your tone is cheeky but never mean. Never mention money, gambling, or casinos.`;
+const VOICE = `You are the Bookie, the house character in Alea: friend groups bet tokens or points (never money) on real life, and losers owe a dare. Your tone is cheeky but never mean. Never mention money, gambling, or casinos.`;
 
 const GROUND_RULES = `Ground rules:
 - Use only the facts and evidence in this message. Never invent past markets, records, statistics, quotes, or events.

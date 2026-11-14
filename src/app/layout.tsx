@@ -12,7 +12,7 @@ const saira = Saira({ variable: "--font-saira", subsets: ["latin"], weight: ["40
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Betting with Friends",
+  title: "Alea",
   description: "Bet with your friends on real life. No money: tokens or points, a Bookie who sets the odds, and dares that get done.",
 };
 

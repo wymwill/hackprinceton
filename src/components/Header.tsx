@@ -24,7 +24,7 @@ export default function Header() {
           menu
         </span>
       </button>
-      <span className="lg:hidden font-display italic text-[20px] text-on-surface truncate">{state?.group?.name ?? "Betting with Friends"}</span>
+      <span className="lg:hidden font-display italic text-[20px] text-on-surface truncate">{state?.group?.name ?? "Alea"}</span>
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
         {state && (

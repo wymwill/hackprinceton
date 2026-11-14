@@ -1,27 +1,27 @@
 @import "tailwindcss";
 
-/* Betting with Friends: Rosy Copper (#CE4C3B) on Shadow Grey (#27242F).
+/* Alea: Rosy Copper (#CE4C3B) on Shadow Grey (#27242F).
  * Layout language borrowed from Scarlet Market (square framed panels, small
  * tracked uppercase labels, serif display, mono numbers), minus the retro FX. */
 @theme {
-  --color-surface: #27242f;
-  --color-surface-dim: #211e28;
-  --color-surface-bright: #4a4558;
-  --color-surface-container-lowest: #1d1a23;
-  --color-surface-container-low: #2d2a36;
-  --color-surface-container: #33303d;
-  --color-surface-container-high: #3a3645;
-  --color-surface-container-highest: #423d4e;
-  --color-surface-variant: #3a3645;
+  --color-surface: #2e2b37;
+  --color-surface-dim: #27242f;
+  --color-surface-bright: #534e62;
+  --color-surface-container-lowest: #24212b;
+  --color-surface-container-low: #35323f;
+  --color-surface-container: #3b3846;
+  --color-surface-container-high: #433f4f;
+  --color-surface-container-highest: #4b4658;
+  --color-surface-variant: #433f4f;
   --color-surface-tint: #ce4c3b;
-  --color-on-surface: #f3eeee;
-  --color-on-surface-variant: #d2cbd8;
+  --color-on-surface: #faf6f6;
+  --color-on-surface-variant: #ddd7e2;
   --color-inverse-surface: #ebe5e8;
   --color-inverse-on-surface: #27242f;
   --color-outline: #a39cae;
-  --color-outline-variant: #4b4657;
-  --color-background: #27242f;
-  --color-on-background: #f3eeee;
+  --color-outline-variant: #565162;
+  --color-background: #2e2b37;
+  --color-on-background: #faf6f6;
 
   /* rosy copper: brand, wins & primary actions */
   --color-primary: #e2685a;
@@ -146,7 +146,7 @@
   *,
   ::before,
   ::after {
-    border-color: #3a3645;
+    border-color: #433f4f;
   }
   html,
   body {
