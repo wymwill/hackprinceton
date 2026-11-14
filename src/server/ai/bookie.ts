@@ -1,180 +1,253 @@
 import "server-only";
-import { ChatAnthropic } from "@langchain/anthropic";
-import { tool } from "@langchain/core/tools";
-import { createDeepAgent } from "deepagents";
-import { z } from "zod";
-import type { BookieLine } from "@/lib/bets/types";
-import { snapshot } from "../bets";
-import { read, transact, type Db } from "../store";
+import type { OddsEstimate, Outcome, Review, ReviewIssue } from "@/lib/bets/types";
+import { BetError, addEstimate, audit, requireInvolved, statsEstimate, statusOf } from "../bets";
+import { newId, read, transact, type Db, type StoredEvidence } from "../store";
+import { AiUnavailable, estimateOdds, reviewEvidence } from "./claude";
+import { aiMode } from "./config";
 
 /**
- * The AI Bookie: a LangChain Deep Agent that sets the opening line on a new bet.
+ * Orchestrates the AI Bookie around the bet lifecycle.
  *
- * Flow: the bet is saved first and marked "thinking", the API responds right
- * away, and this runs afterwards. The agent looks up the bet and the friends'
- * track records with tools, then calls `submit_line`. Whatever it submits is
- * written onto the bet, and the screens pick it up on their next poll.
- *
- * If there's no API key, the agent errors, or it takes too long, a simple
- * track-record formula fills in, so a demo never hangs on the AI.
+ * Model calls take seconds, so they never run inside the database lock:
+ * read a snapshot, call the model, validate the answer, then write it in a
+ * short transaction. The AI only ever records estimates and recommendations.
+ * Settlement still goes through `settleBet`, triggered by a human.
  */
 
-const MODEL = "claude-opus-5-5";
-const TIMEOUT_MS = 45_000;
+const MIN_CONFIDENCE = 0.75;
 
-const SYSTEM_PROMPT = `You are the Bookie for a friend group's no-money betting app. Friends bet points on real-life claims (gym streaks, wake-up times, movie picks, side projects). Losers owe a dare.
+type Who = { id: string; name: string };
 
-Your job: set the opening line on one new bet.
-1. Call get_bet to read it.
-2. Call get_track_record for each friend the bet is about (and the creator if relevant). Base your numbers on their actual history, not vibes.
-3. Call submit_line exactly once with a chance for every outcome (whole numbers that add up to 100), a one-sentence take explaining the numbers, and a short roast.
-
-Tone: cheeky and playful, never mean. No money talk. Keep the take under 25 words and the roast under 15 words.`;
-
-type Ctx = { db: Db; betId: string };
-
-/** Find a friend by full or first name, case-insensitive. */
-function findUser(db: Db, name: string) {
-  const n = name.trim().toLowerCase();
-  return db.users.find((u) => u.name.toLowerCase() === n || u.name.toLowerCase().split(" ")[0] === n.split(" ")[0]);
+function context(db: Db, betId: string) {
+  const bet = db.bets.find((b) => b.id === betId);
+  if (!bet) throw new BetError(404, "bet_not_found", "That bet doesn't exist.");
+  const users: Who[] = db.users.map((u) => ({ id: u.id, name: u.name }));
+  const stakes = new Map<string, string>();
+  for (const e of db.entries.filter((x) => x.betId === betId)) {
+    stakes.set(e.userId, `${e.amount} pts on ${bet.outcomes.find((o) => o.id === e.outcomeId)?.label}`);
+  }
+  const evidence = db.evidence.filter((e) => e.betId === betId);
+  return { bet: structuredClone(bet), users, stakes, evidence: structuredClone(evidence) };
 }
 
-function buildTools({ db, betId }: Ctx, submit: (line: { chances: number[]; take: string; roast: string }) => void) {
-  const state = snapshot(db, "alex");
-  const bet = state.bets.find((b) => b.id === betId);
+// ---------- odds ----------
 
-  const getBet = tool(
-    async () => {
-      if (!bet) return "Bet not found.";
-      const creator = state.users.find((u) => u.id === bet.creatorId)?.name;
-      return JSON.stringify({
-        proposition: bet.proposition,
-        category: bet.category,
-        outcomes: bet.outcomes.map((o) => o.label),
-        deadline: bet.deadline,
-        creator,
-        dare: bet.dare,
-        friends: state.users.map((u) => u.name),
-      });
-    },
-    { name: "get_bet", description: "Read the new bet: proposition, outcomes, deadline, creator, and the group's friends.", schema: z.object({}) }
-  );
-
-  const getTrackRecord = tool(
-    async ({ name }) => {
-      const u = findUser(db, name);
-      if (!u) return `No friend named ${name}.`;
-      const view = state.users.find((x) => x.id === u.id)!;
-      const recent = state.bets
-        .filter((b) => b.receipt && b.entries.some((e) => e.userId === u.id))
-        .slice(0, 8)
-        .map((b) => {
-          const p = b.receipt!.payouts.find((x) => x.userId === u.id);
-          return { bet: b.proposition, result: p && p.net >= 0 ? "won" : "lost" };
-        });
-      return JSON.stringify({ name: u.name, title: u.title, ...view.stats, recentBets: recent });
-    },
-    {
-      name: "get_track_record",
-      description: "Look up a friend's betting history: wins, losses, current streak, net points, and recent settled bets.",
-      schema: z.object({ name: z.string().describe("Friend's full or first name") }),
-    }
-  );
-
-  const submitLine = tool(
-    async ({ chances, take, roast }) => {
-      if (!bet) return "Bet not found.";
-      if (chances.length !== bet.outcomes.length) return `Give exactly ${bet.outcomes.length} chances, one per outcome, in order.`;
-      submit({ chances, take, roast });
-      return "Line saved.";
-    },
-    {
-      name: "submit_line",
-      description: "Submit the opening line. Call this exactly once, last.",
-      schema: z.object({
-        chances: z.array(z.number().int().min(1).max(99)).describe("Chance for each outcome in the same order as get_bet's outcomes. Should add up to 100."),
-        take: z.string().describe("One sentence explaining the numbers, grounded in track records."),
-        roast: z.string().describe("A short, playful roast. Never mean."),
-      }),
-    }
-  );
-
-  return [getBet, getTrackRecord, submitLine];
+/** Normalize model percentages onto our outcome ids; fall back to the baseline for anything missing. */
+function normalize(outcomes: Outcome[], raw: { outcome_id: string; percent: number }[], baseline: { outcomeId: string; p: number }[]) {
+  const vals = outcomes.map((o) => {
+    const r = raw.find((x) => x.outcome_id === o.id);
+    const v = r && Number.isFinite(r.percent) ? r.percent / 100 : (baseline.find((b) => b.outcomeId === o.id)?.p ?? 0);
+    return Math.min(0.99, Math.max(0.01, v));
+  });
+  const total = vals.reduce((a, b) => a + b, 0);
+  return outcomes.map((o, i) => ({ outcomeId: o.id, p: vals[i] / total }));
 }
 
-/** Scale to whole numbers that add up to exactly 100. */
-function normalize(chances: number[]) {
-  const total = chances.reduce((a, b) => a + b, 0) || 1;
-  const scaled = chances.map((c) => Math.max(1, Math.round((c / total) * 100)));
-  scaled[scaled.indexOf(Math.max(...scaled))] += 100 - scaled.reduce((a, b) => a + b, 0);
-  return scaled;
-}
+/**
+ * Refresh a bet's odds. With Claude on, the model reads the stored-history facts,
+ * the stats baseline, and any evidence so far. With it off, only `manual`
+ * refreshes do anything (history changes are handled at settlement).
+ */
+export async function refreshOdds(betId: string, trigger: OddsEstimate["trigger"]): Promise<OddsEstimate | null> {
+  if (aiMode() !== "claude") {
+    if (trigger !== "manual") return null;
+    return transact((db) => {
+      const bet = db.bets.find((b) => b.id === betId);
+      if (!bet) throw new BetError(404, "bet_not_found", "That bet doesn't exist.");
+      if (bet.receiptId) throw new BetError(409, "bet_settled", "This bet is already settled.");
+      const est = statsEstimate(db, bet, "manual", new Date());
+      addEstimate(db, bet, est);
+      return est;
+    });
+  }
 
-async function askAgent(ctx: Ctx): Promise<BookieLine> {
-  let submitted: { chances: number[]; take: string; roast: string } | null = null;
-  const agent = createDeepAgent({
-    model: new ChatAnthropic({ model: MODEL, maxTokens: 8000, outputConfig: { effort: "low" } }),
-    tools: buildTools(ctx, (line) => (submitted = line)),
-    systemPrompt: SYSTEM_PROMPT,
+  const { ctx, base } = await read((db) => {
+    const ctx = context(db, betId);
+    const live = db.bets.find((b) => b.id === betId)!;
+    if (live.receiptId) throw new BetError(409, "bet_settled", "This bet is already settled.");
+    return { ctx, base: statsEstimate(db, live, trigger, new Date()) };
   });
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  let est: OddsEstimate;
   try {
-    await agent.invoke(
-      { messages: [{ role: "user", content: "A new bet was just posted. Set the opening line." }] },
-      { signal: controller.signal, recursionLimit: 30 }
-    );
-  } finally {
-    clearTimeout(timer);
+    const { output, model } = await estimateOdds({
+      proposition: ctx.bet.proposition,
+      category: ctx.bet.category,
+      outcomes: ctx.bet.outcomes,
+      subject: ctx.users.find((u) => u.id === ctx.bet.subjectId)?.name,
+      facts: base.facts,
+      baseline: base.probabilities,
+      evidence: ctx.evidence,
+      users: ctx.users,
+      stakes: ctx.stakes,
+    });
+    const factIds = new Set(base.facts.map((f) => f.id));
+    const evIds = new Set(ctx.evidence.map((e) => e.id));
+    est = {
+      ...base,
+      id: newId("o"),
+      source: "claude",
+      model,
+      probabilities: normalize(ctx.bet.outcomes, output.probabilities, base.probabilities),
+      uncertainty: output.uncertainty,
+      explanation: output.explanation.trim().slice(0, 600),
+      // The model may only point at facts we computed and evidence that exists.
+      citedFactIds: output.cited_fact_ids.filter((id) => factIds.has(id)),
+      citedEvidenceIds: output.cited_evidence_ids.filter((id) => evIds.has(id)),
+    };
+  } catch (err) {
+    if (!(err instanceof AiUnavailable)) throw err;
+    console.warn(`[bookie] odds for ${betId} fell back to stats: ${err.message}`);
+    est = { ...base, fallbackReason: err.message };
   }
-  if (!submitted) throw new Error("The agent finished without submitting a line.");
-  const line = submitted as { chances: number[]; take: string; roast: string };
+
+  return transact((db) => {
+    const bet = db.bets.find((b) => b.id === betId);
+    if (!bet || bet.receiptId) return null;
+    // Keep the stats baseline next to the model's number so both stay visible.
+    if (est.source === "claude") addEstimate(db, bet, { ...base, id: newId("o") });
+    addEstimate(db, bet, est);
+    return est;
+  });
+}
+
+// ---------- evidence review ----------
+
+/** No model: describe what was submitted and flag it for a human. Never recommends. */
+function rulesReview(outcomes: Outcome[], evidence: StoredEvidence[], entriesByUser: Map<string, string>, why: string) {
+  const issues: ReviewIssue[] = [];
+  if (!evidence.length) issues.push({ type: "missing", detail: "Nobody has submitted evidence yet.", evidenceIds: [] });
+  const claimed = new Set(evidence.map((e) => e.claimsOutcomeId).filter(Boolean));
+  if (claimed.size > 1) {
+    issues.push({
+      type: "contradictory",
+      detail: `Evidence points to different outcomes: ${[...claimed].map((id) => outcomes.find((o) => o.id === id)?.label).join(" vs ")}.`,
+      evidenceIds: evidence.filter((e) => e.claimsOutcomeId).map((e) => e.id),
+    });
+  }
+  const self = evidence.filter((e) => e.claimsOutcomeId && entriesByUser.get(e.userId) === e.claimsOutcomeId);
+  if (self.length) {
+    issues.push({ type: "self_interested", detail: "Some evidence backs the outcome its submitter staked on.", evidenceIds: self.map((e) => e.id) });
+  }
+  const unseen = evidence.filter((e) => e.kind !== "text");
+  if (unseen.length) {
+    issues.push({ type: "unverifiable", detail: "Links and images weren't checked by an AI. Open them yourself.", evidenceIds: unseen.map((e) => e.id) });
+  }
+  const counts = outcomes.map((o) => `${o.label}: ${evidence.filter((e) => e.claimsOutcomeId === o.id).length}`).join(", ");
   return {
-    status: "ready",
-    source: "ai",
-    chances: normalize(line.chances),
-    take: line.take.slice(0, 200),
-    roast: line.roast.slice(0, 120),
-    model: MODEL,
-    at: new Date().toISOString(),
+    status: "needs_review" as const,
+    explanation: `${why} ${evidence.length} piece${evidence.length === 1 ? "" : "s"} of evidence submitted (claims by outcome: ${counts}). A human needs to decide.`,
+    evidenceUsed: [],
+    issues,
   };
 }
 
-/** No-AI fallback: lean the first outcome toward the named friend's win rate. */
-function formulaLine({ db, betId }: Ctx): BookieLine {
-  const state = snapshot(db, "alex");
-  const bet = state.bets.find((b) => b.id === betId)!;
-  const mentioned = state.users.find((u) => bet.proposition.toLowerCase().includes(u.name.split(" ")[0].toLowerCase()));
-  const n = bet.outcomes.length;
-  let chances = Array(n).fill(100 / n);
-  let take = "Even odds until someone gives me a track record to work with.";
-  if (mentioned && n === 2 && mentioned.stats.settled > 0) {
-    const rate = (mentioned.stats.wins + 1) / (mentioned.stats.settled + 2);
-    const first = Math.min(85, Math.max(15, Math.round(rate * 100)));
-    chances = [first, 100 - first];
-    take = `${mentioned.name.split(" ")[0]} has won ${mentioned.stats.wins} of ${mentioned.stats.settled} bets, so that's my starting line.`;
+/** Deterministic stand-in for tests (BOOKIE_AI=stub): recommends only when 2+ items agree and none disagree. */
+function stubReview(evidence: StoredEvidence[]) {
+  const claims = evidence.filter((e) => e.claimsOutcomeId);
+  const ids = new Set(claims.map((e) => e.claimsOutcomeId));
+  if (claims.length >= 2 && ids.size === 1) {
+    return {
+      status: "recommended" as const,
+      outcomeId: claims[0].claimsOutcomeId,
+      confidence: 0.9,
+      explanation: `Test stub: ${claims.length} pieces of evidence agree and none disagree.`,
+      evidenceUsed: claims.map((e) => ({ evidenceId: e.id, how: "Claims this outcome." })),
+      issues: [] as ReviewIssue[],
+    };
   }
-  return { status: "ready", source: "formula", chances: normalize(chances), take, at: new Date().toISOString() };
+  return {
+    status: "needs_review" as const,
+    explanation: "Test stub: evidence is missing or disagrees.",
+    evidenceUsed: [],
+    issues: [{ type: ids.size > 1 ? "contradictory" : "missing", detail: "Not enough agreeing evidence.", evidenceIds: claims.map((e) => e.id) }] as ReviewIssue[],
+  };
 }
 
-/** Run the agent for a bet and save its line. Never throws: falls back to the formula. */
-export async function setOpeningLine(betId: string) {
-  const db = await read((d) => structuredClone(d));
-  const ctx = { db, betId };
-  let line: BookieLine;
-  if (!process.env.ANTHROPIC_API_KEY) {
-    line = formulaLine(ctx);
-  } else {
-    try {
-      line = await askAgent(ctx);
-    } catch (err) {
-      console.error("[bookie] agent failed, using formula:", err instanceof Error ? err.message : err);
-      line = formulaLine(ctx);
+const running = new Set<string>();
+
+/** Ask the AI Bookie to review a closed bet's evidence. Records a recommendation; never settles. */
+export async function reviewBet(betId: string, userId: string): Promise<Review> {
+  if (running.has(betId)) throw new BetError(409, "review_running", "A review is already running for this bet.");
+  running.add(betId);
+  try {
+    const ctx = await read((db) => {
+      const bet = requireInvolved(db, userId, betId);
+      const s = statusOf(bet);
+      if (s === "open") throw new BetError(409, "bet_open", "Entries are still open. Close the bet before reviewing evidence.");
+      if (s === "settled") throw new BetError(409, "bet_settled", "This bet is already settled.");
+      const c = context(db, betId);
+      const entriesByUser = new Map(db.entries.filter((e) => e.betId === betId).map((e) => [e.userId, e.outcomeId]));
+      return { ...c, entriesByUser };
+    });
+    const { bet, evidence, stakes, users, entriesByUser } = ctx;
+    const mode = aiMode();
+
+    let result: Omit<Review, "id" | "betId" | "requestedBy" | "at" | "evidenceSeen">;
+    if (mode === "stub") {
+      result = { source: "test-stub", ...stubReview(evidence) };
+    } else if (mode === "off" || evidence.length === 0) {
+      const why = evidence.length === 0 ? "There's nothing to review yet." : "AI review is off (no Anthropic API key), so nothing was judged.";
+      const r = rulesReview(bet.outcomes, evidence, entriesByUser, why);
+      result = { source: "rules", status: r.status, explanation: r.explanation, evidenceUsed: [], issues: r.issues };
+    } else {
+      try {
+        const { output, model } = await reviewEvidence({ proposition: bet.proposition, outcomes: bet.outcomes, deadline: bet.deadline, evidence, users, stakes });
+        const evIds = new Set(evidence.map((e) => e.id));
+        const used = output.evidence_used.filter((u) => evIds.has(u.evidence_id)).map((u) => ({ evidenceId: u.evidence_id, how: u.how.slice(0, 300) }));
+        const issues: ReviewIssue[] = output.issues.map((i) => ({ type: i.type, detail: i.detail.slice(0, 300), evidenceIds: i.evidence_ids.filter((id) => evIds.has(id)) }));
+        const outcome = bet.outcomes.find((o) => o.id === output.outcome_id);
+        const confidence = Math.min(1, Math.max(0, Number(output.confidence) || 0));
+
+        // The server, not the model, decides whether this counts as a recommendation.
+        const blockers: string[] = [];
+        if (output.verdict !== "recommend") blockers.push("the AI called it inconclusive");
+        if (!outcome) blockers.push("no valid outcome was named");
+        if (confidence < MIN_CONFIDENCE) blockers.push(`confidence ${Math.round(confidence * 100)}% is below ${MIN_CONFIDENCE * 100}%`);
+        if (!used.length) blockers.push("no evidence was cited");
+        if (issues.some((i) => i.type === "contradictory")) blockers.push("evidence contradicts itself");
+        const recommended = blockers.length === 0;
+        if (!recommended && output.verdict === "recommend") {
+          issues.push({ type: "inconclusive", detail: `Flagged for human review: ${blockers.join("; ")}.`, evidenceIds: [] });
+        }
+        result = {
+          source: "claude",
+          model,
+          status: recommended ? "recommended" : "needs_review",
+          outcomeId: recommended ? outcome!.id : undefined,
+          confidence,
+          explanation: output.explanation.trim().slice(0, 1200),
+          evidenceUsed: used,
+          issues,
+        };
+      } catch (err) {
+        if (!(err instanceof AiUnavailable)) throw err;
+        const r = rulesReview(bet.outcomes, evidence, entriesByUser, `The AI review failed (${err.message}).`);
+        result = { source: "rules", status: r.status, explanation: r.explanation, evidenceUsed: [], issues: r.issues };
+      }
     }
+
+    return await transact((db) => {
+      const live = db.bets.find((b) => b.id === betId)!;
+      if (live.receiptId) throw new BetError(409, "bet_settled", "This bet was settled while the review ran.");
+      const now = new Date();
+      const review: Review = { id: newId("rv"), betId, requestedBy: userId, at: now.toISOString(), evidenceSeen: evidence.map((e) => e.id), ...result };
+      db.reviews.push(review);
+      const label = review.outcomeId ? live.outcomes.find((o) => o.id === review.outcomeId)?.label : undefined;
+      audit(
+        db,
+        betId,
+        review.source === "claude" ? "ai" : "system",
+        "review_completed",
+        review.status === "recommended"
+          ? `Recommended ${label} (${Math.round((review.confidence ?? 0) * 100)}% confidence) from ${review.evidenceUsed.length} pieces of evidence. Waiting for a human to confirm.`
+          : `Flagged for human review (${review.source}): ${review.issues.map((i) => i.type).join(", ") || "no recommendation"}.`,
+        now,
+        [review.id, ...review.evidenceSeen]
+      );
+      return review;
+    });
+  } finally {
+    running.delete(betId);
   }
-  await transact((d) => {
-    const bet = d.bets.find((b) => b.id === betId);
-    if (bet) bet.bookie = line;
-  });
 }
