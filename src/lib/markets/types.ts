@@ -164,11 +164,14 @@ export type GroupView = GroupSummary & {
   members: MemberView[];
 };
 
-export type UserView = { id: string; name: string };
+export type UserView = { id: string; name: string; avatarUrl?: string };
 
 export type AppState = {
   me: string;
+  /** You, plus everyone who shares a group with you. */
   users: UserView[];
+  /** "supabase": signed in with Google. "demo": the Playing as switcher. */
+  auth: { mode: "supabase" | "demo" | "unconfigured" };
   groups: GroupSummary[];
   group: GroupView | null;
   markets: MarketView[];
