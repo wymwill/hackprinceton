@@ -4,6 +4,7 @@ import { balances, isParticipant, participantIds, standings } from "../lib/rules
 import { STATUS_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { useTheme } from "../lib/theme.ts";
+import { useChatUnread } from "../lib/chat.ts";
 import type { Db, Series } from "../lib/types.ts";
 import { Avatar, Modal, Toasts } from "./ui.tsx";
 
@@ -138,6 +139,17 @@ function Account() {
   );
 }
 
+/** "Clans", with a count of unread clan chat messages. */
+function ClansLink() {
+  const unread = useChatUnread();
+  return (
+    <NavLink to="/clans">
+      Clans
+      {unread > 0 && <b aria-label={`${unread} unread messages`}>{unread > 99 ? "99+" : unread}</b>}
+    </NavLink>
+  );
+}
+
 function Sidebar({ current }: { current?: Series }) {
   const { me } = useStore();
   const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
@@ -160,7 +172,7 @@ function Sidebar({ current }: { current?: Series }) {
           {current.hostId === me && current.status === "active" && <span className="cap" style={{ padding: "10px 4px 0" }}>You're the host</span>}
           <span className="cap" style={{ padding: "14px 4px 0" }}>You</span>
           <NavLink to="/friends">Friends</NavLink>
-          <NavLink to="/clans">Clans</NavLink>
+          <ClansLink />
         </nav>
       ) : (
         <nav className="nav" aria-label="Main">
@@ -169,7 +181,7 @@ function Sidebar({ current }: { current?: Series }) {
           </NavLink>
           <NavLink to="/new">New series</NavLink>
           <NavLink to="/friends">Friends</NavLink>
-          <NavLink to="/clans">Clans</NavLink>
+          <ClansLink />
           <NavLink to="/profile">Profile</NavLink>
         </nav>
       )}
@@ -210,16 +222,44 @@ function TopBar({ crumbs, current }: { crumbs: Crumb[]; current?: Series }) {
   );
 }
 
-export function Shell({ crumbs = [], children }: { crumbs?: Crumb[]; children: ReactNode }) {
+/**
+ * Keep --vvh / --vvt set to the visible part of the window. On phones the
+ * on-screen keyboard shrinks it, so a full-height screen sized with these keeps
+ * its bottom (the chat composer) above the keyboard.
+ */
+function useVisualViewport(on: boolean) {
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!on || !vv) return;
+    const root = document.documentElement;
+    const set = () => {
+      root.style.setProperty("--vvh", `${vv.height}px`);
+      root.style.setProperty("--vvt", `${vv.offsetTop}px`);
+    };
+    set();
+    vv.addEventListener("resize", set);
+    vv.addEventListener("scroll", set);
+    return () => {
+      vv.removeEventListener("resize", set);
+      vv.removeEventListener("scroll", set);
+      root.style.removeProperty("--vvh");
+      root.style.removeProperty("--vvt");
+    };
+  }, [on]);
+}
+
+/** `fill`: the page is one full-height screen that scrolls inside itself (the chat), instead of the window scrolling. */
+export function Shell({ crumbs = [], children, fill = false }: { crumbs?: Crumb[]; children: ReactNode; fill?: boolean }) {
   const { db } = useStore();
   const m = useMatch("/s/:id/*");
   const current = m ? db.series.find((s) => s.id === m.params.id) : undefined;
+  useVisualViewport(fill);
   return (
-    <div className="app">
+    <div className={`app ${fill ? "fill" : ""}`}>
       <Sidebar current={current} />
       <div className="main">
         <TopBar crumbs={crumbs} current={current} />
-        <main className="page">{children}</main>
+        <main className={`page ${fill ? "fill" : ""}`}>{children}</main>
       </div>
       <Toasts />
     </div>
