@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useNow } from "@/lib/bets/format";
-import { FRIENDS, bookieOdds } from "@/lib/data";
+import { baselineEstimate, recordsFromViews } from "@/lib/bets/odds";
 import type { CreateBetInput } from "@/lib/bets/types";
 import { useBookie } from "./BookieProvider";
 
@@ -41,9 +41,9 @@ export default function CreateBetModal({
   onClose: () => void;
   onPosted: (bet: { id: string; proposition: string }) => void;
 }) {
-  const { me, createBet } = useBookie();
+  const { me, state, createBet } = useBookie();
   const [title, setTitle] = useState(prefill);
-  const [target, setTarget] = useState(FRIENDS[0]);
+  const [subjectId, setSubjectId] = useState("");
   const [category, setCategory] = useState("Fitness");
   const [outcomes, setOutcomes] = useState(["Yes", "No"]);
   const [pick, setPick] = useState(0);
@@ -52,10 +52,17 @@ export default function CreateBetModal({
   const [custom, setCustom] = useState(() => toLocalInput(endOfDay(Date.now(), 1)));
   const [dare, setDare] = useState(DARES[0]);
   const [busy, setBusy] = useState(false);
-  const odds = bookieOdds(target, category);
 
   const balance = me?.balance ?? 0;
   const labels = outcomes.map((o) => o.trim());
+  // Same history-only estimate the server stores when the bet is posted.
+  const preview = baselineEstimate({
+    outcomes: labels.map((label, i) => ({ id: `o${i + 1}`, label: label || `Outcome ${i + 1}` })),
+    category,
+    subjectId: subjectId || undefined,
+    subjectName: state?.users.find((u) => u.id === subjectId)?.name,
+    history: recordsFromViews(state?.bets ?? []),
+  });
   const dupes = new Set(labels.map((l) => l.toLowerCase())).size !== labels.length;
   const now = useNow();
   const deadlineAt = (at: number) => (deadline === "custom" ? new Date(custom) : DEADLINES.find((d) => d.id === deadline)!.at(at));
@@ -85,13 +92,14 @@ export default function CreateBetModal({
     const input: CreateBetInput = {
       proposition: title.trim(),
       outcomes: labels,
-      // Recompute presets at submit time so "5 min" means 5 minutes from now.
-      deadline: deadlineAt(Date.now()).toISOString(),
+      // Recompute presets at submit time (now ticks every second) so "5 min" means 5 minutes from now.
+      deadline: deadlineAt(now).toISOString(),
       stake,
       pick,
       category,
       emoji: CATEGORIES.find((c) => c.id === category)?.emoji,
       dare,
+      subjectId: subjectId || undefined,
     };
     const bet = await createBet(input);
     setBusy(false);
@@ -261,22 +269,32 @@ export default function CreateBetModal({
           <span className="w-9 h-9 shrink-0 rounded-lg bg-on-tertiary-container/40 flex items-center justify-center text-lg">🤖</span>
           <div className="flex flex-col gap-1 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-label-sm text-label-sm uppercase text-tertiary-container">Bookie&apos;s read on</span>
+              <span className="font-label-sm text-label-sm uppercase text-tertiary-container">Who&apos;s on the hook</span>
               <select
-                value={target}
-                onChange={(e) => setTarget(e.target.value)}
+                value={subjectId}
+                onChange={(e) => setSubjectId(e.target.value)}
                 className="bg-transparent font-label-md text-label-md text-tertiary"
                 aria-label="Who's on the hook"
               >
-                {FRIENDS.map((f) => (
-                  <option key={f}>{f}</option>
+                <option value="">Nobody in particular</option>
+                {state?.users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
                 ))}
               </select>
-              <span className="ml-auto font-headline-md text-headline-md text-tertiary">{odds.ratio}</span>
+              <span className="ml-auto font-headline-md text-headline-md text-tertiary">
+                {Math.round(preview.probabilities[0].p * 100)}%
+              </span>
             </div>
-            <p className="font-body-md text-body-md text-tertiary/90">{odds.roast}</p>
+            <p className="font-body-md text-body-md text-tertiary/90">{preview.explanation}</p>
+            {preview.facts.map((f) => (
+              <p key={f.id} className="font-label-sm text-label-sm text-on-surface-variant">
+                • {f.text}
+              </p>
+            ))}
             <p className="font-label-sm text-label-sm text-on-surface-variant">
-              Payouts come from the pool: winners split everything that was staked.
+              Preview from stored history{state?.ai.mode === "claude" ? ". The AI Bookie refines it after you post." : "."} Winners split the pool.
             </p>
           </div>
         </div>

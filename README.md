@@ -28,7 +28,7 @@ Open http://localhost:3000. The layout is designed for a 1440px-wide desktop.
 | `/dares` | Dares | Punishment wheel spins and reports where it lands, Upload Proof moves your card to Proof Submitted, Approve/Redo voting |
 | `/profile` | Profile | Bet history filters, Share Card, connect/disconnect proof apps |
 
-The **+ Create Bet** button in the sidebar opens a bet builder: claim, 2–6 outcomes, the one you back, your stake, and when entries close (5 min to a week, or a custom time). It still shows the toy AI opening line from `src/lib/data.ts`.
+The **+ Create Bet** button in the sidebar opens a bet builder: claim, 2–6 outcomes, the one you back, your stake, and when entries close (5 min to a week, or a custom time). Pick who's on the hook to see a live odds preview from the group's stored history.
 
 ## Bet lifecycle
 
@@ -45,9 +45,37 @@ There's no login yet. Use **Playing as** in the header to switch friends (it set
 - `src/server/store.ts`: one JSON file (`.data/bookie.json`, gitignored; override with `BOOKIE_DATA_FILE`). Every change runs through `transact`, which serializes writes, so balance and settlement checks are atomic with their writes. Delete the file to reset to the seed data.
 - `src/server/bets.ts`: create / join / close / settle and the views. Balances are never stored: they're the starting balance plus the ledger.
 - `src/lib/bets/payout.ts`: the payout rule, shared with the client for estimates.
-- API: `GET /api/state`, `POST /api/bets`, `POST /api/bets/:id/entries`, `POST /api/bets/:id/close`, `POST /api/bets/:id/settle`, `POST /api/session`.
+- API: `GET /api/state`, `POST /api/bets`, `POST /api/bets/:id/entries`, `POST /api/bets/:id/close`, `POST /api/bets/:id/settle`, `POST /api/bets/:id/evidence`, `POST /api/bets/:id/odds`, `POST /api/bets/:id/review`, `POST /api/bets/:id/decision`, `GET /api/evidence/:id`, `POST /api/session`.
 
 The lock is in-process, so this assumes a single server process (fine for `next dev` / `next start`, not for multi-instance serverless).
+
+## AI Bookie
+
+**Odds.** Every bet gets an estimate the moment it's created, shown next to (never mixed with) the pool percentages.
+
+- The baseline in `src/lib/bets/odds.ts` comes only from settled bets in the database: the on-the-hook friend's last 10 Yes/No results, with the group's record in that category as a prior. Each fact lists the bet ids it was computed from, and the UI links to them.
+- With no relevant history it says so and starts from an even split. It never invents a record.
+- With Claude on, the model gets those facts, the baseline and any evidence so far, and returns probabilities plus a short explanation. The server normalizes the numbers and drops any fact or evidence id it cites that doesn't exist. The history-only baseline stays visible next to Claude's number.
+- Estimates update when evidence arrives on an open bet, when a bet about the same friend settles, or when someone presses Re-estimate.
+
+**Evidence and settlement.**
+
+- Anyone in a bet can add statements, links or images (PNG/JPEG/GIF/WebP, max 5 MB, checked by file signature) until it settles.
+- After entries close, anyone in the bet can ask the Bookie to review. Claude returns a verdict, the evidence it used, and issues (missing, contradictory, inconclusive, can't verify, self-interested).
+- The server, not the model, decides whether that counts as a recommendation. It needs a named outcome, confidence of at least 75%, cited evidence and no contradictions. Anything else is flagged "needs a human decision".
+- Only the bet's creator can confirm (which settles through the same once-only `settleBet` path), reject (with a note), or settle by hand. A recommendation can't be confirmed if newer evidence or a newer review exists.
+- Links are never opened, and the model is told evidence is untrusted claims, not instructions.
+- Every step lands in the bet's audit trail: entries, estimates, evidence, reviews and decisions.
+
+**Modes** (`BOOKIE_AI`):
+
+| Mode | When | Odds | Reviews |
+| --- | --- | --- | --- |
+| `claude` | default when `ANTHROPIC_API_KEY` is set | Claude on top of stored stats | Claude recommends or flags |
+| `off` | default with no key | Stored stats only | Lists the evidence and flags it for a human; never recommends |
+| `stub` | tests only | Stored stats only | Deterministic fake: recommends when 2+ claims agree |
+
+Claude calls use `claude-opus-5-5` (override with `BOOKIE_AI_MODEL`) with structured output and server-side refusal fallback. If a call fails, the app falls back to `off` behavior for that request and says why.
 
 ### Test the lifecycle
 
@@ -58,6 +86,8 @@ npm run test:e2e                                     # terminal 2 (BOOKIE_URL de
 
 It creates, joins, overspends, races, auto-closes, settles, re-settles, fires 8 settle requests at once, and checks balances, receipts, stats and point conservation.
 
+For the AI Bookie, start the server with `BOOKIE_AI=stub` (or `off`) on a fresh data file and run `npm run test:ai`.
+
 ## Layout
 
 - `src/app/globals.css`: design tokens from Stitch's `DESIGN.md` (colors, type scale, spacing) as a Tailwind v4 `@theme`
@@ -66,3 +96,4 @@ It creates, joins, overspends, races, auto-closes, settles, re-settles, fires 8 
 - `src/lib/data.ts`: mock user, groups, nav and the odds model
 - `src/lib/bets/`: shared bet types, payout rule and formatting
 - `src/server/`: persistence, lifecycle rules, seed data
+- `src/server/ai/`: AI mode, Claude calls, and the orchestration that records odds and reviews

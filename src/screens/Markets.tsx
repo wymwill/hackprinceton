@@ -40,6 +40,24 @@ const changeOf = (b: BetView) => {
   return h[h.length - 1] - h[0];
 };
 
+/** "🤖 AI Bookie 34% Yes · pool 50%": the model's estimate next to what the stakes imply. */
+function AiLine({ b }: { b: BetView }) {
+  if (!b.odds) return null;
+  const top = b.outcomes
+    .map((o) => ({ o, p: b.odds!.probabilities.find((x) => x.outcomeId === o.id)?.p ?? 0 }))
+    .sort((x, y) => y.p - x.p)[0];
+  const subject = b.outcomes.length === 2 ? b.outcomes[0] : top.o;
+  const p = b.odds.probabilities.find((x) => x.outcomeId === subject.id)?.p ?? 0;
+  return (
+    <span className="font-label-sm text-label-sm text-tertiary">
+      🤖 AI Bookie {Math.round(p * 100)}% {subject.label}
+      <span className="text-on-surface-variant">
+        {" "}· pool {subject.chance}% · {b.odds.source === "claude" ? "Claude" : "history"}, {b.odds.uncertainty} uncertainty
+      </span>
+    </span>
+  );
+}
+
 /** Half-circle gauge like a prediction-market card. */
 function ChanceGauge({ chance }: { chance: number }) {
   const r = 26;
@@ -60,7 +78,7 @@ function ChanceGauge({ chance }: { chance: number }) {
       </svg>
       <div className="absolute inset-x-0 bottom-0 flex flex-col items-center leading-none">
         <span className="font-headline-sm text-[15px] text-on-surface">{chance}%</span>
-        <span className="text-[10px] text-on-surface-variant">chance</span>
+        <span className="text-[10px] text-on-surface-variant">pool</span>
       </div>
     </div>
   );
@@ -243,7 +261,7 @@ export default function Markets() {
                   </Link>
                   <div className="flex items-baseline gap-2">
                     <span className="font-display-lg text-display-lg text-on-surface">{featured.outcomes[0].chance}%</span>
-                    <span className="font-body-md text-body-md text-on-surface-variant">{featured.outcomes[0].label}</span>
+                    <span className="font-body-md text-body-md text-on-surface-variant">{featured.outcomes[0].label} · pool</span>
                     {changeOf(featured) !== 0 && (
                       <span className={`font-label-md text-label-md flex items-center ${changeOf(featured) > 0 ? "text-primary" : "text-[#fda4af]"}`}>
                         <span className="material-symbols-outlined text-base">{changeOf(featured) > 0 ? "arrow_upward" : "arrow_downward"}</span>
@@ -251,6 +269,7 @@ export default function Markets() {
                       </span>
                     )}
                   </div>
+                  <AiLine b={featured} />
                   {statusBlock(featured) ??
                     (featured.outcomes.length === 2 ? (
                       joinButtons(featured, "lg")
@@ -328,6 +347,7 @@ export default function Markets() {
                           </Link>
                           {binary && s !== "settled" && <ChanceGauge chance={b.outcomes[0].chance} />}
                         </div>
+                        {s !== "settled" && <AiLine b={b} />}
 
                         {!binary && s !== "settled" && (
                           <div className="flex flex-col gap-1.5">
