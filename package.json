@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:unit": "node --test src/lib/**/*.test.ts",
     "test:e2e": "node scripts/e2e-lifecycle.mjs",
     "test:ai": "node scripts/e2e-ai-bookie.mjs"
   },
