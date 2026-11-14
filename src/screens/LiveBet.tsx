@@ -11,7 +11,7 @@ import { ago, timeLeft, useNow } from "@/lib/bets/format";
 
 const STATUS = {
   open: { label: "Open", cls: "bg-primary-container/15 text-primary border-primary-container/30" },
-  closed: { label: "Closed · needs result", cls: "bg-[#fbbf77]/15 text-[#fcd5a4] border-[#fbbf77]/30" },
+  closed: { label: "Closed · needs result", cls: "bg-[#f0a87a]/15 text-[#f6caa8] border-[#f0a87a]/30" },
   settled: { label: "Settled", cls: "bg-tertiary-container/15 text-tertiary border-tertiary-container/30" },
 };
 
@@ -64,7 +64,7 @@ export default function LiveBet() {
         </Link>
 
         {/* Header */}
-        <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-lg flex flex-col gap-space-md">
+        <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-lg flex flex-col gap-space-md">
           <div className="flex flex-wrap items-center gap-2 font-label-sm text-label-sm">
             <span className={`px-2.5 py-0.5 rounded-full border ${STATUS[status].cls}`}>{STATUS[status].label}</span>
             <span className="text-on-surface-variant">
@@ -95,7 +95,7 @@ export default function LiveBet() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-gutter-desktop items-start">
           <div className="flex flex-col gap-space-md min-w-0">
             {/* Outcomes */}
-            <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-3">
+            <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-md flex flex-col gap-3">
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Outcomes</h2>
               {bet.outcomes.map((o, i) => {
                 const won = winner?.id === o.id;
@@ -103,7 +103,7 @@ export default function LiveBet() {
                   <div
                     key={o.id}
                     className={`relative overflow-clip rounded-xl border p-3 flex items-center gap-3 ${
-                      won ? "border-primary-container bg-primary-container/10" : "border-[#2f384a] bg-surface-container-low"
+                      won ? "border-primary-container bg-primary-container/10" : "border-[#3a3645] bg-surface-container-low"
                     }`}
                   >
                     <div className="absolute inset-y-0 left-0 bg-primary-container/10" style={{ width: `${o.chance}%` }} aria-hidden />
@@ -137,7 +137,7 @@ export default function LiveBet() {
             </section>
 
             {/* Who's in */}
-            <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-2">
+            <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-md flex flex-col gap-2">
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Who&apos;s in</h2>
               {bet.entries.map((e) => {
                 const u = user(e.userId);
@@ -155,7 +155,7 @@ export default function LiveBet() {
                       {e.amount.toLocaleString()} on <b className="text-on-surface">{o.label}</b>
                     </span>
                     {p && (
-                      <span className={`w-20 text-right font-label-md text-label-md font-bold ${p.net >= 0 ? "text-primary" : "text-[#fda4af]"}`}>
+                      <span className={`w-20 text-right font-label-md text-label-md font-bold ${p.net >= 0 ? "text-primary" : "text-[#e9bf86]"}`}>
                         {p.net >= 0 ? "+" : ""}
                         {p.net.toLocaleString()}
                       </span>
@@ -169,7 +169,7 @@ export default function LiveBet() {
           {/* Action rail */}
           <aside className="flex flex-col gap-space-md lg:sticky lg:top-20">
             {mine && (
-              <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-1">
+              <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-md flex flex-col gap-1">
                 <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">Your pick</span>
                 <span className="font-headline-sm text-headline-sm text-on-surface">
                   {mine.amount.toLocaleString()} pts on {bet.outcomes.find((o) => o.id === mine.outcomeId)!.label}
@@ -178,7 +178,7 @@ export default function LiveBet() {
             )}
 
             {status === "open" && (
-              <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-3">
+              <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-md flex flex-col gap-3">
                 {!mine && (
                   <button onClick={() => setSheet(0)} className="py-3 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm">
                     Join this bet
@@ -201,17 +201,17 @@ export default function LiveBet() {
 
             {status === "closed" &&
               (isCreator ? (
-                <section className="rounded-2xl bg-surface-container border border-[#fbbf77]/30 p-space-md flex flex-col gap-3">
+                <section className="rounded-2xl bg-surface-container border border-[#f0a87a]/30 p-space-md flex flex-col gap-3">
                   <h2 className="font-headline-sm text-headline-sm text-on-surface">⚖️ What happened?</h2>
                   <p className="font-body-sm text-body-sm text-on-surface-variant">You made this bet, so you record the result. This can&apos;t be undone.</p>
                   {bet.outcomes.map((o) => (
                     <label
                       key={o.id}
                       className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer ${
-                        result === o.id ? "border-primary-container bg-primary-container/10" : "border-[#2f384a]"
+                        result === o.id ? "border-primary-container bg-primary-container/10" : "border-[#3a3645]"
                       }`}
                     >
-                      <input type="radio" name="result" checked={result === o.id} onChange={() => setResult(o.id)} className="accent-[#34d399]" />
+                      <input type="radio" name="result" checked={result === o.id} onChange={() => setResult(o.id)} className="accent-[#ce4c3b]" />
                       <span className="font-label-lg text-label-lg text-on-surface">{o.label}</span>
                     </label>
                   ))}
@@ -224,7 +224,7 @@ export default function LiveBet() {
                   </button>
                 </section>
               ) : (
-                <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md">
+                <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-md">
                   <p className="font-body-md text-body-md text-on-surface-variant">
                     Entries are closed. Waiting on {creator?.name.split(" ")[0]} to record the result.
                   </p>

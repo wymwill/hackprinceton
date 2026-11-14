@@ -42,3 +42,4 @@ next-env.d.ts
 
 # bookie local database
 /.data/
+.gstack/

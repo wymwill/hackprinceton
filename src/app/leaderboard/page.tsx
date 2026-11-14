@@ -1,6 +1,6 @@
 import Leaderboard from "@/screens/Leaderboard";
 
-export const metadata = { title: "Leaderboard · Bookie" };
+export const metadata = { title: "Leaderboard · Betting with Friends" };
 
 export default function Page() {
   return <Leaderboard />;

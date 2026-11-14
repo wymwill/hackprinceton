@@ -39,19 +39,13 @@ export default function Header() {
             </select>
           </label>
         )}
-        <div className="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-tertiary-container/12 border border-tertiary-container/25">
-          <span className="font-label-sm text-label-sm text-tertiary font-medium flex items-center gap-1 whitespace-nowrap">
-            <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
-            AI Bookie is watching 🤖
-          </span>
-        </div>
         <button
-          onClick={() => toast("🤖 Bookie: Jake just checked in at the gym. Odds just shifted in his favor.", "purple")}
+          onClick={() => toast("🔔 Jake joined your bet on leg day.", "lime")}
           className="relative p-space-xs rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
           aria-label="Notifications"
         >
           <span className="material-symbols-outlined">notifications</span>
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-secondary shadow-[0_0_6px_rgba(251,113,133,0.4)]" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-secondary shadow-[0_0_6px_rgba(217,163,95,0.4)]" />
         </button>
       </div>
     </header>

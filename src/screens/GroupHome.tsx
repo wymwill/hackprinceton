@@ -67,7 +67,7 @@ export default function GroupHome() {
                 {" "}Active Bets
               </span>
               {" "}
-              <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(52,211,153,0.17)]">
+              <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(206,76,59,0.17)]">
                 +3 today
               </span>
             </div>
@@ -116,7 +116,7 @@ export default function GroupHome() {
             </div>
             {" "}
             <div className="mt-space-xs w-full bg-surface-container-highest rounded-full h-1.5 overflow-clip">
-              <div className="bg-primary-container h-full rounded-full shadow-[0_0_8px_rgba(52,211,153,0.3)]" style={{ width: "68.4%" }}></div>
+              <div className="bg-primary-container h-full rounded-full shadow-[0_0_8px_rgba(206,76,59,0.3)]" style={{ width: "68.4%" }}></div>
             </div>
           </div>
           {" "}
@@ -166,7 +166,7 @@ export default function GroupHome() {
                 {" "}Dares Owed
               </span>
               {" "}
-              <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold shadow-[0_0_10px_rgba(251,113,133,0.15)]">
+              <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold shadow-[0_0_10px_rgba(217,163,95,0.15)]">
                 Due in 2 days
               </span>
             </div>
@@ -207,7 +207,7 @@ export default function GroupHome() {
                       The Boyz Gym Arc
                     </h1>
                     {" "}
-                    <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(52,211,153,0.3)] shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(206,76,59,0.3)] shrink-0"></span>
                   </div>
                   {" "}
                   <div className="flex items-center gap-space-xs">
@@ -266,7 +266,7 @@ export default function GroupHome() {
                 <div className="absolute top-0 left-0 bottom-0 w-1 bg-tertiary"></div>
                 {" "}
                 <div className="flex items-start gap-space-sm">
-                  <div className="w-9 h-9 rounded-lg bg-tertiary-container/30 flex items-center justify-center text-tertiary shrink-0 shadow-[0_0_14px_rgba(211,189,255,0.25)]">
+                  <div className="w-9 h-9 rounded-lg bg-tertiary-container/30 flex items-center justify-center text-tertiary shrink-0 shadow-[0_0_14px_rgba(185,195,255,0.25)]">
                     <span className="material-symbols-outlined text-lg text-tertiary">
                       smart_toy
                     </span>
@@ -445,7 +445,7 @@ export default function GroupHome() {
                   <div className="w-full h-3 rounded-full bg-surface-container-highest overflow-clip flex">
                     <div className="bg-secondary-container h-full transition-all" style={{ width: "14%" }}></div>
                     {" "}
-                    <div className="bg-primary-container h-full shadow-[0_0_12px_rgba(52,211,153,0.25)] transition-all" style={{ width: "86%" }}></div>
+                    <div className="bg-primary-container h-full shadow-[0_0_12px_rgba(206,76,59,0.25)] transition-all" style={{ width: "86%" }}></div>
                   </div>
                 </div>
                 {" "}
@@ -482,7 +482,7 @@ export default function GroupHome() {
                   <button
                     onClick={() => takeSide("fade")}
                     disabled={side !== null}
-                    className={`flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(52,211,153,0.2)] hover:shadow-[0_0_28px_rgba(52,211,153,0.33)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:hover:scale-100 ${side === "back" ? "opacity-40" : ""}`}
+                    className={`flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(206,76,59,0.2)] hover:shadow-[0_0_28px_rgba(206,76,59,0.33)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:hover:scale-100 ${side === "back" ? "opacity-40" : ""}`}
                   >
                     <span className="material-symbols-outlined text-lg">
                       {side === "fade" ? "check_circle" : "thumb_down"}
@@ -496,7 +496,7 @@ export default function GroupHome() {
                   <button
                     onClick={() => takeSide("back")}
                     disabled={side !== null}
-                    className={`flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl font-headline-sm text-headline-sm font-semibold transition-all ${side === "back" ? "bg-tertiary-container text-on-tertiary-container shadow-[0_0_20px_rgba(167,139,250,0.2)]" : "bg-surface-container-highest text-on-surface hover:bg-surface-bright"} ${side === "fade" ? "opacity-40" : ""}`}
+                    className={`flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl font-headline-sm text-headline-sm font-semibold transition-all ${side === "back" ? "bg-tertiary-container text-on-tertiary-container shadow-[0_0_20px_rgba(127,140,232,0.2)]" : "bg-surface-container-highest text-on-surface hover:bg-surface-bright"} ${side === "fade" ? "opacity-40" : ""}`}
                   >
                     <span className="material-symbols-outlined text-lg">
                       {side === "back" ? "check_circle" : "rocket_launch"}
@@ -611,7 +611,7 @@ export default function GroupHome() {
                     </div>
                   </article>
                 ) : (
-                  <article key={m.id} className="relative overflow-clip rounded-xl bg-surface-container-low p-space-md border-l-4 border-tertiary-container shadow-[0_0_20px_rgba(167,139,250,0.06)]">
+                  <article key={m.id} className="relative overflow-clip rounded-xl bg-surface-container-low p-space-md border-l-4 border-tertiary-container shadow-[0_0_20px_rgba(127,140,232,0.06)]">
                     <div className="flex items-start gap-space-sm">
                       <span className="w-9 h-9 shrink-0 rounded-lg bg-on-tertiary-container/40 flex items-center justify-center">🤖</span>
                       <div className="flex flex-col gap-1">
@@ -656,7 +656,7 @@ export default function GroupHome() {
                 {" "}
                 {/* Fast Bet CTA Button */}
                 {" "}
-                <button onClick={() => { openCreateBet(draft); setDraft(""); }} className="flex items-center gap-space-xs px-space-md py-2.5 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_18px_rgba(52,211,153,0.2)] hover:shadow-[0_0_24px_rgba(52,211,153,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap">
+                <button onClick={() => { openCreateBet(draft); setDraft(""); }} className="flex items-center gap-space-xs px-space-md py-2.5 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_18px_rgba(206,76,59,0.2)] hover:shadow-[0_0_24px_rgba(206,76,59,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap">
                   <span>
                     Make it a bet
                   </span>
@@ -973,7 +973,7 @@ export default function GroupHome() {
                   </h3>
                 </div>
                 {" "}
-                <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-mono font-bold shadow-[0_0_8px_rgba(251,113,133,0.15)]">
+                <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-mono font-bold shadow-[0_0_8px_rgba(217,163,95,0.15)]">
                   18h left
                 </span>
               </div>

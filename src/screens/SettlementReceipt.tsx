@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useBookie } from "@/components/BookieProvider";
 import DisputeVoteModal from "@/components/DisputeVoteModal";
 
-const CONFETTI_COLORS = ["#10e668", "#77ff93", "#d3bdff", "#ffb2b8", "#ecdeff"];
+const CONFETTI_COLORS = ["#e2685a", "#f2a092", "#b9c3ff", "#f8dfbb", "#dde1ff"];
 // Deterministic so server and client render the same pieces.
 const CONFETTI = Array.from({ length: 36 }, (_, i) => ({
   left: (i * 37) % 100,
@@ -149,7 +149,7 @@ export default function SettlementReceipt() {
                   </span>
                 </div>
                 {" "}
-                <h1 className="font-display-lg text-display-lg text-primary tracking-tight font-black uppercase drop-shadow-[0_0_24px_rgba(52,211,153,0.17)]">
+                <h1 className="font-display-lg text-display-lg text-primary tracking-tight font-black uppercase drop-shadow-[0_0_24px_rgba(206,76,59,0.17)]">
                   Sam wins! 🏆 +150 pts
                 </h1>
                 {" "}
@@ -165,7 +165,7 @@ export default function SettlementReceipt() {
               {" "}
               <div className="lg:col-span-4 flex flex-col items-start lg:items-end justify-center">
                 <div className="w-full lg:w-auto p-space-md rounded-xl bg-surface-container-high shadow-md flex items-center gap-space-md">
-                  <div className="stamp-in w-16 h-16 rounded-xl border-4 border-secondary bg-secondary-container/60 flex items-center justify-center text-secondary font-display-lg text-display-lg font-black shadow-[0_0_24px_rgba(251,113,133,0.25)]">
+                  <div className="stamp-in w-16 h-16 rounded-xl border-4 border-secondary bg-secondary-container/60 flex items-center justify-center text-secondary font-display-lg text-display-lg font-black shadow-[0_0_24px_rgba(217,163,95,0.25)]">
                     L
                   </div>
                   {" "}
@@ -263,13 +263,13 @@ export default function SettlementReceipt() {
                     Checked 3 sources
                   </span>
                   {" "}
-                  <span className="font-headline-lg text-headline-lg font-bold text-tertiary drop-shadow-[0_0_12px_rgba(211,189,255,0.4)]">
+                  <span className="font-headline-lg text-headline-lg font-bold text-tertiary drop-shadow-[0_0_12px_rgba(185,195,255,0.4)]">
                     99.8%
                   </span>
                 </div>
                 {" "}
                 <div className="w-full h-3 rounded-full bg-surface-container-lowest overflow-clip p-0.5">
-                  <div className="h-full rounded-full bg-gradient-to-r from-primary via-tertiary to-tertiary-fixed shadow-[0_0_14px_rgba(167,139,250,0.3)]" style={{ width: "99.8%" }}></div>
+                  <div className="h-full rounded-full bg-gradient-to-r from-primary via-tertiary to-tertiary-fixed shadow-[0_0_14px_rgba(127,140,232,0.3)]" style={{ width: "99.8%" }}></div>
                 </div>
                 {" "}
                 <div className="flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant pt-1">
@@ -420,7 +420,7 @@ export default function SettlementReceipt() {
                   </div>
                   {" "}
                   <div className="flex flex-col items-end">
-                    <span className="font-headline-md text-headline-md text-primary font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.2)]">
+                    <span className="font-headline-md text-headline-md text-primary font-bold drop-shadow-[0_0_8px_rgba(206,76,59,0.2)]">
                       +150 PTS
                     </span>
                     {" "}

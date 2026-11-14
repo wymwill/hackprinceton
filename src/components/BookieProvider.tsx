@@ -37,9 +37,9 @@ export function liveStatus(bet: BetView, now = Date.now()) {
 }
 
 const TONE = {
-  lime: "border-primary-container/50 shadow-[0_0_24px_rgba(52,211,153,0.17)]",
-  coral: "border-secondary-container shadow-[0_0_24px_rgba(190,60,90,0.23)]",
-  purple: "border-tertiary-container/50 shadow-[0_0_24px_rgba(167,139,250,0.17)]",
+  lime: "border-primary-container/50 shadow-[0_0_24px_rgba(206,76,59,0.17)]",
+  coral: "border-secondary-container shadow-[0_0_24px_rgba(150,105,50,0.23)]",
+  purple: "border-tertiary-container/50 shadow-[0_0_24px_rgba(127,140,232,0.17)]",
 };
 
 const POLL_MS = 4000;

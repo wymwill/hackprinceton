@@ -18,7 +18,6 @@ export const NAV = [
   { href: "/", label: "Home", icon: "local_fire_department", match: (p: string) => p === "/" },
   { href: "/bets", label: "Bets", icon: "casino", match: (p: string) => p.startsWith("/bets") || p.startsWith("/receipts") },
   { href: "/leaderboard", label: "Leaderboard", icon: "trophy", match: (p: string) => p.startsWith("/leaderboard") },
-  { href: "/dares", label: "Dares", icon: "warning", match: (p: string) => p.startsWith("/dares") },
   { href: "/profile", label: "Profile", icon: "id_card", match: (p: string) => p.startsWith("/profile") },
 ];
 

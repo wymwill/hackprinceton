@@ -232,9 +232,9 @@ export default function BetDetail() {
                   </div>
                   {" "}
                   <div className="h-2.5 w-full bg-surface-container-lowest rounded-full overflow-clip flex">
-                    <div className="h-full bg-primary-container shadow-[0_0_12px_rgba(52,211,153,0.25)] transition-all duration-500" style={{ width: "85.7%" }}></div>
+                    <div className="h-full bg-primary-container shadow-[0_0_12px_rgba(206,76,59,0.25)] transition-all duration-500" style={{ width: "85.7%" }}></div>
                     {" "}
-                    <div className="h-full bg-secondary-container shadow-[0_0_12px_rgba(190,60,90,0.2)] transition-all duration-500" style={{ width: "14.3%" }}></div>
+                    <div className="h-full bg-secondary-container shadow-[0_0_12px_rgba(150,105,50,0.2)] transition-all duration-500" style={{ width: "14.3%" }}></div>
                   </div>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export default function BetDetail() {
               {" "}
               <div className="flex flex-col gap-space-sm pt-space-xs">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
-                  <button onClick={() => choose("pack")} disabled={pick !== null} className={`flex items-center justify-center gap-space-xs py-space-md px-space-lg rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_24px_rgba(52,211,153,0.17)] hover:shadow-[0_0_32px_rgba(52,211,153,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:hover:scale-100 ${pick && pick !== "pack" ? "opacity-40 shadow-none" : ""}`}>
+                  <button onClick={() => choose("pack")} disabled={pick !== null} className={`flex items-center justify-center gap-space-xs py-space-md px-space-lg rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_24px_rgba(206,76,59,0.17)] hover:shadow-[0_0_32px_rgba(206,76,59,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:hover:scale-100 ${pick && pick !== "pack" ? "opacity-40 shadow-none" : ""}`}>
                     <span>
                       {pick === "pack" ? "Taken · 250 PTS on The Pack" : "Take the Bet"}
                     </span>
@@ -313,7 +313,7 @@ export default function BetDetail() {
               {/* Custom SVG Data Chart */}
               {" "}
               <div className="relative w-full h-48 bg-surface-container-lowest rounded-xl p-space-md overflow-clip flex flex-col justify-between">
-                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#34d399_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ce4c3b_1px,transparent_1px)] [background-size:16px_16px]"></div>
                 {" "}
                 <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 600 130">
                   {/* Gridlines */}
@@ -328,9 +328,9 @@ export default function BetDetail() {
                   {" "}
                   <defs>
                     <linearGradient id="crashGlow" x1="0%" x2="0%" y1="0%" y2="100%">
-                      <stop offset="0%" stopColor="#fda4af" stopOpacity="0.35"></stop>
+                      <stop offset="0%" stopColor="#e9bf86" stopOpacity="0.35"></stop>
                       {" "}
-                      <stop offset="100%" stopColor="#fda4af" stopOpacity="0.0"></stop>
+                      <stop offset="100%" stopColor="#e9bf86" stopOpacity="0.0"></stop>
                     </linearGradient>
                   </defs>
                   {" "}
@@ -338,7 +338,7 @@ export default function BetDetail() {
                   {" "}
                   {/* Trajectory Path */}
                   {" "}
-                  <path d="M 0,30 L 140,32 L 280,30 L 320,60 L 410,110 L 600,118" fill="none" stroke="#fda4af" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
+                  <path d="M 0,30 L 140,32 L 280,30 L 320,60 L 410,110 L 600,118" fill="none" stroke="#e9bf86" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
                   {" "}
                   {/* Highlight Nodes */}
                   {" "}
@@ -478,7 +478,7 @@ export default function BetDetail() {
           <div className="flex flex-col gap-space-lg min-w-0">
             {/* AI Bookie Arbiter Callout Card */}
             {" "}
-            <div className="p-space-lg rounded-xl bg-surface-container-high shadow-[0_0_20px_-2px_rgba(167,139,250,0.17)] flex flex-col gap-space-sm relative overflow-clip">
+            <div className="p-space-lg rounded-xl bg-surface-container-high shadow-[0_0_20px_-2px_rgba(127,140,232,0.17)] flex flex-col gap-space-sm relative overflow-clip">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-space-xs">
                   <span className="font-label-sm text-label-sm px-space-xs py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container font-bold uppercase tracking-wider">

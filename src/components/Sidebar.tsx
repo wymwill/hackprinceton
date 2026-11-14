@@ -25,11 +25,8 @@ export default function Sidebar() {
             <span className="w-8 h-8 rounded-xl bg-primary-container text-on-primary flex items-center justify-center text-lg">
               🎲
             </span>
-            <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight">Bookie</span>
+            <span className="font-display italic text-[22px] leading-none text-on-surface">Betting with Friends</span>
           </div>
-          <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-tertiary-container/15 text-tertiary border border-tertiary-container/25">
-            AI Bookie
-          </span>
         </Link>
 
         <div className="flex flex-col gap-space-xs">
@@ -62,7 +59,7 @@ export default function Sidebar() {
                     </div>
                   </div>
                   {active ? (
-                    <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(52,211,153,0.3)]" />
+                    <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(206,76,59,0.3)]" />
                   ) : g.unread > 0 ? (
                     <span className="font-label-sm text-label-sm px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold">
                       {g.unread}
@@ -106,7 +103,7 @@ export default function Sidebar() {
       <div className="flex flex-col gap-space-md pt-space-md">
         <button
           onClick={() => openCreateBet()}
-          className="w-full flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(52,211,153,0.2)] hover:shadow-[0_0_28px_rgba(52,211,153,0.33)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+          className="w-full flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(206,76,59,0.2)] hover:shadow-[0_0_28px_rgba(206,76,59,0.33)] hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
           <span>+ Create Bet</span>
           <span className="text-base">🎲</span>

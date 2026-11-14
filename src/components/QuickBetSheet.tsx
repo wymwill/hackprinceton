@@ -48,7 +48,7 @@ export default function QuickBetSheet({
     }
   };
 
-  const tone = (i: number) => (binary && i === 1 ? "bg-[#fb7185] text-[#3b0a14]" : "bg-primary-container text-on-primary");
+  const tone = (i: number) => (binary && i === 1 ? "bg-[#d9a35f] text-[#3a2508]" : "bg-primary-container text-on-primary");
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
@@ -57,7 +57,7 @@ export default function QuickBetSheet({
         aria-modal="true"
         aria-label="Join this bet"
         onClick={(e) => e.stopPropagation()}
-        className="w-[420px] max-w-[92vw] rounded-2xl bg-surface-container-high border border-[#2f384a] p-6 flex flex-col gap-5 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.35),0_8px_10px_-6px_rgba(0,0,0,0.25)]"
+        className="w-[420px] max-w-[92vw] rounded-2xl bg-surface-container-high border border-[#3a3645] p-6 flex flex-col gap-5 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.35),0_8px_10px_-6px_rgba(0,0,0,0.25)]"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
@@ -89,7 +89,7 @@ export default function QuickBetSheet({
             <span className="font-label-md text-label-md text-on-surface-variant">Amount</span>
             <span className="font-label-sm text-label-sm text-on-surface-variant">You have {balance.toLocaleString()} pts</span>
           </div>
-          <div className="flex items-center gap-2 rounded-xl bg-surface-container-low border border-[#2f384a] focus-within:border-primary-container px-4 py-3">
+          <div className="flex items-center gap-2 rounded-xl bg-surface-container-low border border-[#3a3645] focus-within:border-primary-container px-4 py-3">
             <input
               type="number"
               min={1}
@@ -105,14 +105,14 @@ export default function QuickBetSheet({
               <button
                 key={c}
                 onClick={() => setAmount((a) => a + c)}
-                className="flex-1 py-1.5 rounded-full bg-surface-container-low border border-[#2f384a] font-label-md text-label-md text-on-surface hover:border-[#414d64]"
+                className="flex-1 py-1.5 rounded-full bg-surface-container-low border border-[#3a3645] font-label-md text-label-md text-on-surface hover:border-[#4b4657]"
               >
                 +{c}
               </button>
             ))}
             <button
               onClick={() => setAmount(balance)}
-              className="flex-1 py-1.5 rounded-full bg-surface-container-low border border-[#2f384a] font-label-md text-label-md text-on-surface hover:border-[#414d64]"
+              className="flex-1 py-1.5 rounded-full bg-surface-container-low border border-[#3a3645] font-label-md text-label-md text-on-surface hover:border-[#4b4657]"
             >
               Max
             </button>

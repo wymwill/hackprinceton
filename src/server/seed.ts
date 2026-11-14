@@ -70,5 +70,13 @@ export function seed(): Db {
   joinBet(db, "jake", legDay.id, "o1", 150, at(-1.5));
   joinBet(db, "priya", legDay.id, "o2", 50, at(-1));
 
+  // Placeholder while the next bet type is being built.
+  createBet(
+    db,
+    "alex",
+    { proposition: "test wip", outcomes: ["Yes", "No"], deadline: iso(24 * 7), stake: 10, pick: 0, category: "Projects", emoji: "🚧" },
+    at(-0.5)
+  );
+
   return db;
 }

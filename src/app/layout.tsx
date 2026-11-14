@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
+import { Instrument_Serif, JetBrains_Mono, Saira_Condensed } from "next/font/google";
 import BookieProvider from "@/components/BookieProvider";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({ variable: "--font-space-grotesk", subsets: ["latin"] });
-const plusJakarta = Plus_Jakarta_Sans({ variable: "--font-plus-jakarta", subsets: ["latin"] });
+const instrumentSerif = Instrument_Serif({ variable: "--font-instrument-serif", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
+const saira = Saira_Condensed({ variable: "--font-saira", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Bookie — bets with friends, settled by AI",
+  title: "Betting with Friends",
   description: "No-money bets on real life. Stakes are reputation, titles, and dares.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`dark ${spaceGrotesk.variable} ${plusJakarta.variable} antialiased`}>
+    <html lang="en" className={`dark ${instrumentSerif.variable} ${saira.variable} ${jetbrains.variable} antialiased`}>
       <head>
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link

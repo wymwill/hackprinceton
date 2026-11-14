@@ -13,7 +13,7 @@ export default function Sparkline({
   className?: string;
 }) {
   const up = tone === "auto" ? data[data.length - 1] >= data[0] : tone === "up";
-  const color = up ? "#34d399" : "#fb7185";
+  const color = up ? "#ce4c3b" : "#d9a35f";
   const min = Math.min(...data);
   const max = Math.max(...data);
   const span = Math.max(1, max - min);
