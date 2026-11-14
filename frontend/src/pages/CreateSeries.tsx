@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shell } from "../components/Shell.tsx";
+import OutcomeEditor, { newDraft, outcomeProblem } from "../components/OutcomeEditor.tsx";
 import { Panel } from "../components/ui.tsx";
 import { DEFAULT_SETTINGS } from "../lib/rules.ts";
 import { MODE_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Mode, Settings } from "../lib/types.ts";
+import type { BetDraft, Mode, Settings } from "../lib/types.ts";
 
 const MODES: { mode: Mode; letter: string; blurb: string }[] = [
   { mode: "money", letter: "A", blurb: "Real money. Preview only." },
@@ -36,17 +37,19 @@ export default function CreateSeries() {
   const nav = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [questions, setQuestions] = useState<string[]>([""]);
+  const [drafts, setDrafts] = useState<BetDraft[]>([newDraft()]);
   const [st, setSt] = useState<Settings>({ ...DEFAULT_SETTINGS });
   const set = <K extends keyof Settings>(k: K, v: Settings[K]) => setSt((s) => ({ ...s, [k]: v }));
 
   const needed = st.mode === "pool" ? 2 * st.losers : st.losers + 1;
-  const written = questions.map((q) => q.trim()).filter(Boolean);
+  const written = drafts.filter((d) => d.question.trim());
   const tooMany = written.length > st.betCount;
-  const setQuestion = (i: number, v: string) => setQuestions((qs) => qs.map((q, j) => (j === i ? v : q)));
+  const setDraft = (i: number, d: BetDraft) => setDrafts((ds) => ds.map((x, j) => (j === i ? d : x)));
+  // Bets with a question must be valid; empty rows are skipped.
+  const draftProblem = written.map((d, i) => (d.question.trim().length < 3 ? `Bet ${i + 1}: write at least 3 characters.` : outcomeProblem(d) && `Bet ${i + 1}: ${outcomeProblem(d)}`)).find(Boolean) || null;
 
   const submit = async () => {
-    const s = await api.createSeries({ name, description, settings: st, questions: written }, "Series created. Share the invite link to fill the lobby.");
+    const s = await api.createSeries({ name, description, settings: st, bets: written }, "Series created. Share the invite link to fill the lobby.");
     if (s) nav(`/s/${s.id}`);
   };
 
@@ -98,31 +101,35 @@ export default function CreateSeries() {
           <Panel label="02 · Bets" right={`${written.length}/${st.betCount} written`}>
             <div className="stack">
               <p className="hint">Write them now or in the lobby.</p>
-              {questions.map((q, i) => (
-                <div key={i} className="row">
-                  <span className="num dim" style={{ width: 22 }}>
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <input
-                    className="input text"
-                    value={q}
-                    onChange={(e) => setQuestion(i, e.target.value)}
-                    maxLength={300}
-                    placeholder="Will Sam hit the gym 5 times this week?"
-                    aria-label={`Bet ${i + 1}`}
-                  />
-                  {questions.length > 1 && (
-                    <button type="button" className="btn ghost sm" onClick={() => setQuestions((qs) => qs.filter((_, j) => j !== i))}>
-                      Remove
-                    </button>
-                  )}
+              {drafts.map((d, i) => (
+                <div key={i} className="draft-bet stack">
+                  <div className="row">
+                    <span className="num dim" style={{ width: 22 }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <input
+                      className="input text"
+                      value={d.question}
+                      onChange={(e) => setDraft(i, { ...d, question: e.target.value })}
+                      maxLength={300}
+                      placeholder={d.kind === "multi" ? "Who will score highest on the midterm?" : "Will Sam hit the gym 5 times this week?"}
+                      aria-label={`Bet ${i + 1}`}
+                    />
+                    {drafts.length > 1 && (
+                      <button type="button" className="btn ghost sm" onClick={() => setDrafts((ds) => ds.filter((_, j) => j !== i))}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <OutcomeEditor value={d} onChange={(next) => setDraft(i, next)} idPrefix={`create-${i}`} />
                 </div>
               ))}
-              {questions.length < st.betCount && (
-                <button type="button" className="btn" onClick={() => setQuestions((qs) => [...qs, ""])}>
-                  + Another question
+              {drafts.length < st.betCount && (
+                <button type="button" className="btn" onClick={() => setDrafts((ds) => [...ds, newDraft()])}>
+                  + Another bet
                 </button>
               )}
+              {draftProblem && <p className="hint warn">{draftProblem}</p>}
               {tooMany && <p className="notice">This series has {st.betCount} bets. Remove {written.length - st.betCount} question{written.length - st.betCount === 1 ? "" : "s"}.</p>}
             </div>
           </Panel>
@@ -256,7 +263,7 @@ export default function CreateSeries() {
               {st.hostPlays ? ", counting you" : ""}.
             </p>
             <div style={{ height: 14 }} />
-            <button type="button" className="btn primary block" onClick={submit} disabled={!name.trim() || tooMany}>
+            <button type="button" className="btn primary block" onClick={submit} disabled={!name.trim() || tooMany || !!draftProblem} title={draftProblem ?? undefined}>
               Create series
             </button>
           </Panel>

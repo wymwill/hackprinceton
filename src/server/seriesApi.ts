@@ -37,6 +37,7 @@ const STATUS: Record<string, number> = {
   bets_still_open: 409,
   favor_proposals_closed: 409,
   questions_locked: 409,
+  outcomes_locked: 409,
   planned_questions_full: 409,
   planned_questions_required: 409,
   one_person: 409,
@@ -121,6 +122,20 @@ export function check<T>({ data, error }: { data: T; error: PgError | null }): T
   return data;
 }
 
-/** "yes"/"YES" → "YES"; anything else passes through for the SQL to refuse. */
-export const side = (v: unknown) => (typeof v === "string" ? v.toUpperCase() : v);
+/**
+ * Which outcome a request means: `outcomeId` (preferred), or the older `outcome` / `side`
+ * label ("YES", "no", or a multiple-choice label). The SQL matches ids exactly and labels
+ * ignoring case, and refuses anything that isn't one of the bet's outcomes.
+ */
+export const outcomeRef = (body: Record<string, unknown>) => {
+  const v = body.outcomeId ?? body.outcome ?? body.side;
+  return typeof v === "string" ? v : null;
+};
 export const text = (v: unknown) => (typeof v === "string" ? v : "");
+/** A list of strings, or undefined when the field is missing (so the SQL default applies). */
+export const texts = (v: unknown) => (Array.isArray(v) ? v.map(text) : undefined);
+/** The fields that describe a bet's outcomes: { outcomes?: string[], tieRule? }. Missing outcomes = YES/NO. */
+export const betShape = (body: Record<string, unknown>) => ({
+  p_outcomes: texts(body.outcomes) ?? null,
+  p_tie_rule: typeof body.tieRule === "string" ? body.tieRule : null,
+});
