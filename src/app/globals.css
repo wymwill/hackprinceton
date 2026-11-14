@@ -1,68 +1,70 @@
 @import "tailwindcss";
 
-/* Bookie "Warm Slate Social" tokens (from the Stitch DESIGN.md export) */
+/* Betting with Friends: Rosy Copper (#CE4C3B) on Shadow Grey (#27242F).
+ * Layout language borrowed from Scarlet Market (square framed panels, small
+ * tracked uppercase labels, serif display, mono numbers), minus the retro FX. */
 @theme {
-  --color-surface: #151921;
-  --color-surface-dim: #151921;
-  --color-surface-bright: #353f55;
-  --color-surface-container-lowest: #11151c;
-  --color-surface-container-low: #1b202c;
-  --color-surface-container: #222938;
-  --color-surface-container-high: #2a3244;
-  --color-surface-container-highest: #323b50;
-  --color-surface-variant: #2a3244;
-  --color-surface-tint: #45dfa4;
-  --color-on-surface: #f1f5f9;
-  --color-on-surface-variant: #a3b1c4;
-  --color-inverse-surface: #dfe2ee;
-  --color-inverse-on-surface: #2c3039;
-  --color-outline: #7c8aa0;
-  --color-outline-variant: #414d64;
-  --color-background: #151921;
-  --color-on-background: #f1f5f9;
+  --color-surface: #27242f;
+  --color-surface-dim: #211e28;
+  --color-surface-bright: #4a4558;
+  --color-surface-container-lowest: #1d1a23;
+  --color-surface-container-low: #2d2a36;
+  --color-surface-container: #33303d;
+  --color-surface-container-high: #3a3645;
+  --color-surface-container-highest: #423d4e;
+  --color-surface-variant: #3a3645;
+  --color-surface-tint: #ce4c3b;
+  --color-on-surface: #f3eeee;
+  --color-on-surface-variant: #b3abbb;
+  --color-inverse-surface: #ebe5e8;
+  --color-inverse-on-surface: #27242f;
+  --color-outline: #8a8396;
+  --color-outline-variant: #4b4657;
+  --color-background: #27242f;
+  --color-on-background: #f3eeee;
 
-  /* mint: wins & primary actions */
-  --color-primary: #5af0b3;
-  --color-on-primary: #0f2a20;
-  --color-primary-container: #34d399;
-  --color-on-primary-container: #0b3d2b;
-  --color-inverse-primary: #006c4b;
-  --color-primary-fixed: #68fcbf;
-  --color-primary-fixed-dim: #45dfa4;
-  --color-on-primary-fixed: #002114;
-  --color-on-primary-fixed-variant: #005137;
+  /* rosy copper: brand, wins & primary actions */
+  --color-primary: #e2685a;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #ce4c3b;
+  --color-on-primary-container: #fff1ee;
+  --color-inverse-primary: #9c3427;
+  --color-primary-fixed: #f2a092;
+  --color-primary-fixed-dim: #e2685a;
+  --color-on-primary-fixed: #3a0a04;
+  --color-on-primary-fixed-variant: #7d2a1f;
 
-  /* peach rose: losses & dares */
-  --color-secondary: #fda4af;
-  --color-on-secondary: #4c0519;
-  --color-secondary-container: #7f2a3e;
-  --color-on-secondary-container: #ffc2c9;
-  --color-secondary-fixed: #ffdadc;
-  --color-secondary-fixed-dim: #fda4af;
-  --color-on-secondary-fixed: #400010;
-  --color-on-secondary-fixed-variant: #891933;
+  /* sand: losses & dares */
+  --color-secondary: #e9bf86;
+  --color-on-secondary: #3a2508;
+  --color-secondary-container: #6b4a22;
+  --color-on-secondary-container: #f8dfbb;
+  --color-secondary-fixed: #f8dfbb;
+  --color-secondary-fixed-dim: #e9bf86;
+  --color-on-secondary-fixed: #2a1a04;
+  --color-on-secondary-fixed-variant: #6b4a22;
 
-  /* lavender: the AI bookie */
-  --color-tertiary: #ddd0ff;
-  --color-on-tertiary: #381385;
-  --color-tertiary-container: #a78bfa;
-  --color-on-tertiary-container: #2e1a66;
-  --color-tertiary-fixed: #e8ddff;
-  --color-tertiary-fixed-dim: #cebdff;
-  --color-on-tertiary-fixed: #21005e;
-  --color-on-tertiary-fixed-variant: #4f319c;
+  /* periwinkle: info & highlights */
+  --color-tertiary: #b9c3ff;
+  --color-on-tertiary: #1c2564;
+  --color-tertiary-container: #7f8ce8;
+  --color-on-tertiary-container: #141b4d;
+  --color-tertiary-fixed: #dde1ff;
+  --color-tertiary-fixed-dim: #b9c3ff;
+  --color-on-tertiary-fixed: #0f1440;
+  --color-on-tertiary-fixed-variant: #3a46a0;
 
-  --color-error: #ffb4ab;
-  --color-on-error: #690005;
-  --color-error-container: #93000a;
-  --color-on-error-container: #ffdad6;
+  --color-error: #ffb4a8;
+  --color-on-error: #5c0f05;
+  --color-error-container: #8c1d10;
+  --color-on-error-container: #ffdad4;
 
-  --radius-sm: 0.25rem;
-  --radius: 0.5rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
+  --radius-sm: 2px;
+  --radius: 3px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+  --radius-2xl: 6px;
 
   --spacing-gutter: 1rem;
   --spacing-margin: 1rem;
@@ -76,16 +78,17 @@
   --spacing-margin-tablet: 2rem;
   --spacing-margin-desktop: 3rem;
 
-  --font-display: var(--font-space-grotesk), sans-serif;
-  --font-body: var(--font-plus-jakarta), sans-serif;
-  --font-mono: var(--font-plus-jakarta), sans-serif;
+  --font-display: var(--font-instrument-serif), Georgia, serif;
+  --font-body: var(--font-saira), "Helvetica Neue", sans-serif;
+  --font-mono: var(--font-saira), "Helvetica Neue", sans-serif;
+  --font-num: var(--font-jetbrains), ui-monospace, monospace;
 
   --font-display-lg: var(--font-display);
   --font-display-lg-mobile: var(--font-display);
   --font-headline-lg: var(--font-display);
   --font-headline-lg-mobile: var(--font-display);
-  --font-headline-md: var(--font-display);
-  --font-headline-sm: var(--font-display);
+  --font-headline-md: var(--font-body);
+  --font-headline-sm: var(--font-body);
   --font-body-lg: var(--font-body);
   --font-body-md: var(--font-body);
   --font-body-sm: var(--font-body);
@@ -93,48 +96,48 @@
   --font-label-md: var(--font-mono);
   --font-label-sm: var(--font-mono);
 
-  --text-display-lg: 40px;
-  --text-display-lg--line-height: 48px;
-  --text-display-lg--letter-spacing: -0.02em;
-  --text-display-lg--font-weight: 700;
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 52px;
+  --text-display-lg--letter-spacing: -0.01em;
+  --text-display-lg--font-weight: 400;
   --text-display-lg-mobile: 36px;
   --text-display-lg-mobile--line-height: 40px;
-  --text-display-lg-mobile--letter-spacing: -0.02em;
-  --text-display-lg-mobile--font-weight: 700;
-  --text-headline-lg: 28px;
-  --text-headline-lg--line-height: 36px;
-  --text-headline-lg--letter-spacing: -0.01em;
-  --text-headline-lg--font-weight: 700;
+  --text-display-lg-mobile--letter-spacing: -0.01em;
+  --text-display-lg-mobile--font-weight: 400;
+  --text-headline-lg: 34px;
+  --text-headline-lg--line-height: 38px;
+  --text-headline-lg--letter-spacing: 0;
+  --text-headline-lg--font-weight: 400;
   --text-headline-lg-mobile: 26px;
   --text-headline-lg-mobile--line-height: 32px;
-  --text-headline-lg-mobile--letter-spacing: -0.01em;
-  --text-headline-lg-mobile--font-weight: 700;
-  --text-headline-md: 20px;
+  --text-headline-lg-mobile--letter-spacing: 0;
+  --text-headline-lg-mobile--font-weight: 400;
+  --text-headline-md: 21px;
   --text-headline-md--line-height: 26px;
-  --text-headline-md--letter-spacing: -0.01em;
+  --text-headline-md--letter-spacing: 0.01em;
   --text-headline-md--font-weight: 600;
-  --text-headline-sm: 17px;
+  --text-headline-sm: 18px;
   --text-headline-sm--line-height: 22px;
   --text-headline-sm--font-weight: 600;
-  --text-body-lg: 16px;
+  --text-body-lg: 17px;
   --text-body-lg--line-height: 24px;
-  --text-body-md: 14px;
+  --text-body-md: 15px;
   --text-body-md--line-height: 20px;
   --text-body-md--letter-spacing: 0em;
-  --text-body-sm: 12px;
+  --text-body-sm: 13px;
   --text-body-sm--line-height: 18px;
   --text-body-sm--letter-spacing: 0.01em;
   --text-label-lg: 14px;
   --text-label-lg--line-height: 18px;
-  --text-label-lg--letter-spacing: 0.01em;
+  --text-label-lg--letter-spacing: 0.02em;
   --text-label-lg--font-weight: 600;
   --text-label-md: 12px;
   --text-label-md--line-height: 16px;
-  --text-label-md--letter-spacing: 0.02em;
+  --text-label-md--letter-spacing: 0.04em;
   --text-label-md--font-weight: 600;
   --text-label-sm: 11px;
   --text-label-sm--line-height: 14px;
-  --text-label-sm--letter-spacing: 0.03em;
+  --text-label-sm--letter-spacing: 0.1em;
   --text-label-sm--font-weight: 600;
 }
 
@@ -143,14 +146,25 @@
   *,
   ::before,
   ::after {
-    border-color: #2f384a;
+    border-color: #3a3645;
   }
   html,
   body {
     margin: 0;
     padding: 0;
-    background: var(--color-surface);
+    background:
+      radial-gradient(60% 45% at 90% -10%, rgba(206, 76, 59, 0.1), transparent 70%),
+      var(--color-surface);
+    background-attachment: fixed;
     color: var(--color-on-surface);
+  }
+  ::selection {
+    background: #ce4c3b;
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 1px solid #ce4c3b;
+    outline-offset: 2px;
   }
   body {
     overscroll-behavior: none;
@@ -160,6 +174,12 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+}
+
+/* Big numbers read best in mono */
+.font-num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
 }
 
 ::-webkit-scrollbar {
@@ -205,3 +225,4 @@
 .stamp-in {
   animation: stamp-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
 }
+

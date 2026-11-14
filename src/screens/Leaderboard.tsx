@@ -75,7 +75,7 @@ const TITLE_STYLE = {
   coral: "bg-secondary-container/30 text-on-secondary-container",
   purple: "bg-tertiary-container/20 text-tertiary",
   plain: "bg-surface-container-high text-on-surface-variant",
-  shame: "bg-secondary-container text-on-secondary-container font-bold shadow-[0_0_8px_rgba(190,60,90,0.2)]",
+  shame: "bg-secondary-container text-on-secondary-container font-bold shadow-[0_0_8px_rgba(150,105,50,0.2)]",
 };
 
 export default function Leaderboard() {
@@ -119,7 +119,7 @@ export default function Leaderboard() {
                 onClick={() => setTab(t.id)}
                 className={`px-space-md py-space-xs rounded-lg font-label-md text-label-md transition-all ${
                   tab === t.id
-                    ? "bg-primary-container text-on-primary-container font-bold shadow-[0_0_14px_rgba(52,211,153,0.2)]"
+                    ? "bg-primary-container text-on-primary-container font-bold shadow-[0_0_14px_rgba(206,76,59,0.2)]"
                     : "text-on-surface-variant hover:text-on-surface"
                 }`}
               >
@@ -302,7 +302,7 @@ export default function Leaderboard() {
               <div className="w-full h-2.5 rounded-full bg-surface-container-lowest overflow-clip flex">
                 <div className="h-full bg-surface-bright" style={{ width: "57.1%" }}></div>
                 {" "}
-                <div className="h-full bg-primary-container shadow-[0_0_8px_rgba(52,211,153,0.3)]" style={{ width: "42.9%" }}></div>
+                <div className="h-full bg-primary-container shadow-[0_0_8px_rgba(206,76,59,0.3)]" style={{ width: "42.9%" }}></div>
               </div>
               {" "}
               <p className="font-body-sm text-body-sm text-on-surface-variant">
@@ -350,7 +350,7 @@ export default function Leaderboard() {
               {/* Mini Bar Comparison */}
               {" "}
               <div className="w-full h-2.5 rounded-full bg-surface-container-lowest overflow-clip flex">
-                <div className="h-full bg-primary shadow-[0_0_8px_rgba(119,255,147,0.5)]" style={{ width: "84.6%" }}></div>
+                <div className="h-full bg-primary shadow-[0_0_8px_rgba(242,160,146,0.5)]" style={{ width: "84.6%" }}></div>
                 {" "}
                 <div className="h-full bg-secondary-container" style={{ width: "15.4%" }}></div>
               </div>
@@ -362,7 +362,7 @@ export default function Leaderboard() {
             {" "}
             {/* AI Bookie's Power Ranking Roast Card */}
             {" "}
-            <div className="p-space-md rounded-2xl bg-gradient-to-br from-tertiary-container/15 via-surface-container-low to-surface-container-low flex flex-col gap-space-xs relative overflow-clip shadow-[0_0_24px_rgba(167,139,250,0.1)]">
+            <div className="p-space-md rounded-2xl bg-gradient-to-br from-tertiary-container/15 via-surface-container-low to-surface-container-low flex flex-col gap-space-xs relative overflow-clip shadow-[0_0_24px_rgba(127,140,232,0.1)]">
               <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-tertiary-container/10 blur-xl pointer-events-none rounded-full"></div>
               {" "}
               <div className="flex items-center justify-between">
@@ -376,7 +376,7 @@ export default function Leaderboard() {
                   </span>
                 </div>
                 {" "}
-                <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse shadow-[0_0_8px_rgba(211,189,255,0.8)]"></span>
+                <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse shadow-[0_0_8px_rgba(185,195,255,0.8)]"></span>
               </div>
               {" "}
               <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mt-1">
@@ -426,7 +426,7 @@ function Podium({ rows, tab }: { rows: Row[]; tab: Tab }) {
             <div key={r.id} className={`${m.order} flex flex-col items-center group`}>
               <div className="relative mb-3 flex flex-col items-center">
                 {first ? (
-                  <div className="w-10 h-10 rounded-full bg-tertiary-container/30 flex items-center justify-center text-xl mb-1 shadow-[0_0_24px_rgba(211,189,255,0.7)] animate-bounce">
+                  <div className="w-10 h-10 rounded-full bg-tertiary-container/30 flex items-center justify-center text-xl mb-1 shadow-[0_0_24px_rgba(185,195,255,0.7)] animate-bounce">
                     👑
                   </div>
                 ) : (
@@ -437,7 +437,7 @@ function Podium({ rows, tab }: { rows: Row[]; tab: Tab }) {
                 <div
                   className={`relative rounded-2xl overflow-clip p-1 ${
                     first
-                      ? "bg-gradient-to-tr from-primary via-tertiary to-primary-container shadow-[0_0_30px_rgba(52,211,153,0.23)]"
+                      ? "bg-gradient-to-tr from-primary via-tertiary to-primary-container shadow-[0_0_30px_rgba(206,76,59,0.23)]"
                       : "bg-gradient-to-b from-surface-bright via-surface-container to-surface-container-low shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
                   }`}
                 >

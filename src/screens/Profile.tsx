@@ -51,7 +51,7 @@ export default function Profile() {
                 </div>
                 {" "}
                 <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-surface-container-lowest">
-                  <span className="h-2.5 w-2.5 rounded-full bg-primary-container shadow-[0_0_8px_rgba(52,211,153,0.4)]"></span>
+                  <span className="h-2.5 w-2.5 rounded-full bg-primary-container shadow-[0_0_8px_rgba(206,76,59,0.4)]"></span>
                 </span>
               </div>
               {" "}
@@ -65,7 +65,7 @@ export default function Profile() {
                     @alex_c
                   </span>
                   {" "}
-                  <span className="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-container font-label-sm text-label-sm font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(52,211,153,0.17)] flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-container font-label-sm text-label-sm font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(206,76,59,0.17)] flex items-center gap-1">
                     <span className="text-xs">
                       ⚡
                     </span>
@@ -103,7 +103,7 @@ export default function Profile() {
                 {" "}Edit Profile
               </button>
               {" "}
-              <button className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-space-md py-2.5 rounded-xl bg-primary-container text-on-primary font-label-md text-label-md font-bold shadow-[0_0_16px_rgba(52,211,153,0.17)] hover:shadow-[0_0_24px_rgba(52,211,153,0.28)] transition-all cursor-pointer" onClick={shareCard}>
+              <button className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-space-md py-2.5 rounded-xl bg-primary-container text-on-primary font-label-md text-label-md font-bold shadow-[0_0_16px_rgba(206,76,59,0.17)] hover:shadow-[0_0_24px_rgba(206,76,59,0.28)] transition-all cursor-pointer" onClick={shareCard}>
                 <span className="material-symbols-outlined text-base">
                   {copied ? "check" : "ios_share"}
                 </span>
@@ -188,7 +188,7 @@ export default function Profile() {
             </div>
             {" "}
             <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-clip">
-              <div className="bg-primary-container h-full rounded-full shadow-[0_0_8px_rgba(52,211,153,0.3)]" style={{ width: "68.4%" }}></div>
+              <div className="bg-primary-container h-full rounded-full shadow-[0_0_8px_rgba(206,76,59,0.3)]" style={{ width: "68.4%" }}></div>
             </div>
           </div>
           {" "}
@@ -277,7 +277,7 @@ export default function Profile() {
               {" "}
               <div className="flex items-center justify-between pb-space-sm">
                 <div className="flex items-center gap-space-sm">
-                  <div className="w-10 h-10 rounded-xl bg-tertiary-container/25 flex items-center justify-center text-lg shadow-[0_0_12px_rgba(167,139,250,0.2)]">
+                  <div className="w-10 h-10 rounded-xl bg-tertiary-container/25 flex items-center justify-center text-lg shadow-[0_0_12px_rgba(127,140,232,0.2)]">
                     🤖
                   </div>
                   {" "}
@@ -443,7 +443,7 @@ export default function Profile() {
                       </div>
                     </div>
                     {" "}
-                    <span className="px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold uppercase shadow-[0_0_8px_rgba(52,211,153,0.15)]">
+                    <span className="px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold uppercase shadow-[0_0_8px_rgba(206,76,59,0.15)]">
                       WON
                     </span>
                   </div>
@@ -481,7 +481,7 @@ export default function Profile() {
                       </div>
                     </div>
                     {" "}
-                    <span className="px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold uppercase shadow-[0_0_8px_rgba(52,211,153,0.15)]">
+                    <span className="px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold uppercase shadow-[0_0_8px_rgba(206,76,59,0.15)]">
                       WON
                     </span>
                   </div>
@@ -560,7 +560,7 @@ export default function Profile() {
                       </div>
                     </div>
                     {" "}
-                    <span className="px-2.5 py-1 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm font-bold uppercase shadow-[0_0_8px_rgba(255,178,184,0.3)]">
+                    <span className="px-2.5 py-1 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm font-bold uppercase shadow-[0_0_8px_rgba(248,223,187,0.3)]">
                       LOST
                     </span>
                   </div>
@@ -604,7 +604,7 @@ export default function Profile() {
                           <div className="flex items-center gap-2">
                             <span className="font-body-md text-body-md font-semibold text-on-surface">{app.name}</span>
                             <span className="font-label-sm text-label-sm px-1.5 rounded bg-surface-container-highest text-on-surface-variant">{app.kind}</span>
-                            {on && <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_rgba(52,211,153,0.4)]"></span>}
+                            {on && <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_rgba(206,76,59,0.4)]"></span>}
                           </div>
                           <span className="font-body-sm text-body-sm text-on-surface-variant truncate">{app.desc}</span>
                         </div>
@@ -615,7 +615,7 @@ export default function Profile() {
                           <span className="hidden group-hover:inline">Disconnect</span>
                         </button>
                       ) : (
-                        <button onClick={() => toggleApp(app.id, app.name)} className="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-[0_0_8px_rgba(52,211,153,0.15)] hover:scale-105 active:scale-95 transition-all shrink-0">
+                        <button onClick={() => toggleApp(app.id, app.name)} className="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-[0_0_8px_rgba(206,76,59,0.15)] hover:scale-105 active:scale-95 transition-all shrink-0">
                           Connect
                         </button>
                       )}

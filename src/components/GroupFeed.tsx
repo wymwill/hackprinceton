@@ -36,7 +36,7 @@ export default function GroupFeed({ groupId = "gym-arc" }: { groupId?: string })
         const winner = b.receipt && b.outcomes.find((o) => o.id === b.receipt!.outcomeId);
         return (
           <article key={b.id} className="relative overflow-clip rounded-xl bg-surface-container p-space-md shadow-md flex flex-col gap-space-sm">
-            <div className={`absolute top-0 left-0 bottom-0 w-1 ${s === "open" ? "bg-primary-container" : s === "closed" ? "bg-[#fbbf77]" : "bg-tertiary"}`} />
+            <div className={`absolute top-0 left-0 bottom-0 w-1 ${s === "open" ? "bg-primary-container" : s === "closed" ? "bg-[#f0a87a]" : "bg-tertiary"}`} />
             <div className="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant">
               <Avatar name={creator?.name ?? "?"} src={creator?.avatar} size={22} />
               <span>
@@ -77,7 +77,7 @@ export default function GroupFeed({ groupId = "gym-arc" }: { groupId?: string })
                   Receipt →
                 </Link>
               ) : s === "closed" && b.creatorId === state.me ? (
-                <Link href={`/bets/${b.id}`} className="text-[#fcd5a4] hover:underline">
+                <Link href={`/bets/${b.id}`} className="text-[#f6caa8] hover:underline">
                   Record the result →
                 </Link>
               ) : (

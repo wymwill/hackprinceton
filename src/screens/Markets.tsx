@@ -44,11 +44,11 @@ const changeOf = (b: BetView) => {
 function ChanceGauge({ chance }: { chance: number }) {
   const r = 26;
   const c = Math.PI * r;
-  const color = chance >= 50 ? "#34d399" : chance >= 25 ? "#fbbf77" : "#fb7185";
+  const color = chance >= 50 ? "#ce4c3b" : chance >= 25 ? "#f0a87a" : "#d9a35f";
   return (
     <div className="relative w-[68px] h-[40px] shrink-0">
       <svg viewBox="0 0 68 40" className="w-full h-full">
-        <path d="M6,36 A28,28 0 0 1 62,36" fill="none" stroke="#2f384a" strokeWidth="6" strokeLinecap="round" />
+        <path d="M6,36 A28,28 0 0 1 62,36" fill="none" stroke="#3a3645" strokeWidth="6" strokeLinecap="round" />
         <path
           d="M6,36 A28,28 0 0 1 62,36"
           fill="none"
@@ -117,7 +117,7 @@ export default function Markets() {
         </button>
         <button
           onClick={() => setSheet({ betId: b.id, outcome: 1 })}
-          className={`${pad} rounded-xl bg-[#fb7185]/12 text-[#fda4af] border border-[#fb7185]/25 hover:bg-[#fb7185] hover:text-[#3b0a14] transition-colors truncate px-2`}
+          className={`${pad} rounded-xl bg-[#d9a35f]/12 text-[#e9bf86] border border-[#d9a35f]/25 hover:bg-[#d9a35f] hover:text-[#3a2508] transition-colors truncate px-2`}
         >
           {no.label} {no.chance}%
         </button>
@@ -144,10 +144,10 @@ export default function Markets() {
       return (
         <Link
           href={`/bets/${b.id}`}
-          className="flex items-center justify-between p-3 rounded-xl bg-[#fbbf77]/10 border border-[#fbbf77]/25 hover:border-[#fbbf77]/50"
+          className="flex items-center justify-between p-3 rounded-xl bg-[#f0a87a]/10 border border-[#f0a87a]/25 hover:border-[#f0a87a]/50"
         >
-          <span className="font-label-lg text-label-lg text-[#fcd5a4]">🔒 Closed · waiting for the result</span>
-          {b.creatorId === myId && <span className="font-label-md text-label-md text-[#fcd5a4]">Settle →</span>}
+          <span className="font-label-lg text-label-lg text-[#f6caa8]">🔒 Closed · waiting for the result</span>
+          {b.creatorId === myId && <span className="font-label-md text-label-md text-[#f6caa8]">Settle →</span>}
         </Link>
       );
     }
@@ -178,7 +178,7 @@ export default function Markets() {
           </div>
           <button
             onClick={() => openCreateBet()}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg hover:shadow-[0_4px_14px_rgba(52,211,153,0.25)] transition-shadow"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg hover:shadow-[0_4px_14px_rgba(206,76,59,0.25)] transition-shadow"
           >
             <span className="material-symbols-outlined text-lg">add</span> New bet
           </button>
@@ -194,7 +194,7 @@ export default function Markets() {
                 className={`px-3.5 py-1.5 rounded-full font-label-md text-label-md border transition-colors ${
                   filter === c.id
                     ? "bg-on-surface text-surface border-on-surface"
-                    : "bg-surface-container-low text-on-surface-variant border-[#2f384a] hover:text-on-surface hover:border-[#414d64]"
+                    : "bg-surface-container-low text-on-surface-variant border-[#3a3645] hover:text-on-surface hover:border-[#4b4657]"
                 }`}
               >
                 {c.label}
@@ -208,14 +208,14 @@ export default function Markets() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Find a bet"
-                className="w-48 pl-9 pr-3 py-1.5 rounded-full bg-surface-container-low border border-[#2f384a] focus:border-primary-container outline-none font-body-md text-body-md"
+                className="w-48 pl-9 pr-3 py-1.5 rounded-full bg-surface-container-low border border-[#3a3645] focus:border-primary-container outline-none font-body-md text-body-md"
               />
             </div>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
               aria-label="Sort bets"
-              className="px-3 py-1.5 rounded-full bg-surface-container-low border border-[#2f384a] font-label-md text-label-md text-on-surface"
+              className="px-3 py-1.5 rounded-full bg-surface-container-low border border-[#3a3645] font-label-md text-label-md text-on-surface"
             >
               {Object.entries(SORTS).map(([k, v]) => (
                 <option key={k} value={k}>
@@ -232,10 +232,10 @@ export default function Markets() {
 
             {/* Featured: the biggest open pool */}
             {featured && filter === "All" && !query && (
-              <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-lg grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-space-lg">
+              <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-lg grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-space-lg">
                 <div className="flex flex-col gap-space-md">
                   <div className="flex items-center gap-2 font-label-sm text-label-sm">
-                    <span className="px-2 py-0.5 rounded-full bg-[#fbbf77]/15 text-[#fcd5a4]">⭐ Biggest pool</span>
+                    <span className="px-2 py-0.5 rounded-full bg-[#f0a87a]/15 text-[#f6caa8]">⭐ Biggest pool</span>
                     <span className="text-on-surface-variant">Closes in {timeLeft(featured.deadline, now)}</span>
                   </div>
                   <Link href={`/bets/${featured.id}`} className="font-headline-md text-headline-md text-on-surface hover:text-primary transition-colors">
@@ -245,7 +245,7 @@ export default function Markets() {
                     <span className="font-display-lg text-display-lg text-on-surface">{featured.outcomes[0].chance}%</span>
                     <span className="font-body-md text-body-md text-on-surface-variant">{featured.outcomes[0].label}</span>
                     {changeOf(featured) !== 0 && (
-                      <span className={`font-label-md text-label-md flex items-center ${changeOf(featured) > 0 ? "text-primary" : "text-[#fda4af]"}`}>
+                      <span className={`font-label-md text-label-md flex items-center ${changeOf(featured) > 0 ? "text-primary" : "text-[#e9bf86]"}`}>
                         <span className="material-symbols-outlined text-base">{changeOf(featured) > 0 ? "arrow_upward" : "arrow_downward"}</span>
                         {Math.abs(changeOf(featured))} since it opened
                       </span>
@@ -299,7 +299,7 @@ export default function Markets() {
 
             {/* Grid */}
             {state && list.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[#414d64] p-10 flex flex-col items-center gap-3 text-center">
+              <div className="rounded-2xl border border-dashed border-[#4b4657] p-10 flex flex-col items-center gap-3 text-center">
                 <span className="text-3xl">🤔</span>
                 <p className="font-headline-sm text-headline-sm text-on-surface">No bets here yet</p>
                 <p className="font-body-md text-body-md text-on-surface-variant">Start one?</p>
@@ -319,7 +319,7 @@ export default function Markets() {
                     return (
                       <article
                         key={b.id}
-                        className="rounded-2xl bg-surface-container border border-[#2f384a] hover:border-[#414d64] p-space-md flex flex-col gap-space-md transition-colors"
+                        className="rounded-2xl bg-surface-container border border-[#3a3645] hover:border-[#4b4657] p-space-md flex flex-col gap-space-md transition-colors"
                       >
                         <div className="flex items-start gap-3">
                           <span className="w-10 h-10 shrink-0 rounded-xl bg-surface-container-high flex items-center justify-center text-xl">{b.emoji}</span>
@@ -354,7 +354,7 @@ export default function Markets() {
                           <span>
                             {b.pool.toLocaleString()} pts · {b.entries.length} friends · by {user(b.creatorId)?.name.split(" ")[0]}
                           </span>
-                          <span className={soon ? "text-[#fcd5a4]" : ""}>⏱ {s === "settled" ? "Settled" : timeLeft(b.deadline, now)}</span>
+                          <span className={soon ? "text-[#f6caa8]" : ""}>⏱ {s === "settled" ? "Settled" : timeLeft(b.deadline, now)}</span>
                         </div>
                       </article>
                     );
@@ -365,7 +365,7 @@ export default function Markets() {
 
           {/* Right rail */}
           <aside className="flex flex-col gap-space-md xl:sticky xl:top-20">
-            <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-3">
+            <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-md flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <h2 className="font-headline-sm text-headline-sm text-on-surface">Your bets</h2>
                 <span className="font-label-sm text-label-sm text-on-surface-variant">{(me?.balance ?? 0).toLocaleString()} pts free</span>
@@ -383,7 +383,7 @@ export default function Markets() {
                       <span className="font-label-sm text-label-sm text-on-surface-variant">
                         {e.amount.toLocaleString()} pts on {pick.label} ·{" "}
                         {result ? (
-                          <span className={result.net >= 0 ? "text-primary" : "text-[#fda4af]"}>
+                          <span className={result.net >= 0 ? "text-primary" : "text-[#e9bf86]"}>
                             {result.net >= 0 ? "+" : ""}
                             {result.net.toLocaleString()} pts
                           </span>
@@ -400,7 +400,7 @@ export default function Markets() {
             </section>
 
             {movers.length > 0 && (
-              <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-3">
+              <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-md flex flex-col gap-3">
                 <h2 className="font-headline-sm text-headline-sm text-on-surface">Biggest moves</h2>
                 {movers.map((b) => {
                   const d = changeOf(b);
@@ -408,7 +408,7 @@ export default function Markets() {
                     <Link key={b.id} href={`/bets/${b.id}`} className="flex items-center gap-3">
                       <span className="text-lg">{b.emoji}</span>
                       <span className="flex-1 font-body-sm text-body-sm text-on-surface line-clamp-2">{b.proposition}</span>
-                      <span className={`font-label-md text-label-md whitespace-nowrap ${d >= 0 ? "text-primary" : "text-[#fda4af]"}`}>
+                      <span className={`font-label-md text-label-md whitespace-nowrap ${d >= 0 ? "text-primary" : "text-[#e9bf86]"}`}>
                         {d >= 0 ? "▲" : "▼"} {Math.abs(d)}
                       </span>
                     </Link>

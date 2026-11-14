@@ -44,7 +44,7 @@ export default function LiveReceipt() {
   return (
     <main className="relative pt-16 bg-surface min-h-screen w-full px-gutter-desktop">
       <div className="flex flex-col gap-space-lg py-space-lg pb-space-xl max-w-3xl mx-auto">
-        <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-lg flex flex-col gap-space-md items-center text-center">
+        <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-lg flex flex-col gap-space-md items-center text-center">
           <span className="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant">Settlement receipt · {r.id}</span>
           <h1 className="font-headline-md text-headline-md text-on-surface">
             {bet.emoji} {bet.proposition}
@@ -56,7 +56,7 @@ export default function LiveReceipt() {
           {mine && (
             <span
               className={`px-4 py-1.5 rounded-full font-label-lg text-label-lg ${
-                r.refunded ? "bg-surface-container-high text-on-surface" : mine.net >= 0 ? "bg-primary-container text-on-primary" : "bg-[#fb7185] text-[#3b0a14]"
+                r.refunded ? "bg-surface-container-high text-on-surface" : mine.net >= 0 ? "bg-primary-container text-on-primary" : "bg-[#d9a35f] text-[#3a2508]"
               }`}
             >
               {r.refunded ? "Refunded" : mine.net >= 0 ? `You won ${mine.net.toLocaleString()} pts` : `You lost ${(-mine.net).toLocaleString()} pts`}
@@ -73,7 +73,7 @@ export default function LiveReceipt() {
             [`On ${winner.label}`, r.winningPool],
             ["Friends", r.payouts.length],
           ].map(([k, v]) => (
-            <div key={k} className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col">
+            <div key={k} className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-md flex flex-col">
               <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">{k}</span>
               <span className="font-headline-md text-headline-md text-on-surface">{Number(v).toLocaleString()}</span>
             </div>
@@ -86,7 +86,7 @@ export default function LiveReceipt() {
           </p>
         )}
 
-        <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-2">
+        <section className="rounded-2xl bg-surface-container border border-[#3a3645] p-space-md flex flex-col gap-2">
           <h2 className="font-headline-sm text-headline-sm text-on-surface">Payouts</h2>
           <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-space-md gap-y-2 items-center font-label-md text-label-md">
             <span className="text-on-surface-variant font-label-sm text-label-sm uppercase">Friend</span>
@@ -105,7 +105,7 @@ export default function LiveReceipt() {
                   </span>
                   <span className="text-right text-on-surface-variant">{p.staked.toLocaleString()}</span>
                   <span className="text-right text-on-surface">{p.payout.toLocaleString()}</span>
-                  <span className={`text-right font-bold ${p.net >= 0 ? "text-primary" : "text-[#fda4af]"}`}>
+                  <span className={`text-right font-bold ${p.net >= 0 ? "text-primary" : "text-[#e9bf86]"}`}>
                     {p.net >= 0 ? "+" : ""}
                     {p.net.toLocaleString()}
                   </span>
