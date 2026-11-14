@@ -124,7 +124,7 @@ export default function NewMarketModal({ onClose, onCreated }: { onClose: () => 
         </div>
         {group.mode === "tokens" && (
           <Field label={`Starting chance: ${chance}%`} hint="The Bookie may adjust it.">
-            <input type="range" min={5} max={95} value={chance} onChange={(e) => setChance(Number(e.target.value))} className="accent-[#ce4c3b]" />
+            <input type="range" min={5} max={95} value={chance} onChange={(e) => setChance(Number(e.target.value))} className="accent-[#ff5f1f]" />
           </Field>
         )}
         <div className="flex flex-col gap-1.5">
