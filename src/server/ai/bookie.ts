@@ -192,7 +192,9 @@ export async function requestReview(marketId: string, userId: string): Promise<R
       const s = statusOf(market);
       if (s === "open") throw new AppError(409, "market_open", "Close the market before asking the Bookie.");
       if (s === "settled") throw new AppError(409, "market_settled", "This market is already settled.");
-      const users = db.users.map((u) => ({ id: u.id, name: u.name }));
+      // Only this group's members: other people's names never go to the model.
+      const memberIds = new Set(db.memberships.filter((m) => m.groupId === market.groupId).map((m) => m.userId));
+      const users = db.users.filter((u) => memberIds.has(u.id)).map((u) => ({ id: u.id, name: u.name }));
       const stakes = new Map<string, string>();
       for (const p of positionsOf(db, marketId)) stakes.set(p.userId, `${p.yes} Yes and ${p.no} No contracts`);
       for (const p of db.picks.filter((x) => x.marketId === marketId)) stakes.set(p.userId, `picked ${p.side.toUpperCase()}`);

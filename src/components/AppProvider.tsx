@@ -58,6 +58,14 @@ export function useApp() {
 
 const POLL_MS = 4000;
 
+/** Signed out (or the session expired): go sign in, then come back here. */
+function toLoginIfSignedOut(res: Response, go: (url: string) => void) {
+  if (res.status !== 401 && res.status !== 503) return false;
+  const here = window.location.pathname + window.location.search;
+  go(`/login${here === "/" ? "" : `?next=${encodeURIComponent(here)}`}`);
+  return true;
+}
+
 const TONE = {
   ok: "border-primary-container/50",
   warn: "border-secondary-container",
@@ -82,10 +90,13 @@ export default function AppProvider({ children }: { children: React.ReactNode })
 
   const refresh = useCallback(async (force = false) => {
     if (inflight.current > 0 && !force) return;
+    // Nothing to load until you're signed in.
+    if (window.location.pathname === "/login") return;
     const g = groupRef.current;
     try {
       const res = await fetch(`/api/state${g ? `?group=${encodeURIComponent(g)}` : ""}`, { cache: "no-store" });
       if (groupRef.current !== g) return;
+      if (toLoginIfSignedOut(res, router.replace)) return;
       if (res.ok) setState(await res.json());
       else if (res.status === 404 && g) {
         // Not in that group (for example after switching who you're playing as).
@@ -95,7 +106,7 @@ export default function AppProvider({ children }: { children: React.ReactNode })
     } catch {
       /* offline: keep the last state */
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     groupRef.current = groupId;
@@ -120,6 +131,7 @@ export default function AppProvider({ children }: { children: React.ReactNode })
           headers: form ? undefined : { "Content-Type": "application/json" },
           body: form ? body : JSON.stringify(body ?? {}),
         });
+        if (toLoginIfSignedOut(res, router.replace)) return null;
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
           toast(json?.error?.message ?? "That didn't work. Try again.", "warn");
@@ -134,7 +146,7 @@ export default function AppProvider({ children }: { children: React.ReactNode })
         await refresh(true);
       }
     },
-    [toast, refresh]
+    [toast, refresh, router]
   );
   const post = useCallback(<T,>(url: string, body?: unknown) => send<T>("POST", url, body), [send]);
 
@@ -184,7 +196,7 @@ export default function AppProvider({ children }: { children: React.ReactNode })
           onClose={() => setModal(null)}
           onCreated={(id) => {
             setModal(null);
-            toast("Group created. Share the invite code from Settings.");
+            toast("Group created. Tap Invite to share the link.");
             router.push(`/g/${id}`);
           }}
         />

@@ -15,7 +15,7 @@ const hue = (name: string) => HUES[[...name].reduce((h, c) => (h * 31 + c.charCo
 export default function Avatar({ name, src, size = 28, className = "" }: { name: string; src?: string; size?: number; className?: string }) {
   const style = { width: size, height: size, fontSize: Math.round(size * 0.38) };
   return src ? (
-    <img alt={name} src={src} style={style} className={`rounded-full object-cover shrink-0 ${className}`} />
+    <img alt={name} src={src} referrerPolicy="no-referrer" style={style} className={`rounded-full object-cover shrink-0 ${className}`} />
   ) : (
     <span
       aria-label={name}

@@ -11,11 +11,35 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. The first request creates `.data/bwf.json` from the demo seed. Delete that file to reset.
+Open http://localhost:3000. You'll need to sign in with Google, which needs a Supabase project (see [Sign-in](#sign-in)). To try the app without accounts, run it in demo mode instead:
+
+```bash
+BWF_AUTH=demo npm run dev
+```
+
+The first request creates `.data/bwf.json` from the demo seed. Delete that file to reset.
 
 No API key is needed. Without one the Bookie runs in `off` mode (see [AI Bookie](#ai-bookie)). To turn Claude on, copy `.env.example` to `.env.local` and set `ANTHROPIC_API_KEY`.
 
-There's no login. Use **Playing as** in the header to switch friends (it sets a cookie). That's how you demo several people in one market, and it also means nobody's identity is verified.
+## Sign-in
+
+People sign in with Google through Supabase Auth. Each Supabase account is linked to exactly one Alea user, created the first time it signs in, with the name and photo from Google.
+
+**Users are kept apart:**
+- Who you are comes only from the verified Supabase session (`getClaims()` checks the token's signature and expiry). There's no identity cookie to edit and no fallback user: without a session the API answers 401 and pages go to `/login`.
+- You only see groups you belong to, and the only people you see are the ones who share a group with you. Other people's names never reach your browser or the Bookie's prompts.
+- "Playing as" exists only in demo mode (`BWF_AUTH=demo`). With sign-in on, switching users is refused.
+- If neither Supabase nor demo mode is configured, the app refuses every request instead of guessing.
+
+**Set it up (about 10 minutes):**
+1. Create a project at [supabase.com](https://supabase.com). New projects use asymmetric JWT signing keys, so sessions are verified locally without a network call.
+2. In the project's API settings, copy the project URL and the publishable key into `.env.local` as `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`.
+3. In Google Cloud Console, create an OAuth client (type: Web application). Add Supabase's callback, `https://<your-project-ref>.supabase.co/auth/v1/callback`, as an authorized redirect URI.
+4. In Supabase, under Authentication → Providers, turn on Google and paste the client ID and secret.
+5. In Supabase, under Authentication → URL Configuration, set the site URL (for example `http://localhost:3000`) and add `http://localhost:3000/auth/callback` to the redirect URLs. Add your deployed URL's `/auth/callback` too.
+6. Restart `npm run dev` and sign in.
+
+The flow: `/login` sends you to Google through Supabase, Google returns to `/auth/callback`, which swaps the one-time code for a session cookie, then you land where you were going. `src/proxy.ts` refreshes the session on every request. Sign out is a POST to `/auth/signout`.
 
 ## Scripts
 
@@ -25,7 +49,7 @@ There's no login. Use **Playing as** in the header to switch friends (it sets a 
 | `npm run build` / `npm start` | Production build and server |
 | `npm run lint` | ESLint |
 | `npm run test:unit` | Node test runner over `src/**/*.test.ts`: the LMSR pricing math, and the Deep Agent with a scripted model |
-| `npm run test:e2e` | End-to-end API tests. Run `npm run build` first: it starts the production server twice (empty seed, then demo seed) on throwaway data files. Uses `BOOKIE_AI=stub` by default and never calls the real API. |
+| `npm run test:e2e` | End-to-end tests. Run `npm run build` first. It starts the production server four times on throwaway data files: demo mode (empty seed, then demo seed), Supabase mode against a local test signing key (real token verification, no Supabase project needed), and with nothing configured. Uses `BOOKIE_AI=stub` by default and never calls the real API. |
 
 ## Screens
 
@@ -79,6 +103,9 @@ If the agent errors, times out (45s) or finishes without submitting, the Bookie 
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
+| `SUPABASE_URL` | (unset) | Your Supabase project URL. Turns on Google sign-in with the key below |
+| `SUPABASE_PUBLISHABLE_KEY` | (unset) | Your project's publishable (anon) key. Safe to expose: the login page sends it to the browser |
+| `BWF_AUTH` | (unset) | `demo` turns off sign-in and brings back the Playing as switcher. For local demos and tests only |
 | `ANTHROPIC_API_KEY` | (unset) | Turns on `claude` mode |
 | `BOOKIE_AI` | from the key | `claude`, `off` or `stub` |
 | `BOOKIE_AI_MODEL` | `claude-opus-5-5` | Model for Bookie calls |
@@ -92,13 +119,16 @@ If the agent errors, times out (45s) or finishes without submitting, the Bookie 
 
 ```
 src/
-  app/            routes: pages under g/[groupId], JSON API under api/
+  proxy.ts        refreshes the Supabase session and sends signed-out visitors to /login
+  app/            routes: pages under g/[groupId], JSON API under api/, login and auth/ callbacks
   screens/        one component per screen
   components/     app shell, AppProvider (state, polling, actions), modals, cards
   lib/markets/    shared with the client: LMSR math, baseline odds, types
   server/
     store.ts      JSON file persistence and the transact() lock
-    http.ts       request helpers: current user, mutate/query, error responses
+    auth.ts       who's calling: the verified Supabase session (or demo cookie), linked to one app user
+    supabase.ts   Supabase client for route handlers
+    http.ts       request helpers: mutate/query as the signed-in user, error responses
     groups.ts     groups, membership, balances
     markets.ts    market lifecycle, resolution, settlement
     dares.ts      dares, proof, votes
@@ -114,7 +144,8 @@ scripts/e2e.mjs   end-to-end tests
 All responses are JSON. Mutations return `{ result }`. Errors return `{ error: { code, message } }` with a matching HTTP status.
 
 - `GET /api/state?group=` everything the screens need
-- `POST /api/session` switch who you're playing as
+- `POST /api/session` switch who you're playing as (demo mode only; 403 otherwise)
+- `GET /auth/callback` finishes Google sign-in, `POST /auth/signout` signs out
 - `POST /api/groups`, `POST /api/groups/join`, `PATCH /api/groups/:id`
 - `POST /api/groups/:id/markets`, `POST /api/groups/:id/dare-suggestion`
 - `POST /api/markets/:id/{trade,pick,close,evidence,odds,review,result,vote}`
@@ -125,4 +156,5 @@ All responses are JSON. Mutations return `{ result }`. Errors return `{ error: {
 
 - Persistence is one JSON file behind an in-process lock, so it assumes a **single server process** (`next dev` or `next start`). Don't deploy it to multi-instance serverless as is.
 - Queued Bookie work (opening odds, roasts) is held in memory and is lost if the server restarts before it runs.
-- There are no accounts. "Playing as" is a cookie anyone can change.
+- Data stays in the JSON file. Supabase is used for sign-in only, not storage.
+- In demo mode there are no accounts, and "Playing as" is a cookie anyone can change. Never run demo mode where real people use it.

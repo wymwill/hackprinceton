@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The standalone Bet Series frontend and backend have their own toolchains.
+    "frontend/**",
+    "backend/**",
   ]),
 ]);
 
