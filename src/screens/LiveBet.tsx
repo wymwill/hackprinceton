@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import Avatar from "@/components/Avatar";
+import BookieLineCard from "@/components/BookieLineCard";
 import { liveStatus, useBookie } from "@/components/BookieProvider";
 import QuickBetSheet from "@/components/QuickBetSheet";
 import Sparkline from "@/components/Sparkline";
@@ -94,6 +95,8 @@ export default function LiveBet() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-gutter-desktop items-start">
           <div className="flex flex-col gap-space-md min-w-0">
+            <BookieLineCard bet={bet} />
+
             {/* Outcomes */}
             <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-3">
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Outcomes</h2>
