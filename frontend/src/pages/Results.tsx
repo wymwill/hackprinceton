@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { StandingsTable } from "../components/Standings.tsx";
-import { ConfirmButton, OutcomeTag, Panel, Pill, Who } from "../components/ui.tsx";
+import { OutcomeTag, Panel, Pill, Who } from "../components/ui.tsx";
 import { agreesTo, resultText, standings } from "../lib/rules.ts";
 import { MODE_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
@@ -29,28 +29,18 @@ function Podium({ s }: { s: Series }) {
 
 const STATUS_PILL: Record<Assignment["status"], [string, string]> = {
   picking: ["draft", "Picking"],
-  pending: ["closed", "Waiting for an answer"],
-  accepted: ["open", "Accepted"],
+  pending: ["open", "Assigned"],
+  accepted: ["open", "Assigned"],
   declined: ["canceled", "Declined"],
 };
 
-/** What the loser can do about their favor: accept or decline it, then mark it done. */
+/** The assigned punishment is owed immediately; the loser can mark it done. */
 function LoserActions({ s, a }: { s: Series; a: Assignment }) {
   const { me, api } = useStore();
   if (a.loserId !== me) return null;
-  if (a.status === "pending") {
+  if ((a.status === "accepted" || a.status === "pending") && !a.done && a.text) {
     return (
-      <div className="row">
-        <button type="button" className="btn sm primary" onClick={() => api.respondToFavor(a.id, true, "Favor accepted.")}>
-          Accept
-        </button>
-        <ConfirmButton className="btn sm ghost" label="Decline" confirm="Decline it?" onConfirm={() => api.respondToFavor(a.id, false, "Declined. They'll pick another.")} />
-      </div>
-    );
-  }
-  if (a.status === "accepted" && !a.done && a.text) {
-    return (
-      <button type="button" className="btn sm primary" onClick={() => api.favorDone(s.id, "Favor marked done.")}>
+      <button type="button" className="btn sm primary" onClick={() => api.favorDone(s.id, "Punishment marked done.")}>
         Mark done
       </button>
     );
@@ -64,10 +54,10 @@ function PoolPicks({ s }: { s: Series }) {
   const held = new Set(list.filter((a) => a.status === "pending" || a.status === "accepted").map((a) => a.favorId));
   const nextUp = s.settings.exclusivePool ? list.find((a) => a.status === "picking") : undefined;
   return (
-    <Panel label="Favor picks" right={s.settings.exclusivePool ? "Each favor once" : "Favors reusable"}>
+    <Panel label="Punishment picks" right={s.settings.exclusivePool ? "Each punishment once" : "Punishments reusable"}>
       <p className="hint">
         1st picks for last place, 2nd for second-to-last, and so on{s.settings.exclusivePool ? ", in that order" : ""}. Only
-        favors the loser agreed to can be picked, and nothing is owed until they accept.
+        punishments the loser agreed to before the series started can be picked. The choice is owed immediately.
       </p>
       {list.map((a) => {
         const picking = a.status === "picking" || a.status === "declined";
@@ -85,7 +75,7 @@ function PoolPicks({ s }: { s: Series }) {
             </div>
             <span className="arrow">→</span>
             <div>
-              <span className="cap">Owes the favor</span>
+              <span className="cap">Owes the punishment</span>
               <div>
                 <Who id={a.loserId} />
               </div>
@@ -96,7 +86,8 @@ function PoolPicks({ s }: { s: Series }) {
                 <LoserActions s={s} a={a} />
               </span>
               {a.text && a.status !== "declined" && (
-                <p className={`notice ${a.status === "accepted" ? "ok" : ""}`}>
+                <p className="notice ok">
+                  {a.loserId === me && <span className="cap">Your assigned punishment</span>}
                   <b>{a.text}</b>
                 </p>
               )}
@@ -111,14 +102,14 @@ function PoolPicks({ s }: { s: Series }) {
                           type="button"
                           className="favor-chip"
                           disabled={(s.settings.exclusivePool && held.has(f.id)) || (a.status === "declined" && f.id === a.favorId)}
-                          onClick={() => api.chooseFavor(s.id, a.loserId, f.id, `Picked for ${name(a.loserId)}. Waiting for them to accept.`)}
+                          onClick={() => api.chooseFavor(s.id, a.loserId, f.id, `Punishment assigned to ${name(a.loserId)}.`)}
                         >
                           {f.text}
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <p className="hint">{name(a.loserId)} didn't agree to any favor in the pool, so there's nothing to pick.</p>
+                    <p className="hint">{name(a.loserId)} didn't agree to any punishment in the pool, so there's nothing to pick.</p>
                   )
                 ) : (
                   <p className="hint">Waiting for {name(nextUp!.chooserId!)} to pick first.</p>
@@ -134,18 +125,18 @@ function PoolPicks({ s }: { s: Series }) {
   );
 }
 
-/** Mode B: the bottom X do the favor they pledged themselves. */
-function OwedFavors({ s }: { s: Series }) {
+/** Mode B: the bottom X do the punishment they pledged themselves. */
+function OwedPunishments({ s }: { s: Series }) {
   const { me } = useStore();
   return (
-    <Panel label="Favors owed">
+    <Panel label="Punishments owed">
       <div className="people">
         {s.assignments.map((a) => (
           <div key={a.id} className="person">
             <span style={{ minWidth: 0 }}>
               <Who id={a.loserId} />
               <div className="bright" style={{ marginTop: 6 }}>
-                {a.text ?? "No favor recorded"}
+                {a.text ?? "No punishment recorded"}
               </div>
             </span>
             {a.done ? (
@@ -189,7 +180,7 @@ export default function Results({ s }: { s: Series }) {
       <section className="hero">
         <div>
           <span className="row">
-            <Pill kind={s.status}>{s.status === "assigning" ? "Picking favors" : "Finished"}</Pill>
+            <Pill kind={s.status}>{s.status === "assigning" ? "Picking punishments" : "Finished"}</Pill>
             <span className="cap">{MODE_LABEL[s.settings.mode]}</span>
           </span>
           <h1 style={{ marginTop: 14 }}>
@@ -224,7 +215,7 @@ export default function Results({ s }: { s: Series }) {
         </div>
         <div className="col">
           {s.settings.mode === "pool" && <PoolPicks s={s} />}
-          {s.settings.mode === "pledge" && <OwedFavors s={s} />}
+          {s.settings.mode === "pledge" && <OwedPunishments s={s} />}
           {s.settings.mode === "money" && <MoneyOutcome s={s} />}
         </div>
       </div>

@@ -24,7 +24,7 @@ Never use the `service_role` / secret key in either app. Only `scripts/e2e-serie
 
 ## Set up the project
 
-1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0013_clan_chat.sql` is the newest; `0012_friends_and_clans.sql` adds friends and clans, `0009_multi_outcome_bets.sql` multiple-choice bets, `0010_range_bets.sql` numerical ranges, and `0007_full_bet_series_rules.sql` holds most of the rules. Each upgrades existing data in place: 0007 for data made with 0001–0006, 0009 turns every existing bet into a YES/NO bet with outcome ids, 0010 leaves existing bets as they are, and 0013 gives every existing clan an empty chat (all tested in `supabase/tests/upgrade.test.mjs`). 0013 also adds `clan_messages` to the `supabase_realtime` publication so chat messages arrive live; check Database → Publications afterwards.
+1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0012_friends_and_clans.sql` adds friends and clans, `0013_clan_chat.sql` adds private chat, `0014_direct_punishment_assignment.sql` updates assignments, and `0015_multiple_clans.sql` allows each user to join several clans. The earlier migrations add the series rules and bet types. Migration 0015 keeps existing memberships and gives each clan its own chat read state. Migration 0013 adds `clan_messages` to the `supabase_realtime` publication so chat messages arrive live; check Database → Publications afterwards.
 2. **Turn on sign-in methods** (Authentication → Sign In / Providers). Email with password works with no setup. For Google, follow `docs/supabase-setup.md`.
 3. **Allow the redirect URLs** (Authentication → URL Configuration): add `http://localhost:3000/**`, and `https://<your-domain>/**` once deployed.
 4. Run it:
@@ -67,7 +67,9 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
 | `POST /api/social/clans/:clanId/messages` | Send as yourself `{ body, clientId? }` (1–2,000 characters; resending a `clientId` returns the first message) |
 | `DELETE /api/social/clans/:clanId/messages/:messageId` | Delete your own message (the text is wiped; a "deleted" marker stays) |
 | `POST /api/social/clans/:clanId/read` | Mark the chat read up to `{ messageId }` |
-| `GET /api/social/chat` | Your clan and its unread count `{ clanId, lastId, unread }` |
+| `GET /api/social/state` | Your profile, friends, `clans` array, and clan leaderboard. The legacy `clan` field is the first clan or null |
+| `POST /api/social/clans/leave` | Leave one clan `{ clanId }`; your other memberships stay intact |
+| `GET /api/social/chat` | Total unread messages across all your clans in `{ unread }`; `clanId` and `lastId` are set when you belong to exactly one clan |
 
 ## Rules the SQL enforces
 

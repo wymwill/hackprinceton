@@ -67,21 +67,20 @@ describe("clans", () => {
     const s = await social(ana);
     assert.equal(s.clan.name, "Gym Rats");
     assert.equal(s.clan.ownerId, ana.id);
+    assert.deepEqual(s.clans.map((c) => c.name), ["Gym Rats"]);
     assert.deepEqual(s.clan.members.map((m) => m.name), ["Ana"]);
     assert.deepEqual(s.clanBoard.map((r) => [r.name, r.members, r.mine]), [["Gym Rats", 1, true]]);
   });
 
-  test("bad names are refused, and you can only be in one clan", async () => {
+  test("bad names are refused", async () => {
     await rejects(ben.rpc("create_clan", { p_name: "   " }), "invalid_clan_name");
-    await rejects(ana.rpc("create_clan", { p_name: "Second" }), "already_in_clan");
   });
 
-  test("join by code; joining again is harmless; another clan needs leaving first", async () => {
+  test("join by code; joining again is harmless", async () => {
     await ben.rpc("join_clan", { p_code: code.toLowerCase() });
     await ben.rpc("join_clan", { p_code: code });
     await rejects(cat.rpc("join_clan", { p_code: "ZZZZ2222" }), "clan_not_found");
     await one(cat.rpc("create_clan", { p_name: "Night Owls" }));
-    await rejects(cat.rpc("join_clan", { p_code: code }), "already_in_clan");
     assert.deepEqual((await social(ben)).clan.members.map((m) => m.name).sort(), ["Ana", "Ben"]);
   });
 
@@ -103,6 +102,21 @@ describe("clans", () => {
     const board = (await social(ana)).clanBoard;
     assert.deepEqual(board.map((r) => [r.rank, r.name, r.wagered]), [[1, "Night Owls", 300], [2, "Gym Rats", 0]]);
     assert.equal((await social(cat)).me.wagered, 300);
+  });
+
+  test("a player can create or join several clans and leave just one", async () => {
+    const second = (await one(ana.rpc("create_clan", { p_name: "Second" }))).create_clan;
+    const gymId = (await social(ana)).clans.find((c) => c.name === "Gym Rats").id;
+    await cat.rpc("join_clan", { p_code: code });
+    await cat.rpc("join_clan", { p_code: code });
+    assert.deepEqual((await social(ana)).clans.map((c) => c.name), ["Gym Rats", "Second"]);
+    assert.deepEqual((await social(cat)).clans.map((c) => c.name), ["Night Owls", "Gym Rats"]);
+    assert.equal((await social(cat)).clanBoard.filter((r) => r.mine).length, 2);
+    await rejects(ana.rpc("leave_clan"), "choose_clan");
+    await ana.rpc("leave_clan", { p_clan_id: second.id });
+    await cat.rpc("leave_clan", { p_clan_id: gymId });
+    assert.deepEqual((await social(ana)).clans.map((c) => c.name), ["Gym Rats"]);
+    assert.deepEqual((await social(cat)).clans.map((c) => c.name), ["Night Owls"]);
   });
 
   test("when the owner leaves, the longest-standing member takes over; the last one out closes it", async () => {

@@ -266,7 +266,7 @@ export function useClanChat(clanId: Id) {
   return { messages, pending, hasMore, loading, loadingOlder, error, unavailable, connection, readAtOpen, loadOlder, send, retry, discard, remove, markRead, reload: loadFirst };
 }
 
-/** Unread messages in your clan's chat, for badges. Checks every so often and right after you read. */
+/** Total unread messages across your clans, for the sidebar badge. */
 export function useChatUnread() {
   const [status, setStatus] = useState<ChatStatus | null>(null);
   useEffect(() => {
