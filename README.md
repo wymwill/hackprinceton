@@ -31,7 +31,7 @@ People sign in with Google through Supabase Auth. Each Supabase account is linke
 - "Playing as" exists only in demo mode (`BWF_AUTH=demo`). With sign-in on, switching users is refused.
 - If neither Supabase nor demo mode is configured, the app refuses every request instead of guessing.
 
-**Set it up (about 10 minutes):**
+**Set it up (about 10 minutes).** The full walkthrough, with troubleshooting, is in [docs/supabase-setup.md](docs/supabase-setup.md). In short:
 1. Create a project at [supabase.com](https://supabase.com). New projects use asymmetric JWT signing keys, so sessions are verified locally without a network call.
 2. In the project's API settings, copy the project URL and the publishable key into `.env.local` as `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`.
 3. In Google Cloud Console, create an OAuth client (type: Web application). Add Supabase's callback, `https://<your-project-ref>.supabase.co/auth/v1/callback`, as an authorized redirect URI.
