@@ -145,3 +145,39 @@ test("0010 keeps YES/NO and multiple-choice bets working and adds range bets", a
   assert.equal(rb.kind, "RANGE");
   await t.close();
 });
+
+test("0013 gives every existing clan a chat and leaves clans, friends and bets working", async () => {
+  const t = await createDb({ upTo: "202611140013" });
+  const [ana, ben, cat] = await Promise.all(["Ana", "Ben", "Cat"].map((n) => t.user(n)));
+  const val = async (p) => Object.values((await p)[0])[0];
+  // Clans made with the 0012 functions, before chat existed.
+  const clan = await val(ana.rpc("create_clan", { p_name: "Old Clan" }));
+  await ben.rpc("join_clan", { p_code: clan.code });
+  await cat.rpc("add_friend", { p_code: (await val(ana.rpc("my_social_state"))).me.friendCode });
+  const before = await val(ana.rpc("my_social_state"));
+
+  await t.migrate();
+
+  // Same clan, members, owner and friends.
+  const after = await val(ana.rpc("my_social_state"));
+  assert.deepEqual(after.clan, before.clan);
+  assert.deepEqual(after.friends, before.friends);
+  // Its chat exists, empty (no announcements for joins that happened before), and nothing is unread.
+  const page = await val(ben.rpc("clan_messages_page", { p_clan_id: clan.id }));
+  assert.deepEqual([page.messages, page.hasMore, page.unread], [[], false, 0]);
+  await ana.rpc("send_clan_message", { p_clan_id: clan.id, p_body: "first message after the upgrade" });
+  assert.equal((await val(ben.rpc("clan_chat_status"))).unread, 1);
+  await rejects(cat.rpc("clan_messages_page", { p_clan_id: clan.id }), "not_clan_member");
+  // Leaving still hands the clan over, now with a note in the chat.
+  await ana.rpc("leave_clan");
+  const last = (await val(ben.rpc("clan_messages_page", { p_clan_id: clan.id }))).messages.map((m) => m.event);
+  assert.deepEqual(last, [null, "member_left", "owner_changed"]);
+  await t.close();
+});
+
+async function rejects(p, hint) {
+  await assert.rejects(p, (err) => {
+    assert.equal(err.hint, hint, `hint for: ${err.message}`);
+    return true;
+  });
+}

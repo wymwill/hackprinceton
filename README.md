@@ -47,9 +47,10 @@ The sign-in page switches the Google button off by itself while Google isn't ena
 ```bash
 npm run typecheck        # Next app and frontend
 npm run lint
-npm run test:series-sql      # the SQL rules, on an in-memory Postgres (incl. multiple-choice bets and the 0009 upgrade)
+npm run test:series-sql      # the SQL rules, on an in-memory Postgres (bets, upgrades, friends, clans and clan chat)
 npm run test:outcomes-local  # multiple-choice bets over HTTP, against the local Supabase stand-in (see the script header)
 npm run test:ranges-local    # numerical range bets over HTTP, same setup
+npm run test:chat-local      # clan chat over HTTP and Realtime, same setup
 npm run test:series          # API end to end against the real Supabase project (needs .supabase-test-secret)
 ```
 

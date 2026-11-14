@@ -2055,3 +2055,365 @@ img.avatar {
   color: var(--fg);
   line-height: 1.5;
 }
+
+/* ── clan chat ──────────────────────────────────────────────────────────── */
+
+.tabs a {
+  padding: 10px 16px 9px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--dim);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  text-decoration: none;
+}
+.tabs a:hover {
+  color: var(--bright);
+}
+.tabs a.active {
+  color: var(--bright);
+  border-color: var(--red);
+}
+.tabs a b {
+  font-family: var(--mono);
+  font-weight: 400;
+  color: var(--red-hi);
+  margin-left: 6px;
+}
+
+/* A full-height screen: the window doesn't scroll, the chat list does. Sized to the
+   visible viewport (--vvh, set from window.visualViewport) so a phone keyboard
+   pushes the composer up instead of covering it. */
+.app.fill {
+  height: var(--vvh, 100dvh);
+  min-height: 0;
+  overflow: hidden;
+}
+.app.fill .main {
+  min-height: 0;
+  height: 100%;
+}
+.page.fill {
+  flex: 1;
+  min-height: 0;
+  gap: 16px;
+  padding-bottom: 20px;
+}
+.chat {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.chat-head > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.conn i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dim);
+}
+.conn.live i {
+  background: #3ecf8e;
+  box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.2);
+}
+.conn.offline {
+  color: var(--red-hi);
+}
+.conn.offline i {
+  background: var(--red);
+}
+.chat-banner {
+  padding: 8px 18px;
+  font-size: 13px;
+  color: var(--bright);
+  background: var(--red-soft);
+  border-bottom: 1px solid var(--line);
+}
+.chat-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 18px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chat-list > :first-child {
+  margin-top: auto;
+}
+.chat-older {
+  align-self: center;
+  margin: 4px 0 10px;
+}
+.chat-start,
+.chat-system,
+.chat-day {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--dim);
+  padding: 6px 0;
+}
+.chat-day {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-top: 14px;
+}
+.chat-unread {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--red-hi);
+}
+.chat-unread::before,
+.chat-unread::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--red);
+  opacity: 0.6;
+}
+.chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 28px 0;
+  color: var(--dim);
+}
+.chat-empty b {
+  color: var(--bright);
+}
+.msg {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  margin-top: 10px;
+  max-width: 100%;
+}
+.msg.grouped {
+  margin-top: 2px;
+}
+.msg.mine {
+  justify-content: flex-end;
+}
+.msg-av {
+  width: 30px;
+  flex: none;
+  align-self: flex-start;
+  padding-top: 18px;
+}
+.msg-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  max-width: min(560px, 78%);
+}
+.msg.mine .msg-col {
+  align-items: flex-end;
+}
+.msg-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--dim);
+  margin: 0 2px 3px;
+}
+.msg-meta b {
+  color: var(--bright);
+  font-weight: 600;
+}
+.msg-body {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--fg);
+  font-size: 15px;
+  line-height: 1.42;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-radius: 14px 14px 14px 4px;
+}
+.msg.mine .msg-body {
+  background: var(--red-soft);
+  border-color: rgba(255, 95, 31, 0.45);
+  color: var(--bright);
+  border-radius: 14px 14px 4px 14px;
+}
+.msg-body.deleted {
+  font-style: italic;
+  color: var(--dim);
+  background: transparent;
+  border-style: dashed;
+}
+.msg.pending .msg-body {
+  opacity: 0.6;
+}
+.msg.pending .msg-meta {
+  margin: 3px 2px 0;
+}
+.msg.failed .msg-body {
+  opacity: 1;
+  border-color: var(--red);
+}
+.msg-del {
+  margin-top: 2px;
+  padding: 2px 4px;
+  font-size: 11.5px;
+  color: var(--dim);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.msg-del.primary {
+  color: var(--red-hi);
+  opacity: 1;
+}
+.msg:hover .msg-del,
+.msg-del:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .msg-del {
+    opacity: 0.8;
+  }
+}
+.warn-t {
+  color: var(--red-hi);
+}
+.linkish {
+  color: var(--bright);
+  text-decoration: underline;
+  font-size: 12px;
+}
+.chat-jump {
+  position: absolute;
+  left: 50%;
+  bottom: 86px;
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+.composer {
+  border-top: 1px solid var(--line);
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--panel);
+}
+.composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.composer textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  min-height: 40px;
+  max-height: 150px;
+  line-height: 1.4;
+  padding-top: 9px;
+  padding-bottom: 9px;
+  /* 16px keeps iOS from zooming in when the box gets focus. */
+  font-size: 16px;
+}
+.emoji-btn {
+  font-size: 18px;
+  line-height: 1;
+  height: 40px;
+  width: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.emoji-btn.on {
+  background: var(--red-soft);
+}
+.emoji-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.emoji-row button {
+  font-size: 22px;
+  line-height: 1;
+  padding: 6px;
+  border-radius: 8px;
+}
+.emoji-row button:hover {
+  background: var(--red-soft);
+}
+@media (max-width: 820px) {
+  /* The chat screen takes the whole phone screen: no sidebar, smaller margins. */
+  .app.fill {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: var(--vvt, 0);
+  }
+  .app.fill .sidebar {
+    display: none;
+  }
+  .page.fill {
+    padding: 10px 0 0;
+    gap: 6px;
+  }
+  .page.fill > .tabs {
+    padding: 0 8px;
+  }
+  .page.fill > .panel {
+    border-left: 0;
+    border-right: 0;
+    margin: 0 !important;
+  }
+  .chat-list {
+    padding: 10px 12px 8px;
+  }
+  .msg-col {
+    max-width: 84%;
+  }
+}

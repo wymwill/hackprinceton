@@ -28,6 +28,10 @@ do $$ begin
 end $$;
 grant usage on schema public, auth to anon, authenticated;
 grant execute on function auth.uid(), auth.jwt() to anon, authenticated;
+-- Supabase Realtime's publication, so migrations that add tables to it run as they would on Supabase.
+do $$ begin
+  if not exists (select 1 from pg_publication where pubname = 'supabase_realtime') then create publication supabase_realtime; end if;
+end $$;
 -- Supabase Storage, as far as the avatar bucket migration uses it.
 create schema if not exists storage;
 create table storage.buckets (id text primary key, name text not null, public boolean default false, file_size_limit bigint, allowed_mime_types text[]);

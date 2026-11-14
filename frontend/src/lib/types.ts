@@ -228,3 +228,27 @@ export type SocialState = {
   clan: Clan | null;
   clanBoard: ClanRow[];
 };
+
+/** A clan chat message: `_chat_json` in supabase/migrations/202611140013_clan_chat.sql. */
+export type ChatMessage = {
+  id: number;
+  clanId: Id;
+  /** The sender, or for system messages the member the event is about. */
+  userId: Id | null;
+  kind: "text" | "system";
+  /** System messages: clan_created, member_joined, member_left, owner_changed (more can be added later). */
+  event: string | null;
+  body: string;
+  data: Record<string, unknown>;
+  authorName: string;
+  authorAvatar: string | null;
+  clientId: string | null;
+  createdAt: string;
+  deleted: boolean;
+};
+
+/** GET /api/social/clans/:clanId/messages */
+export type ChatPage = { messages: ChatMessage[]; hasMore: boolean; lastReadId: number; unread: number };
+
+/** GET /api/social/chat */
+export type ChatStatus = { clanId: Id | null; lastId: number | null; unread: number };
