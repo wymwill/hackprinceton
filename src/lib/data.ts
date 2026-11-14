@@ -21,28 +21,3 @@ export const NAV = [
   { href: "/dares", label: "Dares", icon: "warning", match: (p: string) => p.startsWith("/dares") },
   { href: "/profile", label: "Profile", icon: "id_card", match: (p: string) => p.startsWith("/profile") },
 ];
-
-export const FRIENDS = ["Jake Miller", "Sam Vance", "Priya Sharma", "Marcus Reed", "David K.", "Elena Rostova"];
-
-/** Toy odds model: the worse someone's track record, the longer the odds. */
-export function bookieOdds(friend: string, category: string) {
-  const record: Record<string, number> = {
-    "Jake Miller": 0.14,
-    "Sam Vance": 0.85,
-    "Priya Sharma": 0.61,
-    "Marcus Reed": 0.52,
-    "David K.": 0.49,
-    "Elena Rostova": 0.66,
-  };
-  const categoryBias: Record<string, number> = { Fitness: -0.04, Habits: -0.08, "Pop Culture": 0.05, Projects: -0.1 };
-  const p = Math.min(0.95, Math.max(0.05, (record[friend] ?? 0.5) + (categoryBias[category] ?? 0)));
-  const against = (1 - p) / p;
-  const ratio = against >= 1 ? `${Math.round(against)}:1` : `1:${Math.round(1 / against)}`;
-  const roasts =
-    p < 0.25
-      ? `${friend.split(" ")[0]} has a ${Math.round(p * 100)}% hit rate. Prove me wrong! 😄`
-      : p < 0.55
-        ? `Coin flip energy. ${friend.split(" ")[0]} could go either way. 🪙`
-        : `${friend.split(" ")[0]} usually delivers. Betting against them is bold. 😬`;
-  return { p, ratio, roast: roasts };
-}

@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useState } from "react";
+import AiOddsPanel from "@/components/AiOddsPanel";
+import AuditTrail from "@/components/AuditTrail";
 import Avatar from "@/components/Avatar";
 import { liveStatus, useBookie } from "@/components/BookieProvider";
+import EvidencePanel from "@/components/EvidencePanel";
 import QuickBetSheet from "@/components/QuickBetSheet";
+import SettlementReview from "@/components/SettlementReview";
 import Sparkline from "@/components/Sparkline";
 import { ago, timeLeft, useNow } from "@/lib/bets/format";
 
@@ -18,12 +22,9 @@ const STATUS = {
 /** One bet from the server: who's in, the pool, and the controls for each stage of its life. */
 export default function LiveBet() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const { state, user, closeBet, settleBet, toast } = useBookie();
+  const { state, user, closeBet, toast } = useBookie();
   const now = useNow();
   const [sheet, setSheet] = useState<number | null>(null);
-  const [result, setResult] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
   const bet = state?.bets.find((b) => b.id === id);
   if (!state) return <Shell>Loading…</Shell>;
@@ -43,17 +44,6 @@ export default function LiveBet() {
   const mine = bet.entries.find((e) => e.userId === me);
   const creator = user(bet.creatorId);
   const winner = bet.receipt && bet.outcomes.find((o) => o.id === bet.receipt!.outcomeId);
-
-  const settle = async () => {
-    if (!result || busy) return;
-    setBusy(true);
-    const out = await settleBet(bet.id, result);
-    setBusy(false);
-    if (out) {
-      toast(out.alreadySettled ? "Already settled. No points moved twice." : "⚖️ Settled. Points paid out.", "purple");
-      router.push(`/receipts/${bet.id}`);
-    }
-  };
 
   return (
     <main className="relative pt-16 bg-surface min-h-screen w-full px-gutter-desktop">
@@ -94,9 +84,13 @@ export default function LiveBet() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-gutter-desktop items-start">
           <div className="flex flex-col gap-space-md min-w-0">
+            <AiOddsPanel bet={bet} />
             {/* Outcomes */}
             <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-3">
-              <h2 className="font-headline-sm text-headline-sm text-on-surface">Outcomes</h2>
+              <div className="flex items-baseline justify-between gap-2">
+                <h2 className="font-headline-sm text-headline-sm text-on-surface">Outcomes</h2>
+                <span className="font-label-sm text-label-sm text-on-surface-variant">% = share of points staked (pool)</span>
+              </div>
               {bet.outcomes.map((o, i) => {
                 const won = winner?.id === o.id;
                 return (
@@ -164,6 +158,9 @@ export default function LiveBet() {
                 );
               })}
             </section>
+
+            <EvidencePanel bet={bet} />
+            <AuditTrail bet={bet} />
           </div>
 
           {/* Action rail */}
@@ -199,37 +196,7 @@ export default function LiveBet() {
               </section>
             )}
 
-            {status === "closed" &&
-              (isCreator ? (
-                <section className="rounded-2xl bg-surface-container border border-[#fbbf77]/30 p-space-md flex flex-col gap-3">
-                  <h2 className="font-headline-sm text-headline-sm text-on-surface">⚖️ What happened?</h2>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">You made this bet, so you record the result. This can&apos;t be undone.</p>
-                  {bet.outcomes.map((o) => (
-                    <label
-                      key={o.id}
-                      className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer ${
-                        result === o.id ? "border-primary-container bg-primary-container/10" : "border-[#2f384a]"
-                      }`}
-                    >
-                      <input type="radio" name="result" checked={result === o.id} onChange={() => setResult(o.id)} className="accent-[#34d399]" />
-                      <span className="font-label-lg text-label-lg text-on-surface">{o.label}</span>
-                    </label>
-                  ))}
-                  <button
-                    disabled={!result || busy}
-                    onClick={settle}
-                    className="py-3 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm disabled:opacity-40"
-                  >
-                    {busy ? "Settling…" : "Settle and pay out"}
-                  </button>
-                </section>
-              ) : (
-                <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md">
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    Entries are closed. Waiting on {creator?.name.split(" ")[0]} to record the result.
-                  </p>
-                </section>
-              ))}
+            {status === "closed" && <SettlementReview bet={bet} />}
 
             {status === "settled" && bet.receipt && (
               <section className="rounded-2xl bg-primary-container/10 border border-primary-container/30 p-space-md flex flex-col gap-2">

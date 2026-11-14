@@ -63,7 +63,7 @@ export default function GroupFeed({ groupId = "gym-arc" }: { groupId?: string })
                         : "bg-surface-container-high text-on-surface border-transparent enabled:hover:border-primary-container/40 disabled:opacity-70"
                   }`}
                 >
-                  {winner?.id === o.id && "🏆"} {o.label} <span className="opacity-70">{o.chance}%</span>
+                  {winner?.id === o.id && "🏆"} {o.label} <span className="opacity-70" title="Share of points staked">{o.chance}% pool</span>
                 </button>
               ))}
             </div>
@@ -71,6 +71,11 @@ export default function GroupFeed({ groupId = "gym-arc" }: { groupId?: string })
               <span>
                 {b.pool.toLocaleString()} pts · {b.entries.length} in
                 {mine && ` · you: ${mine.amount} on ${b.outcomes.find((o) => o.id === mine.outcomeId)!.label}`}
+                {b.odds && s !== "settled" && (
+                  <span className="text-tertiary">
+                    {" "}· 🤖 AI {Math.round((b.odds.probabilities[0]?.p ?? 0) * 100)}% {b.outcomes[0].label}
+                  </span>
+                )}
               </span>
               {s === "settled" ? (
                 <Link href={`/receipts/${b.id}`} className="text-primary hover:underline">
