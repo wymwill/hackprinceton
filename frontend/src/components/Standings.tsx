@@ -4,6 +4,7 @@ import { fmt, signed } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Bet, BetDraft, Series } from "../lib/types.ts";
 import OutcomeEditor, { newDraft, outcomeProblem } from "./OutcomeEditor.tsx";
+import { defaultRange, draftFromBet } from "../lib/ranges.ts";
 import { Modal, Who } from "./ui.tsx";
 
 /** Ranked by settled coins; the dashed line marks where the bottom X start. */
@@ -53,6 +54,7 @@ export function NewBetModal({ s, bet, onClose }: { s: Series; bet?: Bet; onClose
           kind: bet.kind,
           outcomes: bet.kind === "multi" ? bet.outcomes.map((o) => ({ id: o.id, label: o.label })) : [{ label: "" }, { label: "" }],
           tieRule: bet.tieRule,
+          range: bet.kind === "range" ? draftFromBet(bet) : defaultRange(),
         }
       : newDraft()
   );
@@ -79,7 +81,13 @@ export function NewBetModal({ s, bet, onClose }: { s: Series; bet?: Bet; onClose
             value={draft.question}
             onChange={(e) => setDraft({ ...draft, question: e.target.value })}
             maxLength={300}
-            placeholder={draft.kind === "multi" ? "Who will score highest on the midterm?" : "Will Sam hit the gym 5 times this week?"}
+            placeholder={
+              draft.kind === "range"
+                ? "What will tomorrow's high temperature be?"
+                : draft.kind === "multi"
+                  ? "Who will score highest on the midterm?"
+                  : "Will Sam hit the gym 5 times this week?"
+            }
             autoFocus
           />
         </label>

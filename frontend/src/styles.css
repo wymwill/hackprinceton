@@ -1942,3 +1942,53 @@ img.avatar {
   align-items: flex-start;
   gap: 10px;
 }
+
+/* favors: who pledged or added each one */
+.favor-row {
+  align-items: flex-start;
+}
+.favor-by {
+  font-size: 13px;
+}
+
+/* numerical ranges */
+.gen-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 8px;
+  align-items: end;
+}
+.range-preview {
+  display: grid;
+  gap: 6px;
+}
+.range-preview ol {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 4px;
+}
+.range-preview li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 14px;
+}
+.opick .lbl {
+  display: grid;
+  gap: 2px;
+}
+.opick .rule {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--dim);
+  background: none;
+  padding: 0;
+}
+@media (max-width: 640px) {
+  .gen-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
