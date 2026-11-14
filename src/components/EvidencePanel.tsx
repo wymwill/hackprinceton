@@ -9,7 +9,7 @@ import { useBookie } from "./BookieProvider";
 type Kind = "text" | "link" | "image";
 
 /** Evidence submitted for a bet, plus the form to add more (for anyone in the bet, until it's settled). */
-export default function EvidencePanel({ bet }: { bet: BetView }) {
+export default function EvidencePanel({ bet, bare = false }: { bet: BetView; bare?: boolean }) {
   const { state, user, submitEvidence, toast } = useBookie();
   const now = useNow(30_000);
   const [kind, setKind] = useState<Kind>("text");
@@ -60,11 +60,13 @@ export default function EvidencePanel({ bet }: { bet: BetView }) {
   );
 
   return (
-    <section className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="font-headline-sm text-headline-sm text-on-surface">📎 Evidence</h2>
-        <span className="font-label-sm text-label-sm text-on-surface-variant">{bet.evidence.length} submitted</span>
-      </div>
+    <section className={bare ? "flex flex-col gap-3" : "rounded-2xl bg-surface-container border border-[#2f384a] p-space-md flex flex-col gap-3"}>
+      {!bare && (
+        <div className="flex items-center justify-between">
+          <h2 className="font-headline-sm text-headline-sm text-on-surface">📎 Evidence</h2>
+          <span className="font-label-sm text-label-sm text-on-surface-variant">{bet.evidence.length} submitted</span>
+        </div>
+      )}
 
       {bet.evidence.length === 0 && <p className="font-body-md text-body-md text-on-surface-variant">Nothing yet. Screenshots, links, or a quick write-up all help.</p>}
       {bet.evidence.map((ev) => {

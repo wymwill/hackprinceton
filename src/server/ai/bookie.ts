@@ -98,7 +98,7 @@ export async function refreshOdds(betId: string, trigger: OddsEstimate["trigger"
   } catch (err) {
     if (!(err instanceof AiUnavailable)) throw err;
     console.warn(`[bookie] odds for ${betId} fell back to stats: ${err.message}`);
-    est = { ...base, explanation: `${base.explanation} (Claude unavailable: ${err.message})` };
+    est = { ...base, fallbackReason: err.message };
   }
 
   return transact((db) => {

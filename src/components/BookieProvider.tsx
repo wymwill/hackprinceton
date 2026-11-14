@@ -10,6 +10,9 @@ type Toast = { id: number; text: string; tone: "lime" | "coral" | "purple" };
 type Ctx = {
   toast: (text: string, tone?: Toast["tone"]) => void;
   openCreateBet: (prefill?: string) => void;
+  /** Mobile navigation drawer. */
+  navOpen: boolean;
+  setNavOpen: (open: boolean) => void;
   /** Live server state. Null until the first load finishes. */
   state: AppState | null;
   me: UserView | null;
@@ -60,6 +63,7 @@ export default function BookieProvider({ children }: { children: React.ReactNode
   const [createOpen, setCreateOpen] = useState(false);
   const [prefill, setPrefill] = useState("");
   const [state, setState] = useState<AppState | null>(null);
+  const [navOpen, setNavOpen] = useState(false);
   const inflight = useRef(0);
 
   const toast = useCallback((text: string, tone: Toast["tone"] = "lime") => {
@@ -129,12 +133,15 @@ export default function BookieProvider({ children }: { children: React.ReactNode
 
   const ctx: Ctx = {
     toast,
+    navOpen,
+    setNavOpen,
     state,
     me: state?.users.find((u) => u.id === state.me) ?? null,
     user: (id) => state?.users.find((u) => u.id === id),
     refresh,
     switchUser,
     openCreateBet: (p = "") => {
+      setNavOpen(false);
       setPrefill(p);
       setCreateOpen(true);
     },

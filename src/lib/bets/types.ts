@@ -62,6 +62,8 @@ export type OddsEstimate = {
   /** Fact ids and evidence ids the explanation relies on. Only ids that exist are kept. */
   citedFactIds: string[];
   citedEvidenceIds: string[];
+  /** Set when Claude was asked but failed, so this is the history-only fallback. */
+  fallbackReason?: string;
 };
 
 export type Evidence = {
