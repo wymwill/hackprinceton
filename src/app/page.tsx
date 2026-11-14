@@ -1,7 +1,7 @@
-import GroupHome from "@/screens/GroupHome";
+import MarketsHome from "@/screens/MarketsHome";
 
-export const metadata = { title: "The Boyz Gym Arc · Bookie" };
+export const metadata = { title: "Markets · Bookie" };
 
 export default function Page() {
-  return <GroupHome />;
+  return <MarketsHome />;
 }

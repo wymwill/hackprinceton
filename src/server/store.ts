@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { BookieLine, Entry, Outcome, Receipt } from "@/lib/bets/types";
+import type { AuditEntry, Entry, OddsEstimate, Outcome, Receipt, Review } from "@/lib/bets/types";
 
 /**
  * Bookie's persistence: one JSON file on disk, written atomically.
@@ -32,7 +32,22 @@ export type Bet = {
   deadline: string;
   history: number[][];
   receiptId?: string;
-  bookie?: BookieLine;
+  subjectId?: string;
+  odds: OddsEstimate[];
+};
+
+/** Stored evidence. Images live on disk next to the database; `file` is relative to it. */
+export type StoredEvidence = {
+  id: string;
+  betId: string;
+  userId: string;
+  kind: "text" | "link" | "image";
+  text?: string;
+  url?: string;
+  file?: string;
+  mime?: string;
+  claimsOutcomeId?: string;
+  createdAt: string;
 };
 
 export type LedgerRow = {
@@ -52,9 +67,14 @@ export type Db = {
   entries: Entry[];
   ledger: LedgerRow[];
   receipts: Receipt[];
+  evidence: StoredEvidence[];
+  reviews: Review[];
+  audit: AuditEntry[];
 };
 
 const DATA_FILE = process.env.BOOKIE_DATA_FILE ?? path.join(process.cwd(), ".data", "bookie.json");
+/** Uploaded evidence images live here. */
+export const UPLOAD_DIR = path.join(path.dirname(DATA_FILE), "evidence");
 
 const g = globalThis as unknown as { __bookieLock?: Promise<unknown> };
 
@@ -62,7 +82,7 @@ export const newId = (prefix: string) => `${prefix}_${randomUUID().replace(/-/g,
 
 async function load(): Promise<Db> {
   try {
-    return JSON.parse(await readFile(/*turbopackIgnore: true*/ DATA_FILE, "utf8")) as Db;
+    return upgrade(JSON.parse(await readFile(/*turbopackIgnore: true*/ DATA_FILE, "utf8")) as Db);
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     const { seed } = await import("./seed");
@@ -70,6 +90,15 @@ async function load(): Promise<Db> {
     await save(db);
     return db;
   }
+}
+
+/** Fill in fields added after a data file was first written. */
+function upgrade(db: Db): Db {
+  db.evidence ??= [];
+  db.reviews ??= [];
+  db.audit ??= [];
+  for (const b of db.bets) b.odds ??= [];
+  return db;
 }
 
 async function save(db: Db) {

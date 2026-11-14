@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import type { AppState, BetView, CreateBetInput, Receipt, UserView } from "@/lib/bets/types";
+import type { AppState, BetView, CreateBetInput, Evidence, OddsEstimate, Receipt, Review, UserView } from "@/lib/bets/types";
 import CreateBetModal from "./CreateBetModal";
 
 type Toast = { id: number; text: string; tone: "lime" | "coral" | "purple" };
@@ -10,6 +10,9 @@ type Toast = { id: number; text: string; tone: "lime" | "coral" | "purple" };
 type Ctx = {
   toast: (text: string, tone?: Toast["tone"]) => void;
   openCreateBet: (prefill?: string) => void;
+  /** Mobile navigation drawer. */
+  navOpen: boolean;
+  setNavOpen: (open: boolean) => void;
   /** Live server state. Null until the first load finishes. */
   state: AppState | null;
   me: UserView | null;
@@ -19,7 +22,17 @@ type Ctx = {
   createBet: (input: CreateBetInput) => Promise<{ id: string } | null>;
   joinBet: (betId: string, outcomeId: string, amount: number) => Promise<boolean>;
   closeBet: (betId: string) => Promise<boolean>;
-  settleBet: (betId: string, outcomeId: string) => Promise<{ receipt: Receipt; alreadySettled: boolean } | null>;
+  settleBet: (betId: string, outcomeId: string, note?: string) => Promise<{ receipt: Receipt; alreadySettled: boolean } | null>;
+  /** JSON for text/link evidence, FormData for an image upload. */
+  submitEvidence: (betId: string, body: { kind: "text" | "link"; text?: string; url?: string; claimsOutcomeId?: string } | FormData) => Promise<Evidence | null>;
+  refreshOdds: (betId: string) => Promise<OddsEstimate | null>;
+  reviewBet: (betId: string) => Promise<Review | null>;
+  decide: (
+    betId: string,
+    reviewId: string,
+    action: "confirm" | "reject",
+    note?: string
+  ) => Promise<{ review: Review; receipt?: Receipt; alreadySettled: boolean } | null>;
 };
 
 const BookieContext = createContext<Ctx | null>(null);
@@ -50,6 +63,7 @@ export default function BookieProvider({ children }: { children: React.ReactNode
   const [createOpen, setCreateOpen] = useState(false);
   const [prefill, setPrefill] = useState("");
   const [state, setState] = useState<AppState | null>(null);
+  const [navOpen, setNavOpen] = useState(false);
   const inflight = useRef(0);
 
   const toast = useCallback((text: string, tone: Toast["tone"] = "lime") => {
@@ -86,10 +100,11 @@ export default function BookieProvider({ children }: { children: React.ReactNode
     async <T,>(url: string, body?: unknown): Promise<T | null> => {
       inflight.current++;
       try {
+        const form = body instanceof FormData;
         const res = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body ?? {}),
+          headers: form ? undefined : { "Content-Type": "application/json" },
+          body: form ? body : JSON.stringify(body ?? {}),
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -118,19 +133,26 @@ export default function BookieProvider({ children }: { children: React.ReactNode
 
   const ctx: Ctx = {
     toast,
+    navOpen,
+    setNavOpen,
     state,
     me: state?.users.find((u) => u.id === state.me) ?? null,
     user: (id) => state?.users.find((u) => u.id === id),
     refresh,
     switchUser,
     openCreateBet: (p = "") => {
+      setNavOpen(false);
       setPrefill(p);
       setCreateOpen(true);
     },
     createBet: (input) => post<{ id: string }>("/api/bets", input),
     joinBet: async (betId, outcomeId, amount) => (await post(`/api/bets/${betId}/entries`, { outcomeId, amount })) !== null,
     closeBet: async (betId) => (await post(`/api/bets/${betId}/close`)) !== null,
-    settleBet: (betId, outcomeId) => post(`/api/bets/${betId}/settle`, { outcomeId }),
+    settleBet: (betId, outcomeId, note) => post(`/api/bets/${betId}/settle`, { outcomeId, note }),
+    submitEvidence: (betId, body) => post(`/api/bets/${betId}/evidence`, body),
+    refreshOdds: (betId) => post(`/api/bets/${betId}/odds`),
+    reviewBet: (betId) => post(`/api/bets/${betId}/review`),
+    decide: (betId, reviewId, action, note) => post(`/api/bets/${betId}/decision`, { reviewId, action, note }),
   };
 
   return (
