@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shell } from "../components/Shell.tsx";
 import { Panel } from "../components/ui.tsx";
-import { DEFAULT_SETTINGS, createSeries } from "../lib/engine.ts";
+import { DEFAULT_SETTINGS } from "@rules/engine.ts";
 import { MODE_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Id, Mode, Settings } from "../lib/types.ts";
+import type { Id, Mode, Settings } from "@rules/types.ts";
 
 const MODES: { mode: Mode; letter: string; blurb: string }[] = [
   { mode: "money", letter: "A", blurb: "Players chip in real money instead of favors. Shown for the demo; no money moves." },
@@ -32,7 +32,7 @@ function Seg<T extends string | number | boolean>({
 }
 
 export default function CreateSeries() {
-  const { db, me, run } = useStore();
+  const { db, me, api } = useStore();
   const nav = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -44,8 +44,8 @@ export default function CreateSeries() {
   const expected = invite.length + (st.hostPlays ? 1 : 0);
   const needed = st.mode === "pool" ? 2 * st.losers : st.losers + 1;
 
-  const submit = () => {
-    const s = run((d, m, now) => createSeries(d, m, { name, description, settings: st, invite }, now), "Series created. Share the code to fill the lobby.");
+  const submit = async () => {
+    const s = await api.createSeries({ name, description, settings: st, invite }, "Series created. Share the code to fill the lobby.");
     if (s) nav(`/s/${s.id}`);
   };
 

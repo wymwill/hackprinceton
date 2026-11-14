@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ConfirmButton, Panel, Pill, PoolBar, Who } from "../components/ui.tsx";
-import {
-  balances, cancelBet, closeBet, isParticipant, payoutIfWins, placeWager, pools, resolveBet, withdrawUntil, withdrawWager,
-} from "../lib/engine.ts";
+import { balances, isParticipant, payoutIfWins, pools, withdrawUntil } from "@rules/engine.ts";
 import { ago, countdown, fmt, signed, useNow } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Bet, Series, Side } from "../lib/types.ts";
+import type { Bet, Series, Side } from "@rules/types.ts";
 
 function SideColumn({ bet, side }: { bet: Bet; side: Side }) {
   const { me } = useStore();
@@ -31,12 +29,12 @@ function SideColumn({ bet, side }: { bet: Bet; side: Side }) {
 }
 
 function Ticket({ s, bet }: { s: Series; bet: Bet }) {
-  const { me, run } = useStore();
+  const { me, api, skew } = useStore();
   const [params] = useSearchParams();
   const mine = bet.wagers.find((w) => w.userId === me);
   const [pick, setPick] = useState<Side>(mine?.side ?? (params.get("side") === "no" ? "no" : "yes"));
   const [amount, setAmount] = useState(50);
-  const now = useNow(1000);
+  const now = useNow(1000) + skew;
   const side = mine?.side ?? pick;
   const free = balances(s).get(me)!.available;
   const until = withdrawUntil(bet, s.settings);
@@ -92,7 +90,7 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
         type="button"
         className={`submit ${side}`}
         disabled={!(amount >= 1) || amount > free}
-        onClick={() => run((d, m, t) => placeWager(d, m, s.id, bet.id, side, amount, t), `${fmt(amount)} on ${side.toUpperCase()}.`)}
+        onClick={() => api.wager(s.id, bet.id, side, amount, `${fmt(amount)} on ${side.toUpperCase()}.`)}
       >
         {mine ? "Add" : "Bet"} {fmt(amount > 0 ? amount : 0)} on {side.toUpperCase()}
       </button>
@@ -101,7 +99,7 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
           className="btn block"
           label={`Withdraw · ${countdown(until! - now)} left`}
           confirm="Take your coins back?"
-          onConfirm={() => run((d, m, t) => withdrawWager(d, m, s.id, bet.id, t), "Wager withdrawn.")}
+          onConfirm={() => api.withdraw(s.id, bet.id, "Wager withdrawn.")}
         />
       )}
       {mine && until !== null && now >= until && <p className="hint">The withdrawal window has closed.</p>}
@@ -110,26 +108,26 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
 }
 
 function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
-  const { run } = useStore();
+  const { api } = useStore();
   if (bet.status !== "open" && bet.status !== "closed") return null;
   return (
     <Panel label="Host controls">
       <div className="stack">
         {bet.status === "open" && (
-          <button type="button" className="btn" onClick={() => run((d, m, t) => closeBet(d, m, s.id, bet.id, t), "Betting closed.")}>
+          <button type="button" className="btn" onClick={() => api.closeBet(s.id, bet.id, "Betting closed.")}>
             Close betting
           </button>
         )}
         <span className="cap">Resolve</span>
         <div className="resolve-grid">
-          <ConfirmButton className="y" label="Yes" confirm="Confirm YES" onConfirm={() => run((d, m, t) => resolveBet(d, m, s.id, bet.id, "yes", t), "Resolved YES.")} />
-          <ConfirmButton className="n" label="No" confirm="Confirm NO" onConfirm={() => run((d, m, t) => resolveBet(d, m, s.id, bet.id, "no", t), "Resolved NO.")} />
+          <ConfirmButton className="y" label="Yes" confirm="Confirm YES" onConfirm={() => api.resolveBet(s.id, bet.id, "yes", "Resolved YES.")} />
+          <ConfirmButton className="n" label="No" confirm="Confirm NO" onConfirm={() => api.resolveBet(s.id, bet.id, "no", "Resolved NO.")} />
         </div>
         <ConfirmButton
           className="btn danger"
           label="Cancel bet"
           confirm="Cancel and refund everyone?"
-          onConfirm={() => run((d, m, t) => cancelBet(d, m, s.id, bet.id, t), "Canceled. Coins returned.")}
+          onConfirm={() => api.cancelBet(s.id, bet.id, "Canceled. Coins returned.")}
         />
         <p className="hint">You decide the result even if you bet on it. Resolving pays out right away.</p>
       </div>
@@ -138,9 +136,9 @@ function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
 }
 
 export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
-  const { me, name } = useStore();
+  const { me, name, skew } = useStore();
   const p = pools(bet);
-  const now = useNow(1000);
+  const now = useNow(1000) + skew;
   const until = withdrawUntil(bet, s.settings);
   const playing = isParticipant(s, me);
   const index = s.bets.indexOf(bet) + 1;

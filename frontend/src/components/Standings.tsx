@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { addBet, standings } from "../lib/engine.ts";
+import { standings } from "@rules/engine.ts";
 import { fmt, signed } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "../lib/types.ts";
+import type { Series } from "@rules/types.ts";
 import { Modal, Who } from "./ui.tsx";
 
 /** Ranked by settled coins; the dashed line marks where the bottom X start. */
@@ -40,16 +40,16 @@ export function StandingsTable({ s, compact = false }: { s: Series; compact?: bo
 }
 
 export function NewBetModal({ s, onClose }: { s: Series; onClose: () => void }) {
-  const { run } = useStore();
+  const { api } = useStore();
   const [q, setQ] = useState("");
   const left = s.settings.betCount - s.bets.length;
   return (
     <Modal kicker={s.status === "lobby" ? "Write a bet" : "New bet · opens now"} title="YES or NO?" onClose={onClose}>
       <form
         className="stack"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          if (run((d, m, now) => addBet(d, m, s.id, q, now), s.status === "lobby" ? "Bet written." : "Bet is open.")) onClose();
+          if (await api.addBet(s.id, q, s.status === "lobby" ? "Bet written." : "Bet is open.")) onClose();
         }}
       >
         <label className="field">

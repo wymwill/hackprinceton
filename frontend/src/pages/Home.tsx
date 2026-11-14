@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { JoinModal, Shell, mySeries } from "../components/Shell.tsx";
 import { Empty, Panel, Pill } from "../components/ui.tsx";
-import { balances, isParticipant, joinSeries, leaveSeries, participantIds, standings } from "../lib/engine.ts";
+import { balances, isParticipant, participantIds, standings } from "@rules/engine.ts";
 import { MODE_LABEL, STATUS_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "../lib/types.ts";
+import type { Series } from "@rules/types.ts";
 
 function SeriesCard({ s }: { s: Series }) {
   const { me, name } = useStore();
@@ -44,7 +44,7 @@ function SeriesCard({ s }: { s: Series }) {
 }
 
 export default function Home() {
-  const { db, me, run, name } = useStore();
+  const { db, me, api, name } = useStore();
   const nav = useNavigate();
   const [joining, setJoining] = useState(false);
   const list = mySeries(db, me);
@@ -88,15 +88,15 @@ export default function Home() {
                   <button
                     type="button"
                     className="btn sm ghost"
-                    onClick={() => run((d, m, now) => leaveSeries(d, m, s.id, now), "Invitation declined.")}
+                    onClick={() => api.leaveSeries(s.id, "Invitation declined.")}
                   >
                     Decline
                   </button>
                   <button
                     type="button"
                     className="btn sm primary"
-                    onClick={() => {
-                      if (run((d, m, now) => joinSeries(d, m, s.id, now), "You're in. Review the rules.")) nav(`/s/${s.id}`);
+                    onClick={async () => {
+                      if (await api.joinSeries(s.id, "You're in. Review the rules.")) nav(`/s/${s.id}`);
                     }}
                   >
                     Join

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Mode, SeriesStatus } from "./types.ts";
+import type { Mode, SeriesStatus } from "@rules/types.ts";
 
 export const fmt = (n: number) => n.toLocaleString("en-US");
 export const signed = (n: number) => (n > 0 ? `+${fmt(n)}` : n < 0 ? `−${fmt(-n)}` : "0");
