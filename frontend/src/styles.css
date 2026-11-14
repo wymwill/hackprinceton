@@ -1,7 +1,7 @@
 /* Alea
  * Colors: bright orange (#FF5F1F) on dark grey (#1C1B1F), matching the main app.
  * Layout language from Scarlet Market: framed panels with label tags, tracked
- * uppercase captions, serif display numbers, mono figures, YES teal / NO violet.
+ * uppercase captions, rounded display type, mono figures, YES teal / NO violet.
  * No retro effects (no scanlines, grain, grid, flicker or corner brackets). */
 
 :root {
@@ -31,8 +31,8 @@
   --link: #9fb4ff;
   --pink: #f07178;
 
-  --display: "Instrument Serif", Georgia, "Times New Roman", serif;
-  --ui: "Saira Condensed", "Helvetica Neue", system-ui, sans-serif;
+  --display: "Fredoka", "Nunito", system-ui, sans-serif;
+  --ui: "Nunito", "Helvetica Neue", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   --sidebar: 268px;
@@ -146,13 +146,11 @@ button {
   border: 1px solid var(--red);
   color: var(--red-hi);
   font-family: var(--display);
-  font-style: italic;
   font-size: 20px;
   line-height: 1;
 }
 .brand-name {
   font-family: var(--display);
-  font-style: italic;
   font-size: 23px;
   line-height: 1;
   color: var(--bright);
@@ -249,7 +247,7 @@ button {
   padding: 8px 10px;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
   border-left: 2px solid transparent;
@@ -312,7 +310,7 @@ button {
   gap: 8px;
   min-width: 0;
   font-size: 12px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -333,7 +331,7 @@ button {
 }
 .topbar .op {
   font-size: 12px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
   white-space: nowrap;
@@ -395,7 +393,7 @@ button {
   gap: 7px;
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   line-height: 1;
   text-transform: uppercase;
   color: var(--red-hi);
@@ -410,7 +408,7 @@ button {
   right: 14px;
   z-index: 3;
   font-size: 10.5px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   background: var(--bg);
   padding: 2px 6px;
@@ -419,7 +417,7 @@ button {
 
 .cap {
   font-size: 11px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -430,7 +428,7 @@ button {
   gap: 12px;
   padding: 5px 0;
   font-size: 12.5px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -477,7 +475,7 @@ button {
   gap: 7px;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1;
   color: var(--fg);
@@ -535,7 +533,7 @@ button {
 }
 .field > span {
   font-size: 11px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -600,7 +598,7 @@ textarea.input {
   padding: 9px 10px;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
   transition:
@@ -674,7 +672,6 @@ textarea.input {
 }
 .choice .letter {
   font-family: var(--display);
-  font-style: italic;
   font-size: 30px;
   line-height: 0.9;
   color: var(--red-hi);
@@ -698,7 +695,7 @@ textarea.input {
   gap: 6px;
   font-size: 10.5px;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   padding: 3px 8px;
   border: 1px solid currentColor;
@@ -773,8 +770,7 @@ textarea.input {
 }
 .hero h1 {
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 400;
+  font-weight: 600;
   font-size: clamp(40px, 5vw, 60px);
   line-height: 0.95;
   color: var(--bright);
@@ -850,8 +846,7 @@ textarea.input {
 }
 .scard h3 {
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 400;
+  font-weight: 600;
   font-size: 30px;
   line-height: 1;
   color: var(--bright);
@@ -889,7 +884,7 @@ textarea.input {
   border: 1px dashed var(--line-hi);
   font-family: var(--mono);
   font-size: 18px;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.05em;
   color: var(--bright);
 }
 
@@ -903,7 +898,7 @@ textarea.input {
   padding: 10px 16px 9px;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
   border-bottom: 2px solid transparent;
@@ -963,7 +958,6 @@ textarea.input {
 }
 .chance .v {
   font-family: var(--display);
-  font-style: italic;
   font-size: 40px;
   line-height: 0.85;
   color: var(--bright);
@@ -980,7 +974,7 @@ textarea.input {
   justify-content: space-between;
   gap: 10px;
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -1003,7 +997,7 @@ textarea.input {
   padding: 10px 12px;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   border: 1px solid;
   transition:
@@ -1037,13 +1031,13 @@ textarea.input {
   padding: 10px 12px;
   border: 1px solid var(--line);
   font-size: 12px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
 .settled b {
   font-size: 15px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
 }
 
 /* leaderboard / tables */
@@ -1055,7 +1049,7 @@ textarea.input {
   text-align: left;
   font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
   padding: 8px 10px;
@@ -1074,7 +1068,6 @@ textarea.input {
 }
 .table .rank {
   font-family: var(--display);
-  font-style: italic;
   font-size: 24px;
   color: var(--dim);
   width: 48px;
@@ -1176,7 +1169,7 @@ textarea.input {
   gap: 10px 18px;
   align-items: center;
   font-size: 12px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -1189,7 +1182,6 @@ textarea.input {
 }
 .readout .v {
   font-family: var(--display);
-  font-style: italic;
   font-size: clamp(64px, 8vw, 104px);
   line-height: 0.8;
   color: var(--bright);
@@ -1208,7 +1200,7 @@ textarea.input {
   justify-content: space-between;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--line);
@@ -1296,7 +1288,7 @@ textarea.input {
   padding: 13px;
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   border: 1px solid;
   transition: filter 0.15s;
@@ -1327,7 +1319,7 @@ textarea.input {
   padding: 12px 6px;
   border: 1px solid var(--line-hi);
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   font-size: 13px;
 }
@@ -1349,7 +1341,6 @@ textarea.input {
 }
 .outcome-banner .o {
   font-family: var(--display);
-  font-style: italic;
   font-size: 54px;
   line-height: 0.9;
 }
@@ -1367,7 +1358,6 @@ textarea.input {
 }
 .podium .spot .place {
   font-family: var(--display);
-  font-style: italic;
   font-size: 46px;
   line-height: 0.9;
   color: var(--red-hi);
@@ -1430,8 +1420,7 @@ textarea.input {
   display: block;
   margin-bottom: 6px;
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 400;
+  font-weight: 600;
   font-size: 26px;
   color: var(--bright);
 }
@@ -1470,15 +1459,14 @@ textarea.input {
 }
 .modal .kicker {
   font-size: 11px;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--red-hi);
 }
 .modal h3 {
   margin-top: 4px;
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 400;
+  font-weight: 600;
   font-size: 32px;
   line-height: 1;
   color: var(--bright);
@@ -1604,4 +1592,48 @@ textarea.input {
   color: var(--bright);
   font-size: 13.5px;
   text-align: center;
+}
+
+/* /new: roomier than the other screens, since it's one long form. */
+.create {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.create .col {
+  gap: 32px;
+}
+.create .pbody {
+  padding: 28px 26px 24px;
+}
+.create .stack {
+  gap: 22px;
+}
+.create .field {
+  gap: 8px;
+}
+.create .field > span {
+  font-size: 12px;
+}
+.create .two-col {
+  gap: 24px;
+}
+.create .input {
+  padding: 12px 14px;
+  font-size: 15px;
+}
+.create .choice-grid {
+  gap: 14px;
+}
+.create .choice {
+  padding: 18px 16px 16px;
+  gap: 8px;
+}
+.create .choice p,
+.create .hint {
+  font-size: 14px;
+}
+.create .kv {
+  padding: 9px 0;
+  font-size: 13px;
 }
