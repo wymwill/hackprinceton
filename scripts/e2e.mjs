@@ -490,6 +490,8 @@ async function unconfiguredPhase() {
   check("pages go to the login page", page.status === 307 && page.location?.includes("/login"), page);
   const html = await fetch(`${BASE}/login`).then((r) => r.text());
   check("which explains the setup", html.includes("SUPABASE_URL"));
+  check("and shows the Google button, turned off until keys are added", /<button[^>]*disabled[^>]*>(?:(?!<\/button>).)*Continue with Google/s.test(html));
+  check("with no Playing as switcher", !html.includes("Playing as"));
 }
 
 const keyServer = createServer((req, res) => {
