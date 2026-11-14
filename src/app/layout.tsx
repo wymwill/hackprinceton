@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Instrument_Serif, JetBrains_Mono, Saira } from "next/font/google";
+import { Inter, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import AppProvider from "@/components/AppProvider";
 import GroupSync from "@/components/GroupSync";
 import Header from "@/components/Header";
@@ -9,7 +9,7 @@ import Sidebar from "@/components/Sidebar";
 import "./globals.css";
 
 const instrumentSerif = Instrument_Serif({ variable: "--font-instrument-serif", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
-const saira = Saira({ variable: "--font-saira", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -20,14 +20,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#2d2939",
+  themeColor: "#1c1b1f",
   // Draw under the iPhone home indicator. The bottom bars pad themselves with the safe area.
   viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`dark ${instrumentSerif.variable} ${saira.variable} ${jetbrains.variable} antialiased`}>
+    <html lang="en" className={`dark ${instrumentSerif.variable} ${inter.variable} ${jetbrains.variable} antialiased`}>
       <head>
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" />

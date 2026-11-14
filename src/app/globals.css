@@ -1,36 +1,36 @@
 @import "tailwindcss";
 
-/* Alea: Rosy Copper (#CE4C3B) on Shadow Grey (#27242F).
+/* Alea: bright orange (#FF5F1F) on dark grey (#1C1B1F).
  * Layout language borrowed from Scarlet Market (square framed panels, small
  * tracked uppercase labels, serif display, mono numbers), minus the retro FX. */
 @theme {
-  --color-surface: #2d2939;
-  --color-surface-dim: #27242f;
-  --color-surface-bright: #534e62;
-  --color-surface-container-lowest: #24212b;
-  --color-surface-container-low: #342f43;
-  --color-surface-container: #3a354b;
-  --color-surface-container-high: #443e56;
-  --color-surface-container-highest: #4d4660;
-  --color-surface-variant: #433f4f;
-  --color-surface-tint: #ce4c3b;
+  --color-surface: #1c1b1f;
+  --color-surface-dim: #18171b;
+  --color-surface-bright: #3f3d44;
+  --color-surface-container-lowest: #141316;
+  --color-surface-container-low: #222126;
+  --color-surface-container: #28272d;
+  --color-surface-container-high: #313036;
+  --color-surface-container-highest: #3a3940;
+  --color-surface-variant: #313036;
+  --color-surface-tint: #ff5f1f;
   --color-on-surface: #faf6f6;
   --color-on-surface-variant: #ddd7e2;
   --color-inverse-surface: #ebe5e8;
-  --color-inverse-on-surface: #27242f;
+  --color-inverse-on-surface: #1c1b1f;
   --color-outline: #a39cae;
-  --color-outline-variant: #565162;
-  --color-background: #2d2939;
+  --color-outline-variant: #45434b;
+  --color-background: #1c1b1f;
   --color-on-background: #faf6f6;
 
   /* rosy copper: brand, wins & primary actions */
-  --color-primary: #ff7563;
+  --color-primary: #ff7a45;
   --color-on-primary: #ffffff;
-  --color-primary-container: #e8503c;
+  --color-primary-container: #ff5f1f;
   --color-on-primary-container: #fff1ee;
   --color-inverse-primary: #9c3427;
-  --color-primary-fixed: #f2a092;
-  --color-primary-fixed-dim: #e2685a;
+  --color-primary-fixed: #ffb08a;
+  --color-primary-fixed-dim: #ff7a45;
   --color-on-primary-fixed: #3a0a04;
   --color-on-primary-fixed-variant: #7d2a1f;
 
@@ -79,8 +79,8 @@
   --spacing-margin-desktop: 3rem;
 
   --font-display: var(--font-instrument-serif), Georgia, serif;
-  --font-body: var(--font-saira), "Helvetica Neue", sans-serif;
-  --font-mono: var(--font-saira), "Helvetica Neue", sans-serif;
+  --font-body: var(--font-inter), "Helvetica Neue", sans-serif;
+  --font-mono: var(--font-inter), "Helvetica Neue", sans-serif;
   --font-num: var(--font-jetbrains), ui-monospace, monospace;
 
   --font-display-lg: var(--font-display);
@@ -146,25 +146,25 @@
   *,
   ::before,
   ::after {
-    border-color: #433f4f;
+    border-color: #333238;
   }
   html,
   body {
     margin: 0;
     padding: 0;
     background:
-      radial-gradient(60% 45% at 90% -10%, rgba(232, 80, 60, 0.18), transparent 70%),
-      radial-gradient(50% 40% at 0% 110%, rgba(125, 140, 255, 0.1), transparent 70%),
+      radial-gradient(60% 45% at 90% -10%, rgba(255, 95, 31, 0.14), transparent 70%),
+      radial-gradient(50% 40% at 0% 110%, rgba(125, 140, 255, 0.06), transparent 70%),
       var(--color-surface);
     background-attachment: fixed;
     color: var(--color-on-surface);
   }
   ::selection {
-    background: #ce4c3b;
+    background: #ff5f1f;
     color: #fff;
   }
   :focus-visible {
-    outline: 1px solid #ce4c3b;
+    outline: 1px solid #ff5f1f;
     outline-offset: 2px;
   }
   body {

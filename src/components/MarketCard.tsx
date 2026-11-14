@@ -26,7 +26,7 @@ export default function MarketCard({ market: m, group, now }: { market: MarketVi
   const outcome = m.receipt?.outcome;
 
   return (
-    <article className="group relative flex flex-col gap-3 rounded-2xl bg-surface-container ring-1 ring-[#4a4460] hover:ring-primary-container/50 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(232,80,60,0.45)] p-4 transition-all">
+    <article className="group relative flex flex-col gap-3 rounded-2xl bg-surface-container ring-1 ring-[#333238] hover:ring-primary-container/50 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(255,95,31,0.45)] p-4 transition-all">
       <div className="flex items-start gap-3">
         {m.subjectId ? <Avatar name={name(m.subjectId)} size={40} className="rounded-xl!" /> : <span className="w-10 h-10 shrink-0 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface-variant" aria-hidden><span className="material-symbols-outlined text-[20px]">help</span></span>}
         <h3 className="flex-1 min-w-0 font-label-lg text-[15px] leading-snug text-on-surface">

@@ -29,7 +29,7 @@ export default function GroupSwitcher() {
         onClick={() => setMenu(!menu)}
         aria-expanded={menu}
         aria-haspopup="menu"
-        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-container ring-1 ring-[#4a4460] hover:ring-outline-variant text-left"
+        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-container ring-1 ring-[#333238] hover:ring-outline-variant text-left"
       >
         <span className="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-lg" aria-hidden>
           {group?.emoji ?? "🎲"}
