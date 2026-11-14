@@ -376,3 +376,58 @@ test("catch-up SQL stops before changing anything if an old wager isn't YES/NO",
   assert.deepEqual(await snapshot(t.db), before);
   await t.close();
 });
+
+test("catch-up refuses partial schema and unavailable Realtime without changing data", async () => {
+  const { catchupSql } = await import("../../scripts/catchup-sql.mjs");
+  for (const [setup, error] of [
+    ["alter table public.series_bets add column unit text", /partial or later migration/],
+    ["alter table public.clan_members add column last_read_id bigint", /partial or later migration/],
+    ["drop publication supabase_realtime", /supabase_realtime must exist/],
+    ["alter publication supabase_realtime set (publish = 'insert')", /INSERT and UPDATE/],
+  ]) {
+    const { t } = await liveProjectWithData();
+    try {
+      await t.db.exec(setup);
+      const before = await snapshot(t.db);
+      await assert.rejects(t.db.exec(await catchupSql()), error);
+      await t.db.exec("rollback");
+      assert.deepEqual(await snapshot(t.db), before);
+      assert.equal((await t.db.query("select to_regclass('public.series_bet_outcomes') as x")).rows[0].x, null);
+    } finally {
+      await t.close();
+    }
+  }
+});
+
+test("read-only recovery audit works before and after catch-up and does not change data", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const { catchupSql } = await import("../../scripts/catchup-sql.mjs");
+  const audit = await readFile(new URL("../diagnostics/clan-chat.sql", import.meta.url), "utf8");
+  const { t } = await liveProjectWithData();
+  try {
+    for (const upgraded of [false, true]) {
+      if (upgraded) {
+        await t.db.exec(await catchupSql());
+        // Exercise the ledger-present branch too; SQL-editor-only projects may lack it.
+        await t.db.exec("create schema supabase_migrations; create table supabase_migrations.schema_migrations(version text); insert into supabase_migrations.schema_migrations values ('202611140013')");
+      }
+      const before = await snapshot(t.db);
+      const results = await t.db.exec(audit);
+      assert.deepEqual(await snapshot(t.db), before);
+      const flags = results.flatMap((r) => r.rows).find((r) => "has_0013" in r);
+      assert.equal(flags.has_0013, upgraded);
+      const fns = results.flatMap((r) => r.rows).filter((r) => "signature" in r);
+      assert.equal(fns.length, 12);
+      assert.ok(fns.every((r) => r.present === upgraded));
+      if (upgraded) {
+        assert.ok(fns.every((r) => r.anon_execute === false));
+        assert.ok(fns.every((r) => r.authenticated_execute === !r.signature.startsWith("public._")));
+        const publication = results.flatMap((r) => r.rows).find((r) => "publishes_chat" in r);
+        assert.equal(publication.publishes_chat, true);
+        assert.equal(publication.pubinsert && publication.pubupdate, true);
+      }
+    }
+  } finally {
+    await t.close();
+  }
+});

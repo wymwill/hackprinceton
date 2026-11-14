@@ -4,7 +4,8 @@
 // The live project ran 0001–0008, then 0012 (friends and clans) before 0009–0011
 // were merged. This applies what's missing, in order: 0009, 0010, 0011, 0013.
 // Everything runs in one transaction: if any statement fails, nothing changes.
-// A preflight check refuses to run unless the database is in exactly that state.
+// A preflight check rejects missing prerequisites and conflicting schema markers.
+// Inspect supabase/diagnostics/clan-chat.sql first; markers are not a full schema audit.
 //
 //   node scripts/catchup-sql.mjs > catchup.sql     # then paste into the SQL editor
 //
@@ -37,9 +38,18 @@ begin
   if to_regclass('public.clan_messages') is not null then
     raise exception 'Stopped: 0013 (clan chat) is already applied.';
   end if;
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and (
+      (table_name = 'series_bets' and column_name in ('kind', 'tie_rule', 'winning_outcome_id', 'tied_outcome_ids', 'unit', 'decimals', 'result_value'))
+      or (table_name in ('series_wagers', 'series_bet_results') and column_name = 'outcome_id')
+      or (table_name = 'clan_members' and column_name = 'last_read_id'))) then
+    raise exception 'Stopped: partial or later migration columns already exist. Inspect the schema before choosing a recovery script.';
+  end if;
+  if not exists (select 1 from pg_publication where pubname = 'supabase_realtime' and pubinsert and pubupdate) then
+    raise exception 'Stopped: supabase_realtime must exist with INSERT and UPDATE enabled for live clan chat.';
+  end if;
   -- 0009 turns every existing bet into a YES/NO bet; that needs every wager, result and winner to be YES or NO.
   if exists (select 1 from public.series_wagers where outcome is null or outcome not in ('YES','NO'))
-     or exists (select 1 from public.series_bet_results where side not in ('YES','NO'))
+     or exists (select 1 from public.series_bet_results where side is null or side not in ('YES','NO'))
      or exists (select 1 from public.series_bets where winning_outcome is not null and winning_outcome not in ('YES','NO')) then
     raise exception 'Stopped: some existing wagers, results or bets have a side other than YES/NO, which 0009 can''t convert. Nothing was changed.';
   end if;
@@ -53,6 +63,8 @@ export async function catchupSql() {
     `-- Applies, in order: ${CATCHUP.join(", ")}.`,
     "-- One transaction: if anything fails, nothing is changed.",
     "begin;",
+    "set local lock_timeout = '5s';",
+    "set local statement_timeout = '120s';",
     PREFLIGHT,
   ];
   for (const f of CATCHUP) {
