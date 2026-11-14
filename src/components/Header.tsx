@@ -8,7 +8,7 @@ import { amount } from "./ui";
 /** Top bar: menu (mobile), and who you are: your account, or the Playing as switcher in demo mode. */
 export default function Header() {
   const router = useRouter();
-  const { state, me, member, switchUser, navOpen, setNavOpen, open } = useApp();
+  const { state, me, member, switchUser, navOpen, setNavOpen } = useApp();
 
   return (
     <header className="fixed top-0 left-0 lg:left-[260px] right-0 h-16 bg-surface/85 backdrop-blur-xl z-30 flex items-center gap-3 px-4 lg:px-gutter-desktop">
@@ -17,7 +17,7 @@ export default function Header() {
           menu
         </span>
       </button>
-      <span className="lg:hidden font-display italic text-[20px] text-on-surface truncate">{state?.group?.name ?? "Alea"}</span>
+      <span className="lg:hidden font-display italic text-[20px] text-on-surface truncate">Alea</span>
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
         {state && me && state.auth.mode !== "demo" && (
@@ -51,13 +51,6 @@ export default function Header() {
         )}
         {member && state?.group && (
           <span className="lg:hidden whitespace-nowrap px-2 py-1 rounded-full bg-surface-container-high font-num text-[12px] text-primary font-bold">{amount(member.balance, state.group.mode)}</span>
-        )}
-        {state?.group && (
-          <button onClick={() => open("new-market")} className="lg:hidden p-1.5 rounded-lg bg-primary-container text-on-primary" aria-label="New market">
-            <span className="material-symbols-outlined block" aria-hidden>
-              add
-            </span>
-          </button>
         )}
       </div>
     </header>

@@ -48,8 +48,8 @@ export default function ChanceChart({ market, now, height = 180 }: { market: Mar
         </g>
       ))}
       {bookie && <line x1={pad.l} x2={W - pad.r} y1={y(bookie.chance)} y2={y(bookie.chance)} stroke="#b9c3ff" strokeOpacity="0.5" strokeDasharray="6 5" />}
-      <path d={`${d}V${y(0)}H${x(Date.parse(pts[0]?.at ?? market.createdAt))}Z`} fill="#ff5f1f" opacity="0.08" />
-      <path d={d} fill="none" stroke="#ff7a45" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d={`${d}V${y(0)}H${x(Date.parse(pts[0]?.at ?? market.createdAt))}Z`} fill="#ce4c3b" opacity="0.08" />
+      <path d={d} fill="none" stroke="#e2685a" strokeWidth="2.5" strokeLinejoin="round" />
       {pts
         .filter((p) => p.source === "bookie")
         .map((p) => (
@@ -57,7 +57,7 @@ export default function ChanceChart({ market, now, height = 180 }: { market: Mar
             <title>The Bookie set {p.yes}%</title>
           </circle>
         ))}
-      <circle cx={x(t1)} cy={y(last)} r="4" fill="#ff7a45" />
+      <circle cx={x(t1)} cy={y(last)} r="4" fill="#e2685a" />
     </svg>
   );
 }
