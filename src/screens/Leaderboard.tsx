@@ -48,9 +48,9 @@ export default function Leaderboard() {
                 <td className="p-3 text-right font-num">
                   <span className="text-primary">{m.record.wins}</span>
                   <span className="text-on-surface-variant">–</span>
-                  <span className="text-secondary">{m.record.losses}</span>
+                  <span className="text-on-surface-variant">{m.record.losses}</span>
                 </td>
-                <td className={`p-3 text-right font-num ${m.streak > 0 ? "text-primary" : m.streak < 0 ? "text-secondary" : "text-on-surface-variant"}`}>
+                <td className={`p-3 text-right font-num ${m.streak > 0 ? "text-primary" : "text-on-surface-variant"}`}>
                   {m.streak > 0 ? `W${m.streak}` : m.streak < 0 ? `L${-m.streak}` : "–"}
                 </td>
                 <td className="p-3 text-right font-num text-on-surface">{m.dares.done}</td>
