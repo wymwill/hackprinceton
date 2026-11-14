@@ -42,7 +42,7 @@ export default function SignIn() {
 
   return (
     <div className="boot">
-      <span className="brand-name">Betting with Friends</span>
+      <span className="brand-name">Alea</span>
       <p className="hint" style={{ maxWidth: 380 }}>
         YES/NO bets with friends, played for virtual coins across a whole series. Sign in to see your series.
       </p>

@@ -138,9 +138,9 @@ function Sidebar({ current }: { current?: Series }) {
   const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
   return (
     <aside className="sidebar">
-      <Link to="/" className="brand" aria-label="Betting with Friends home">
+      <Link to="/" className="brand" aria-label="Alea home">
         <span className="brand-mark">B</span>
-        <span className="brand-name">Betting with Friends</span>
+        <span className="brand-name">Alea</span>
       </Link>
       <SeriesSwitcher current={current} />
       {current ? (

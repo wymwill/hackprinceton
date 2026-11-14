@@ -131,7 +131,7 @@ export function useStore() {
 function Boot({ children }: { children: ReactNode }) {
   return (
     <div className="boot">
-      <span className="brand-name">Betting with Friends</span>
+      <span className="brand-name">Alea</span>
       {children}
     </div>
   );
