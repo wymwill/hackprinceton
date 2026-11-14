@@ -59,7 +59,13 @@ export default function LiveReceipt() {
                 r.refunded ? "bg-surface-container-high text-on-surface" : mine.net >= 0 ? "bg-primary-container text-on-primary" : "bg-[#d9a35f] text-[#3a2508]"
               }`}
             >
-              {r.refunded ? "Refunded" : mine.net >= 0 ? `You won ${mine.net.toLocaleString()} pts` : `You lost ${(-mine.net).toLocaleString()} pts`}
+              {r.refunded
+                ? "Refunded"
+                : mine.net > 0
+                  ? `You won ${mine.net.toLocaleString()} pts`
+                  : mine.net < 0
+                    ? `You lost ${(-mine.net).toLocaleString()} pts`
+                    : "Even: you got your stake back"}
             </span>
           )}
           <p className="font-body-sm text-body-sm text-on-surface-variant">

@@ -28,10 +28,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="bg-surface font-body-md text-body-md text-on-surface">
         <BookieProvider>
           {/* Sidebar reads the URL, so dynamic routes like /bets/[id] fill it in at request time. */}
-          <Suspense fallback={<aside className="fixed left-0 top-0 h-full w-[260px] bg-surface-container-low z-50" />}>
+          <Suspense fallback={<aside className="hidden lg:block fixed left-0 top-0 h-full w-[260px] bg-surface-container-low z-50" />}>
             <Sidebar />
           </Suspense>
-          <div className="pl-[260px]">
+          <div className="lg:pl-[260px]">
             <Header />
             {children}
           </div>

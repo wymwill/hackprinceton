@@ -1,5 +1,5 @@
 import "server-only";
-import { createBet, joinBet, settleBet } from "./bets";
+import { addEvidence, createBet, joinBet, settleBet } from "./bets";
 import type { Db, User } from "./store";
 
 const AVATARS = {
@@ -22,16 +22,36 @@ const HOUR = 3_600_000;
 
 /** First-run data: a few bets at different points in the lifecycle so every screen has something to show. */
 export function seed(): Db {
-  const db: Db = { version: 1, users: USERS, bets: [], entries: [], ledger: [], receipts: [] };
+  const db: Db = { version: 1, users: USERS, bets: [], entries: [], ledger: [], receipts: [], evidence: [], reviews: [], audit: [] };
   const now = Date.now();
   const at = (h: number) => new Date(now + h * HOUR);
   const iso = (h: number) => at(h).toISOString();
+
+  /** A small Yes/No bet that's already settled, so the odds model has real history to read. */
+  const past = (subjectId: string, proposition: string, category: string, yes: boolean, daysAgo: number, creator: string, against: string) => {
+    const t = -daysAgo * 24;
+    const b = createBet(db, creator, { proposition, outcomes: ["Yes", "No"], deadline: iso(t + 10), stake: 20, pick: 1, category, subjectId }, at(t));
+    joinBet(db, against, b.id, "o1", 20, at(t + 1));
+    settleBet(db, creator, b.id, yes ? "o1" : "o2", at(t + 11));
+  };
+  // Jake: 2 of 7 early-morning gym calls.
+  past("jake", "Will Jake make the 6 AM lift?", "Fitness", false, 26, "sam", "jake");
+  past("jake", "Will Jake be at the gym before 6 AM Monday?", "Fitness", true, 23, "priya", "jake");
+  past("jake", "Will Jake skip the snooze button and run at 5:30?", "Fitness", false, 20, "marcus", "jake");
+  past("jake", "Will Jake make sunrise yoga?", "Fitness", false, 16, "sam", "elena");
+  past("jake", "Will Jake hit the 6 AM spin class?", "Fitness", true, 12, "elena", "jake");
+  past("jake", "Will Jake be at the gym before 6 AM Friday?", "Fitness", false, 9, "sam", "jake");
+  past("jake", "Will Jake do the early leg day?", "Fitness", false, 6, "priya", "jake");
+  // A few others so category base rates exist.
+  past("priya", "Will Priya ship the landing page by Sunday?", "Projects", true, 18, "marcus", "priya");
+  past("david", "Will Dave bench 205 for 5?", "Fitness", true, 15, "alex", "david");
+  past("sam", "Will Sam read 50 pages a day for a week?", "Habits", true, 11, "jake", "sam");
 
   // Settled last week, so the leaderboard and a receipt have history.
   const marathon = createBet(
     db,
     "marcus",
-    { proposition: "Will Sam run the marathon in under 4 hours?", outcomes: ["Yes", "No"], deadline: iso(-30), stake: 100, pick: 1, category: "Fitness", emoji: "🏅", dare: "Run a mile in a tutu" },
+    { proposition: "Will Sam run the marathon in under 4 hours?", outcomes: ["Yes", "No"], deadline: iso(-30), stake: 100, pick: 1, category: "Fitness", emoji: "🏅", dare: "Run a mile in a tutu", subjectId: "sam" },
     at(-120)
   );
   joinBet(db, "sam", marathon.id, "o1", 200, at(-110));
@@ -43,12 +63,15 @@ export function seed(): Db {
   const bench = createBet(
     db,
     "alex",
-    { proposition: "Will Dave bench 225 lbs for 5 clean reps tonight?", outcomes: ["Yes", "No"], deadline: iso(-1), stake: 150, pick: 1, category: "Fitness", emoji: "💪", dare: "50 burpees on camera" },
+    { proposition: "Will Dave bench 225 lbs for 5 clean reps tonight?", outcomes: ["Yes", "No"], deadline: iso(-1), stake: 150, pick: 1, category: "Fitness", emoji: "💪", dare: "50 burpees on camera", subjectId: "david" },
     at(-6)
   );
   joinBet(db, "david", bench.id, "o1", 200, at(-5));
   joinBet(db, "elena", bench.id, "o2", 80, at(-4));
   joinBet(db, "jake", bench.id, "o1", 60, at(-3));
+  // Conflicting evidence, so a review of this bet gets flagged for a human.
+  addEvidence(db, "david", bench.id, { kind: "text", text: "Hit 225 for 5 clean reps at 8:40 PM. Elena was spotting.", claimsOutcomeId: "o1" }, at(-0.8));
+  addEvidence(db, "elena", bench.id, { kind: "text", text: "I spotted. Rep 4 stopped well above the chest and I touched the bar on rep 5. Not clean.", claimsOutcomeId: "o2" }, at(-0.7));
 
   // Open, multi-outcome.
   const half = createBet(
@@ -64,7 +87,7 @@ export function seed(): Db {
   const legDay = createBet(
     db,
     "sam",
-    { proposition: "Will Jake make 6 AM leg day tomorrow without hitting snooze?", outcomes: ["Yes", "No"], deadline: iso(20), stake: 100, pick: 1, category: "Fitness", emoji: "🏋️", dare: "Dye beard pink" },
+    { proposition: "Will Jake make 6 AM leg day tomorrow without hitting snooze?", outcomes: ["Yes", "No"], deadline: iso(20), stake: 100, pick: 1, category: "Fitness", emoji: "🏋️", dare: "Dye beard pink", subjectId: "jake" },
     at(-2)
   );
   joinBet(db, "jake", legDay.id, "o1", 150, at(-1.5));

@@ -42,4 +42,7 @@ next-env.d.ts
 
 # bookie local database
 /.data/
+
+# Local secrets. Copy .env.example to .env.local and fill it in.
+!.env.example
 .gstack/

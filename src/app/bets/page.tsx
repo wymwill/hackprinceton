@@ -1,7 +1,6 @@
-import Markets from "@/screens/Markets";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Bets · Betting with Friends" };
-
+/** The market grid now lives on the home page. Keep old /bets links working. */
 export default function Page() {
-  return <Markets />;
+  redirect("/");
 }
