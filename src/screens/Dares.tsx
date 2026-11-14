@@ -37,7 +37,7 @@ export default function Dares() {
                 <span>
                   {c.title} <span className="font-num">{list.length}</span>
                 </span>
-                <span className="normal-case tracking-normal font-normal text-[11px]">{c.hint}</span>
+                <span className="normal-case tracking-normal font-normal text-xs">{c.hint}</span>
               </h2>
               {list.length ? list.map((d) => <DareCard key={d.id} dare={d} groupId={group.id} now={now} />) : <div className="rounded-2xl border border-dashed border-outline-variant p-6 text-center font-body-sm text-body-sm text-on-surface-variant">Nothing here</div>}
             </section>
@@ -96,7 +96,7 @@ function DareCard({ dare: d, groupId, now }: { dare: DareView; groupId: string; 
           {d.proof.imageUrl && <img src={d.proof.imageUrl} alt="Dare proof" className="max-h-40 w-fit rounded-lg" />}
         </div>
       )}
-      {(d.status === "todo" || d.status === "voting") && <p className="font-label-sm text-[11px] text-secondary">⏱ {timeLeft(d.dueAt, now)} left</p>}
+      {(d.status === "todo" || d.status === "voting") && <p className="font-label-sm text-xs text-secondary">{timeLeft(d.dueAt, now)} left</p>}
       {d.status === "voting" && (
         <p className="font-body-sm text-body-sm text-on-surface-variant">
           {approvals} of {d.owedTo.length} approved
@@ -106,8 +106,8 @@ function DareCard({ dare: d, groupId, now }: { dare: DareView; groupId: string; 
         <form onSubmit={submit} className="flex flex-col gap-2">
           <input className={input} value={text} onChange={(e) => setText(e.target.value)} placeholder="How did it go? Link the video in the chat…" maxLength={300} aria-label="Proof" />
           <div className="flex items-center gap-2">
-            <label className="px-3 py-2 rounded-xl bg-surface-container-high font-label-md text-label-md text-on-surface-variant hover:text-on-surface cursor-pointer">
-              📷 Photo
+            <label className="px-3 py-2 rounded-xl inline-flex items-center gap-1.5 bg-surface-container-high font-label-md text-label-md text-on-surface-variant hover:text-on-surface cursor-pointer">
+              <span className="material-symbols-outlined text-[18px]" aria-hidden>photo_camera</span>Photo
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/gif,image/webp" className="sr-only" />
             </label>
             <Button tone="primary" type="submit" className="flex-1" disabled={busy}>

@@ -114,9 +114,9 @@ export default function Markets() {
               {soon.map((m) => (
                 <Link key={m.id} href={`/g/${group.id}/m/${m.id}`} className={`${card} p-3 hover:ring-outline-variant flex flex-col gap-1.5`}>
                   <span className="font-label-md text-label-md text-on-surface line-clamp-2">{m.question}</span>
-                  <span className="flex items-center justify-between font-label-sm text-[11px]">
+                  <span className="flex items-center justify-between font-label-sm text-xs">
                     <span className="font-num text-primary text-[13px]">{m.chance}%</span>
-                    <span className="text-secondary">⏱ {timeLeft(m.deadline, now)}</span>
+                    <span className="text-secondary">{timeLeft(m.deadline, now)}</span>
                   </span>
                 </Link>
               ))}
@@ -172,7 +172,7 @@ export default function Markets() {
               <li key={i}>
                 <Link href={`/g/${group.id}/m/${a.href}`} className={`flex flex-col font-body-sm text-body-sm hover:underline ${a.bookie ? "text-tertiary" : "text-on-surface"}`}>
                   <span className="line-clamp-2">{a.text}</span>
-                  <span className="font-label-sm text-[11px] text-on-surface-variant">{ago(a.at, now)}</span>
+                  <span className="font-label-sm text-xs text-on-surface-variant">{ago(a.at, now)}</span>
                 </Link>
               </li>
             ))}

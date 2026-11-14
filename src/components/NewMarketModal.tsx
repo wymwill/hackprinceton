@@ -144,7 +144,7 @@ export default function NewMarketModal({ onClose, onCreated }: { onClose: () => 
               </button>
             ))}
             <button type="button" className={chip(dareKind === "wheel")} onClick={() => setDareKind("wheel")}>
-              🎡 Spin the wheel
+              Spin the wheel
             </button>
             <button type="button" className={chip(dareKind === "custom")} onClick={() => (setDareKind("custom"), setDareText(""))}>
               Write my own

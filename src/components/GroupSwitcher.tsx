@@ -36,7 +36,7 @@ export default function GroupSwitcher() {
         </span>
         <span className="flex flex-col min-w-0 flex-1">
           <span className="font-label-lg text-label-lg text-on-surface truncate">{group?.name ?? (state ? "Pick a group" : " ")}</span>
-          <span className="font-label-sm text-[11px] text-on-surface-variant">{group ? `${group.members.length} ${group.members.length === 1 ? "member" : "friends"} · ${group.mode === "tokens" ? "Tokens" : "Points"}` : " "}</span>
+          <span className="font-label-sm text-xs text-on-surface-variant">{group ? `${group.members.length} ${group.members.length === 1 ? "member" : "friends"} · ${group.mode === "tokens" ? "Tokens" : "Points"}` : " "}</span>
         </span>
         <span className="material-symbols-outlined text-on-surface-variant" aria-hidden>
           unfold_more

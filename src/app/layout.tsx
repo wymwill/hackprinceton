@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Instrument_Serif, JetBrains_Mono, Saira_Condensed } from "next/font/google";
+import { Instrument_Serif, JetBrains_Mono, Saira } from "next/font/google";
 import AppProvider from "@/components/AppProvider";
 import GroupSync from "@/components/GroupSync";
 import Header from "@/components/Header";
@@ -8,7 +8,7 @@ import Sidebar from "@/components/Sidebar";
 import "./globals.css";
 
 const instrumentSerif = Instrument_Serif({ variable: "--font-instrument-serif", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
-const saira = Saira_Condensed({ variable: "--font-saira", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const saira = Saira({ variable: "--font-saira", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
 
 export const metadata: Metadata = {

@@ -89,7 +89,7 @@ function SettingsForm({ group, me }: { group: GroupView; me: string }) {
           <ul className="flex flex-col gap-1.5">
             {presets.map((d, i) => (
               <li key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container-lowest">
-                <span className="flex-1 font-body-md text-body-md text-on-surface">🔥 {d}</span>
+                <span className="flex-1 font-body-md text-body-md text-on-surface">{d}</span>
                 {owner && (
                   <button type="button" onClick={() => setPresets(presets.filter((_, k) => k !== i))} aria-label={`Remove ${d}`} className="text-on-surface-variant hover:text-secondary">
                     <span className="material-symbols-outlined text-[18px] block" aria-hidden>
@@ -130,7 +130,7 @@ function SettingsForm({ group, me }: { group: GroupView; me: string }) {
             <li key={m.userId} className="flex items-center gap-2">
               <Avatar name={m.name} size={28} />
               <span className="text-on-surface">{m.name}</span>
-              <span className="font-label-sm text-[11px] text-on-surface-variant">{m.role}</span>
+              <span className="font-label-sm text-xs text-on-surface-variant">{m.role}</span>
             </li>
           ))}
         </ul>

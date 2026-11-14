@@ -73,9 +73,9 @@ function EvidenceSection({ market: m, now }: { market: MarketView; now: number }
             <div className="flex-1 min-w-0 flex flex-col gap-1">
               <span className="font-label-md text-label-md text-on-surface">
                 {name(e.userId)}
-                {e.app && <span className="ml-1.5 px-1.5 py-0.5 rounded bg-surface-container-high font-label-sm text-[10px] text-on-surface-variant">📱 {e.app}</span>}
-                {e.claims && <span className={`ml-1.5 font-label-sm text-[11px] ${e.claims === "yes" ? "text-primary" : "text-secondary"}`}>says {e.claims === "yes" ? "Yes" : "No"}</span>}
-                <span className="ml-1.5 font-label-sm text-[11px] text-on-surface-variant">{ago(e.createdAt, now)}</span>
+                {e.app && <span className="ml-1.5 px-1.5 py-0.5 rounded bg-surface-container-high font-label-sm text-xs text-on-surface-variant">{e.app}</span>}
+                {e.claims && <span className={`ml-1.5 font-label-sm text-xs ${e.claims === "yes" ? "text-primary" : "text-secondary"}`}>says {e.claims === "yes" ? "Yes" : "No"}</span>}
+                <span className="ml-1.5 font-label-sm text-xs text-on-surface-variant">{ago(e.createdAt, now)}</span>
               </span>
               {e.text && <p className="font-body-md text-body-md text-on-surface-variant">{e.text}</p>}
               {e.imageUrl && <img src={e.imageUrl} alt={`Evidence from ${name(e.userId)}`} className="max-h-48 w-fit rounded-lg ring-1 ring-outline-variant/50" />}
@@ -92,8 +92,8 @@ function EvidenceSection({ market: m, now }: { market: MarketView; now: number }
               <option value="yes">It happened (Yes)</option>
               <option value="no">It didn&apos;t (No)</option>
             </select>
-            <label className="px-3 py-2 rounded-xl bg-surface-container-high font-label-md text-label-md text-on-surface-variant hover:text-on-surface cursor-pointer">
-              📷 {fileName ? fileName.slice(0, 18) : "Photo"}
+            <label className="px-3 py-2 rounded-xl inline-flex items-center gap-1.5 bg-surface-container-high font-label-md text-label-md text-on-surface-variant hover:text-on-surface cursor-pointer">
+              <span className="material-symbols-outlined text-[18px]" aria-hidden>photo_camera</span>{fileName ? fileName.slice(0, 18) : "Photo"}
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/gif,image/webp" className="sr-only" onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")} />
             </label>
             <Button type="submit" className="ml-auto" disabled={busy || (!text.trim() && !fileName)}>
@@ -113,7 +113,7 @@ function ReviewCard({ market: m }: { market: MarketView }) {
     <div className="rounded-xl bg-tertiary-container/[0.08] ring-1 ring-tertiary-container/30 p-3 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <BookieMark size="xs" />
-        <span className="font-label-sm text-[11px] text-tertiary/70">{sourceLabel(r.source)}</span>
+        <span className="font-label-sm text-xs text-tertiary">{sourceLabel(r.source)}</span>
       </div>
       <p className="font-headline-sm text-headline-sm text-tertiary">
         {r.status === "recommended" ? `Recommends ${OUTCOME_LABEL[r.outcome!]} · ${Math.round((r.confidence ?? 0) * 100)}% sure` : "Needs a human to decide"}
@@ -126,7 +126,7 @@ function ReviewCard({ market: m }: { market: MarketView }) {
           ))}
         </ul>
       )}
-      <p className="font-label-sm text-[11px] text-tertiary/60">Advice only. The host decides and the group can dispute.</p>
+      <p className="font-label-sm text-xs text-tertiary">Advice only. The host decides and the group can dispute.</p>
     </div>
   );
 }
@@ -194,7 +194,7 @@ function ReviewTally({ market: m, now }: { market: MarketView; now: number }) {
     <section className={`${card} p-4 flex flex-col gap-3`} aria-label="Group vote">
       <div className="flex items-center justify-between gap-2">
         <h2 className={label}>{name(p.by)} proposed</h2>
-        <span className="font-label-sm text-[11px] text-on-surface-variant">Settles in {timeLeft(p.endsAt, now)} unless disputed</span>
+        <span className="font-label-sm text-xs text-on-surface-variant">Settles in {timeLeft(p.endsAt, now)} unless disputed</span>
       </div>
       <p className={`font-display text-headline-lg ${p.outcome === "yes" ? "text-primary" : p.outcome === "no" ? "text-secondary" : "text-on-surface"}`}>{OUTCOME_LABEL[p.outcome]}</p>
       <div className="flex gap-4 font-body-md text-body-md">
@@ -236,14 +236,14 @@ function ReceiptCard({ market: m, group }: { market: MarketView; group: GroupVie
     <section className={`${card} p-5 flex flex-col gap-4 relative overflow-hidden`} aria-label="Receipt">
       <div className="flex items-center justify-between">
         <h2 className={label}>Receipt</h2>
-        <span className="font-label-sm text-[11px] text-on-surface-variant">{new Date(r.settledAt).toLocaleString()}</span>
+        <span className="font-label-sm text-xs text-on-surface-variant">{new Date(r.settledAt).toLocaleString()}</span>
       </div>
       <p className={`stamp-in self-start ml-2 px-3 py-0.5 rounded-lg ring-2 font-display text-[30px] leading-tight ${r.outcome === "yes" ? "text-primary ring-primary" : r.outcome === "no" ? "text-secondary ring-secondary" : "text-on-surface-variant ring-outline"}`}>
         {r.voided ? "VOID" : r.outcome.toUpperCase()}
       </p>
       {r.roast && (
         <div className={`flex items-start gap-2 p-3 rounded-xl ${aiRoast ? "bg-tertiary-container/10 ring-1 ring-tertiary-container/30" : "bg-surface-container-high"}`}>
-          {aiRoast ? <BookieMark size="xs" label={false} /> : <span aria-hidden>🎤</span>}
+          {aiRoast ? <BookieMark size="xs" label={false} /> : null}
           <p className={`font-body-lg text-body-lg italic ${aiRoast ? "text-tertiary" : "text-on-surface"}`}>“{r.roast}”</p>
         </div>
       )}
@@ -271,7 +271,7 @@ function ReceiptCard({ market: m, group }: { market: MarketView; group: GroupVie
       )}
       {dares.length > 0 && (
         <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-secondary/10 ring-1 ring-secondary/30">
-          <span className="font-label-md text-label-md text-secondary">🔥 Dare owed: {r.dareText}</span>
+          <span className="font-label-md text-label-md text-secondary">Dare owed: {r.dareText}</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">{dares.map((d) => name(d.owedBy)).join(", ")} · see Dares</span>
         </div>
       )}

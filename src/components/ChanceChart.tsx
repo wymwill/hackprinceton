@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import type { MarketView } from "@/lib/markets/types";
 
 /**
@@ -5,9 +8,18 @@ import type { MarketView } from "@/lib/markets/types";
  * Bookie's estimates as periwinkle dots and a dashed level.
  */
 export default function ChanceChart({ market, now, height = 180 }: { market: MarketView; now: number; height?: number }) {
-  const W = 600;
+  // Draw at the real pixel width so lines and labels never get scaled down.
+  const ref = useRef<SVGSVGElement>(null);
+  const [W, setW] = useState(600);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setW(Math.max(200, Math.round(e.contentRect.width))));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const H = height;
-  const pad = { l: 8, r: 36, t: 10, b: 18 };
+  const pad = { l: 8, r: 40, t: 10, b: 18 };
   const pts = market.history;
   const t0 = Date.parse(market.createdAt);
   const end = market.receipt ? Date.parse(market.receipt.settledAt) : Math.max(now, ...pts.map((p) => Date.parse(p.at)));
@@ -26,11 +38,11 @@ export default function ChanceChart({ market, now, height = 180 }: { market: Mar
   const bookie = market.bookie;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height }} role="img" aria-label={`Chance of Yes over time, now ${market.chance}%`}>
+    <svg ref={ref} viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height }} role="img" aria-label={`Chance of Yes over time, now ${market.chance}%`}>
       {[25, 50, 75].map((v) => (
         <g key={v}>
           <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} stroke="#3a3645" strokeDasharray="2 4" />
-          <text x={W - pad.r + 6} y={y(v) + 4} fill="#8a8396" fontSize="11" fontFamily="var(--font-num)">
+          <text x={W - pad.r + 6} y={y(v) + 4} fill="#d2cbd8" fontSize="12" fontFamily="var(--font-num)">
             {v}%
           </text>
         </g>

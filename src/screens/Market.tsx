@@ -38,8 +38,8 @@ export default function Market() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href={`/g/${group.id}`} className="self-start font-label-md text-label-md text-on-surface-variant hover:text-on-surface">
-        ← Markets
+      <Link href={`/g/${group.id}`} className="self-start inline-flex items-center gap-1 font-label-md text-label-md text-on-surface-variant hover:text-on-surface">
+        <span className="material-symbols-outlined text-[18px]" aria-hidden>arrow_back</span>Markets
       </Link>
       <div className="grid lg:grid-cols-[1fr_340px] gap-6 items-start">
         <div className="flex flex-col gap-5 min-w-0">
@@ -58,7 +58,7 @@ export default function Market() {
                 </span>
               )}
               {m.rule && <span>How we&apos;ll know: {m.rule}</span>}
-              {dare && <span className="text-secondary">🔥 Loser&apos;s dare: {dare}</span>}
+              {dare && <span className="text-secondary">Loser&apos;s dare: {dare}</span>}
             </div>
           </header>
 
@@ -77,7 +77,7 @@ export default function Market() {
                   </>
                 )}
               </div>
-              <span className="flex items-center gap-3 font-label-sm text-[11px] text-on-surface-variant">
+              <span className="flex items-center gap-3 font-label-sm text-xs text-on-surface-variant">
                 <span className="flex items-center gap-1">
                   <span className="w-3 h-0.5 bg-primary inline-block" /> Market
                 </span>
