@@ -41,7 +41,6 @@ export default function BookieCard({ market: m, now }: { market: MarketView; now
             <Confidence level={b.uncertainty} />
             {b.fallbackReason && <span className="font-label-sm text-xs text-on-surface-variant">AI unavailable, used history</span>}
           </div>
-          {m.tradeCount > 0 && m.status === "open" && <p className="font-label-sm text-xs text-tertiary">Shown next to the price. Once trading starts, the Bookie never moves it.</p>}
         </>
       ) : (
         <p className={`font-body-md text-body-md text-tertiary ${m.status === "open" ? "animate-pulse" : ""}`}>{m.status === "open" ? "Setting the line…" : "No line was set on this one."}</p>

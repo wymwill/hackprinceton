@@ -143,7 +143,7 @@ export default function Market() {
                     </Button>
                   ))}
                 </div>
-                <p className="font-body-sm text-body-sm text-on-surface-variant">Change it any time before it closes. A right call scores 100 minus the share who agreed with you, at least 10.</p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant">Change it until it closes. Bold calls score more.</p>
               </section>
             ))}
           {m.status === "open" && isHost && (

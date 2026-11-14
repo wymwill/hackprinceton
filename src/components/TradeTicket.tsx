@@ -111,7 +111,7 @@ export default function TradeTicket({ market: m, initialSide }: { market: Market
         {action === "buy" ? "Buy" : "Sell"} {side === "yes" ? "Yes" : "No"}
         {quote.contracts ? ` · ${quote.contracts} for ${quote.cost}` : ""}
       </Button>
-      <p className="font-label-sm text-xs text-on-surface-variant text-center">Each right call pays {PAYOUT}. Prices move as people trade.</p>
+      <p className="font-label-sm text-xs text-on-surface-variant text-center">Right calls pay {PAYOUT}.</p>
     </section>
   );
 }

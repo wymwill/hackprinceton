@@ -10,9 +10,9 @@ import { useGroup } from "@/components/useGroup";
 import { Button, Loading, NotInGroup, card, input, label } from "@/components/ui";
 
 const COLUMNS = [
-  { id: "todo", title: "To do", hint: "Owed, no proof yet" },
-  { id: "voting", title: "Group is voting", hint: "Proof posted" },
-  { id: "done", title: "Done", hint: "Approved, or skipped" },
+  { id: "todo", title: "To do" },
+  { id: "voting", title: "Group is voting" },
+  { id: "done", title: "Done" },
 ] as const;
 
 export default function Dares() {
@@ -26,7 +26,7 @@ export default function Dares() {
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="font-display text-headline-lg text-on-surface">Dares</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">Losers post proof, winners approve it or ask for a redo. No proof by the deadline counts as skipped.</p>
+        <p className="font-body-md text-body-md text-on-surface-variant">Losers post proof. Winners approve it.</p>
       </div>
       <div className="grid md:grid-cols-3 gap-4 items-start">
         {COLUMNS.map((c) => {
@@ -37,7 +37,6 @@ export default function Dares() {
                 <span>
                   {c.title} <span className="font-num">{list.length}</span>
                 </span>
-                <span className="normal-case tracking-normal font-normal text-xs">{c.hint}</span>
               </h2>
               {list.length ? list.map((d) => <DareCard key={d.id} dare={d} groupId={group.id} now={now} />) : <div className="rounded-2xl border border-dashed border-outline-variant p-6 text-center font-body-sm text-body-sm text-on-surface-variant">Nothing here</div>}
             </section>

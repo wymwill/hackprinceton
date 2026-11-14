@@ -15,7 +15,7 @@ export default function Leaderboard() {
     <div className="flex flex-col gap-5 max-w-4xl">
       <div>
         <h1 className="font-display text-headline-lg text-on-surface">Leaderboard</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">{tokens ? "Tokens on hand plus what your open positions are worth right now." : "Points from right calls. Going against the crowd pays more."}</p>
+        <p className="font-body-md text-body-md text-on-surface-variant">{tokens ? "Tokens plus open positions." : "Points from right calls."}</p>
       </div>
       <div className={`${card} overflow-x-auto`}>
         <table className="w-full font-body-md text-body-md min-w-[560px]">

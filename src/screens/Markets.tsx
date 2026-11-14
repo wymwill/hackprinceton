@@ -81,13 +81,13 @@ export default function Markets() {
             <BookieMark size="md" label={false} />
             <div className="flex-1 grid sm:grid-cols-3 gap-3 font-body-sm text-body-sm text-on-surface-variant">
               <p>
-                <b className="text-on-surface">Ask a Yes or No question</b> about real life. The Bookie sets the opening chance from everyone&apos;s track record.
+                <b className="text-on-surface">Ask Yes or No.</b> The Bookie sets the odds.
               </p>
               <p>
-                <b className="text-on-surface">{group.mode === "tokens" ? "Buy Yes or No." : "Make your pick."}</b> {group.mode === "tokens" ? "The price is the chance. A right call pays 100 per contract." : "Calling it against the crowd scores more."}
+                <b className="text-on-surface">{group.mode === "tokens" ? "Buy Yes or No." : "Make your pick."}</b> {group.mode === "tokens" ? "Price = chance. Wins pay 100." : "Bold calls score more."}
               </p>
               <p>
-                <b className="text-on-surface">Settle with proof.</b> Post evidence, the Bookie weighs in, the host calls it, and the loser does the dare.
+                <b className="text-on-surface">Settle with proof.</b> Loser does the dare.
               </p>
             </div>
             <button
@@ -146,7 +146,7 @@ export default function Markets() {
           </div>
         ) : (
           <Empty icon="inbox" title={filter === "open" ? "No open markets" : "Nothing here yet"}>
-            {filter === "open" && <p>Post one and the Bookie will set the line.</p>}
+            {filter === "open" && <p>Post one to get started.</p>}
           </Empty>
         )}
       </div>

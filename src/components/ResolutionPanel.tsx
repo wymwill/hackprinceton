@@ -126,7 +126,7 @@ function ReviewCard({ market: m }: { market: MarketView }) {
           ))}
         </ul>
       )}
-      <p className="font-label-sm text-xs text-tertiary">Advice only. The host decides and the group can dispute.</p>
+      <p className="font-label-sm text-xs text-tertiary">Advice only. The host decides.</p>
     </div>
   );
 }
@@ -177,7 +177,7 @@ function HostPanel({ market: m }: { market: MarketView }) {
           Propose {OUTCOME_LABEL[picked]}…
         </Button>
       )}
-      <p className="font-body-sm text-body-sm text-on-surface-variant">Everyone who traded gets a vote. If most dispute, it comes back to you.</p>
+      <p className="font-body-sm text-body-sm text-on-surface-variant">Traders vote. If most dispute, it comes back to you.</p>
     </section>
   );
 }
