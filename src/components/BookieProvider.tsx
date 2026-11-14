@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { AppState, BetView, CreateBetInput, Evidence, OddsEstimate, Receipt, Review, UserView } from "@/lib/bets/types";
 import CreateBetModal from "./CreateBetModal";
+import { getSupabaseClient } from "@/lib/supabase-client";
 
 type Toast = { id: number; text: string; tone: "lime" | "coral" | "purple" };
 
@@ -101,9 +102,11 @@ export default function BookieProvider({ children }: { children: React.ReactNode
       inflight.current++;
       try {
         const form = body instanceof FormData;
+        const session = await getSupabaseClient()?.auth.getSession();
+        const token = session?.data.session?.access_token;
         const res = await fetch(url, {
           method: "POST",
-          headers: form ? undefined : { "Content-Type": "application/json" },
+          headers: { ...(form ? {} : { "Content-Type": "application/json" }), ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: form ? body : JSON.stringify(body ?? {}),
         });
         const json = await res.json().catch(() => ({}));

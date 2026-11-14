@@ -1,0 +1,2 @@
+import { authenticatedSupabase } from "@/server/supabase";import {errorResponse} from "@/server/http";
+export async function GET(req:Request,{params}:{params:Promise<{seriesId:string}>}){try{const {client}=await authenticatedSupabase(req);const {seriesId}=await params;const {data,error}=await client.from("bet_series").select("*,bet_series_participants(user_id,joined_at,balance)").eq("id",seriesId).single();if(error)throw error;return Response.json({result:data});}catch(e){return errorResponse(e);}}

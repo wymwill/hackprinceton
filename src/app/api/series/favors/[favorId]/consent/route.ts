@@ -1,0 +1,2 @@
+import {seriesRequest} from "@/server/supabase";import {readJson} from "@/server/http";
+export async function POST(req:Request,{params}:{params:Promise<{favorId:string}>}){const {favorId}=await params;const body=await readJson(req);return seriesRequest(req,async c=>{const {data,error}=await c.rpc("consent_series_favor",{p_favor_id:favorId,p_consent:body.consent===true});if(error)throw error;return data;});}

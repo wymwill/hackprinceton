@@ -4,16 +4,19 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test:e2e": "node scripts/e2e-lifecycle.mjs",
+    "test:series": "node scripts/e2e-series.mjs",
+    "create:demo-users": "node scripts/create-demo-users.mjs",
     "test:ai": "node scripts/e2e-ai-bookie.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
     "@langchain/anthropic": "^1.6.5",
     "@langchain/core": "^1.4.1",
+    "@supabase/supabase-js": "^2.119.0",
     "deepagents": "^1.16.5",
     "next": "16.4.6",
     "react": "19.3.0",

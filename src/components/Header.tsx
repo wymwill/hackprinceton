@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useBookie } from "./BookieProvider";
 import BookieMark from "./market/BookieMark";
+import AuthControl from "./AuthControl";
 
 const AI_LABEL = {
   claude: { text: "Live", cls: "bg-tertiary-container/15 text-tertiary ring-tertiary-container/40", dot: "bg-tertiary animate-pulse" },
@@ -33,6 +34,7 @@ export default function Header() {
       </Link>
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <AuthControl />
         {state && (
           <span
             className={`hidden sm:inline-flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full ring-1 font-label-sm text-label-sm ${ai.cls}`}

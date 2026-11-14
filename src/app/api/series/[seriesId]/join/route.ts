@@ -1,0 +1,2 @@
+import {authenticatedSupabase} from "@/server/supabase";import {errorResponse} from "@/server/http";
+export async function POST(req:Request,{params}:{params:Promise<{seriesId:string}>}){try{const {client}=await authenticatedSupabase(req);const {seriesId}=await params;const {data,error}=await client.rpc("join_bet_series",{p_series_id:seriesId});if(error)throw error;return Response.json({result:data});}catch(e){return errorResponse(e);}}
