@@ -81,11 +81,14 @@ As of 2026-11-14 every item is covered.
 | Requirement | Screen | API / rule | Test |
 | --- | --- | --- | --- |
 | Host writes YES/NO questions | Series creation, Lobby, Dashboard | `POST …/bets` | "lobby bets…", "bets during the series…" |
+| Multiple choice: 2–10 named outcomes, YES/NO stays the default | Series creation, New bet dialog (Yes/No · Multiple choice) | `POST …/bets` `{ outcomes, tieRule }`, `series_bet_outcomes` (0009) | outcomes suite: "creating multiple-choice bets" |
+| Host adds, renames, reorders, removes outcomes; they lock when betting opens | Outcome editor; Lobby → Edit | `PATCH …/bets/:betId` (`outcomes_locked` after opening) | "renames, reorders, adds and removes…", "outcomes lock when betting opens" |
+| Ties decided by a rule set before betting | Bet page, Host controls → It's a tie | `…/resolve` `{ tiedOutcomeIds }`, tie rule `refund` / `first_listed` | ties suite |
 | Several bets open at once | Dashboard, Open tab | all written bets open at start | "coins are handed out…" (bet open) |
 | Pick a side and wager; add more | Bet page ticket | `…/wagers` | "add to your side, never switch, never overspend…" |
 | Withdraw in the first 15 minutes only | Ticket, Withdraw with countdown | `…/withdraw` | "withdraw only inside the window…" |
 | See others' picks and stakes | Bet page, Who's on what | wagers in the state read | API run |
-| Host decides YES or NO, even if playing | Bet page, Host controls | `…/resolve` (host only) | "winners split the whole pool…" |
+| Host decides the outcome, even if playing | Bet page, Host controls | `…/resolve` (host only) | "winners split the whole pool…", "the four-option midterm bet" |
 | Winners split the pool by stake | Bet page, Payouts | `_bs_settle` | "200 YES, 100 YES, 300 NO pays 400 / 200 / 0", "rounding leftovers…" |
 | Everyone on one side: refund | Result banner | `_bs_settle` refund branch; lock refunds at once | "everyone on one side gets refunded…" |
 | Host cancels: refund | Host controls, Cancel bet | `…/cancel` | "cancel refunds once…" |

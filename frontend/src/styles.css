@@ -1774,3 +1774,171 @@ img.avatar {
     align-items: flex-start;
   }
 }
+
+/* ── multiple-choice outcomes ───────────────────────────────────────────── */
+/* Each outcome sets --oc (its color) inline; YES/NO bets keep the yes/no styles above. */
+
+.otag {
+  color: var(--oc, var(--bright));
+  white-space: nowrap;
+}
+.otag::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  vertical-align: 1px;
+  border-radius: 50%;
+  background: var(--oc, var(--dim));
+}
+.outcome-banner .o.otag::before {
+  width: 12px;
+  height: 12px;
+}
+.ochips {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.ochips li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  padding-left: 10px;
+  border-left: 3px solid var(--oc);
+}
+.ochips .lbl {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ochips .num {
+  color: var(--bright);
+}
+.settled.pick {
+  color: var(--bright);
+}
+
+/* the wager ticket's outcome picker */
+.opick {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.opick button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-hi);
+  border-left: 4px solid var(--oc);
+  font-size: 14px;
+  text-align: left;
+}
+.opick button:hover:not(:disabled) {
+  background: var(--hover);
+}
+.opick button.on {
+  color: var(--oc);
+  background: var(--hover);
+  border-color: var(--oc);
+  font-weight: 700;
+}
+.opick button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.opick .lbl {
+  overflow-wrap: anywhere;
+}
+.opick button:focus-visible,
+.outcome-editor button:focus-visible {
+  outline: 2px solid var(--oc, var(--red));
+  outline-offset: 2px;
+}
+.submit.oc {
+  color: var(--side);
+  background: var(--oc);
+  border-color: var(--oc);
+}
+
+/* who's on what, one column per outcome */
+.sides.many {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+.side-col.oc h4 {
+  color: var(--oc);
+}
+.side-col.oc .bar {
+  background: var(--oc);
+}
+
+/* host: resolve a multiple-choice bet */
+.resolve-list {
+  display: grid;
+  gap: 6px;
+}
+.resolve-list button {
+  padding: 11px 12px;
+  border: 1px solid var(--line-hi);
+  border-left: 4px solid var(--oc);
+  font-weight: 700;
+  font-size: 13px;
+  text-align: left;
+  color: var(--oc);
+}
+.resolve-list button:hover {
+  background: var(--hover);
+  border-color: var(--oc);
+}
+.tie-report summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--dim);
+}
+.tie-report summary:hover {
+  color: var(--bright);
+}
+
+/* writing a bet */
+.outcome-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.outcome-rows .row {
+  gap: 6px;
+}
+.outcome-rows .input {
+  flex: 1;
+  min-width: 0;
+}
+.tie-rule {
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.tie-rule legend {
+  padding: 0 4px;
+}
+.hint.warn {
+  color: var(--amber);
+}
+.draft-bet {
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--line);
+}
+.draft-row {
+  align-items: flex-start;
+  gap: 10px;
+}

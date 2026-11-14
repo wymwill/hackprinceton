@@ -5,7 +5,7 @@ import { ConfirmButton, Panel, Pill, Who } from "../components/ui.tsx";
 import { agreesTo, isParticipant, participantIds } from "../lib/rules.ts";
 import { ago } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Favor, Series } from "../lib/types.ts";
+import type { Bet, Favor, Series } from "../lib/types.ts";
 import { RulesList } from "./Rules.tsx";
 
 /** Shared pool: who has agreed to this favor, and a toggle for everyone but its author. */
@@ -114,6 +114,7 @@ export default function Lobby({ s }: { s: Series }) {
   const { me, api } = useStore();
   const nav = useNavigate();
   const [writing, setWriting] = useState(false);
+  const [editing, setEditing] = useState<Bet | null>(null);
   const isHost = s.hostId === me;
   const member = s.members.find((m) => m.userId === me);
   const playing = isParticipant(s, me);
@@ -173,15 +174,25 @@ export default function Lobby({ s }: { s: Series }) {
               <div className="people">
                 {s.bets.length === 0 && <span className="hint">No bets written yet.</span>}
                 {s.bets.map((b, i) => (
-                  <div key={b.id} className="person">
-                    <span>
-                      <span className="num dim">{String(i + 1).padStart(2, "0")} </span>
-                      <span className="bright">{b.question}</span>
+                  <div key={b.id} className="person draft-row">
+                    <span className="stack" style={{ gap: 4 }}>
+                      <span>
+                        <span className="num dim">{String(i + 1).padStart(2, "0")} </span>
+                        <span className="bright">{b.question}</span>
+                      </span>
+                      <span className="hint">
+                        {b.kind === "binary" ? "Yes / No" : `${b.outcomes.map((o) => o.label).join(" · ")} — ${b.tieRule === "refund" ? "tie refunds" : "tie: first listed wins"}`}
+                      </span>
                     </span>
                     {isHost && (
-                      <button type="button" className="btn ghost sm" onClick={() => api.removeDraftBet(s.id, b.id)}>
-                        Remove
-                      </button>
+                      <span className="row" style={{ gap: 6 }}>
+                        <button type="button" className="btn ghost sm" onClick={() => setEditing(b)}>
+                          Edit
+                        </button>
+                        <button type="button" className="btn ghost sm" onClick={() => api.removeDraftBet(s.id, b.id)}>
+                          Remove
+                        </button>
+                      </span>
                     )}
                   </div>
                 ))}
@@ -277,6 +288,7 @@ export default function Lobby({ s }: { s: Series }) {
       </div>
 
       {writing && <NewBetModal s={s} onClose={() => setWriting(false)} />}
+      {editing && <NewBetModal s={s} bet={editing} onClose={() => setEditing(null)} />}
     </>
   );
 }

@@ -1,7 +1,7 @@
 /**
  * What the Bet Series API sends from GET /api/series/state, already in the
  * shape the screens use. The SQL that builds it is `_bs_series_json` in
- * supabase/migrations/202611140007_full_bet_series_rules.sql.
+ * supabase/migrations/202611140009_multi_outcome_bets.sql (first written in 0007).
  */
 
 export type Id = string;
@@ -10,7 +10,24 @@ export type Id = string;
 export type Mode = "money" | "pledge" | "pool";
 export type Tiebreak = "first" | "random";
 export type BetCreation = "upfront" | "during";
+/** Legacy YES/NO side names. Bets now use outcome ids; see Outcome. */
 export type Side = "yes" | "no";
+/** "binary" = YES/NO (the default). "multi" = 2 to 10 outcomes the host named. */
+export type BetKind = "binary" | "multi";
+/** What a multiple-choice bet does if the host reports a tie. Fixed before betting. */
+export type TieRule = "refund" | "first_listed";
+
+/** One possible result of a bet. Ids are stable; labels and order lock when betting opens. */
+export type Outcome = {
+  id: Id;
+  label: string;
+  /** 1-based order the host listed it in. */
+  position: number;
+  /** Coins wagered on this outcome. */
+  pool: number;
+  /** Players with coins on it. */
+  backers: number;
+};
 
 export type Settings = {
   /** Total bets in the series. */
@@ -58,26 +75,37 @@ export type BetStatus = "draft" | "open" | "closed" | "resolved" | "canceled";
 
 export type Wager = {
   userId: Id;
-  side: Side;
+  /** The outcome this player is on (one per bet; they can add to it but not switch). */
+  outcomeId: Id;
+  /** That outcome's label, lowercased. Kept for older code; use outcomeId. */
+  side: string;
   amount: number;
   /** When this player first put coins on the bet. */
   firstAt: string;
   updatedAt: string;
 };
 
-export type BetResult = { userId: Id; stake: number; payout: number; net: number; firstAt: string };
+export type BetResult = { userId: Id; outcomeId?: Id | null; stake: number; payout: number; net: number; firstAt: string };
 
 export type Bet = {
   id: Id;
   question: string;
   createdAt: string;
   position: number;
+  kind: BetKind;
+  tieRule: TieRule;
+  /** In the order the host listed them. YES/NO bets have YES then NO. */
+  outcomes: Outcome[];
   status: BetStatus;
   openedAt?: string | null;
   closedAt?: string | null;
   settledAt?: string | null;
-  /** Null on a resolved bet means it was refunded when the host locked a one-sided pool. */
-  outcome?: Side | null;
+  /** The winning outcome. Null on a resolved bet means it was refunded (one-sided pool, or a tie under the refund rule). */
+  outcomeId?: Id | null;
+  /** Set when the host reported a tie: the outcomes that tied. */
+  tiedOutcomeIds?: Id[] | null;
+  /** The winner's label, lowercased. Kept for older code; use outcomeId. */
+  outcome?: string | null;
   /** Order in which bets were resolved: 1, 2, 3… */
   seq?: number | null;
   /** True when everyone got their coins back (one-sided pool, nobody on the winning side, or canceled). */
@@ -150,3 +178,11 @@ export type AppState = { me: Me; serverTime: string; series: Series[] };
 
 /** What the screens read from the store. */
 export type Db = { series: Series[] };
+
+/** A bet as the host writes or edits it. Outcomes with an id are existing ones (kept on rename or move). */
+export type BetDraft = {
+  question: string;
+  kind: BetKind;
+  outcomes: { id?: Id; label: string }[];
+  tieRule: TieRule;
+};

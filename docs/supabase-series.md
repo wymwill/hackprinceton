@@ -24,7 +24,7 @@ Never use the `service_role` / secret key in either app. Only `scripts/e2e-serie
 
 ## Set up the project
 
-1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0008_avatar_uploads.sql` (the profile-picture bucket) is the newest; `0007_full_bet_series_rules.sql` holds the rules. It upgrades data made with 0001–0006 in place (tested in `supabase/tests/upgrade.test.mjs`).
+1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0009_multi_outcome_bets.sql` (multiple-choice bets) is the newest; `0007_full_bet_series_rules.sql` holds most of the rules. Each upgrades existing data in place: 0007 for data made with 0001–0006, and 0009 turns every existing bet into a YES/NO bet with outcome ids (both tested in `supabase/tests/upgrade.test.mjs`).
 2. **Turn on sign-in methods** (Authentication → Sign In / Providers). Email with password works with no setup. For Google, follow `docs/supabase-setup.md`.
 3. **Allow the redirect URLs** (Authentication → URL Configuration): add `http://localhost:3000/**`, and `https://<your-domain>/**` once deployed.
 4. Run it:
@@ -41,7 +41,7 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
 | --- | --- |
 | `GET /api/series/state` | Everything the app shows: you, the server clock, and every series you're in with members, favors, bets, wagers, results, standings, start blockers, assignments and activity |
 | `GET /api/series` | Your series (all statuses), newest first |
-| `POST /api/series` | Create a lobby. `{ title, description?, plannedBetCount, initialBankroll, loserCount, stakeMode: "SHARED_FAVOR_POOL" \| "PLEDGE" \| "MONEY", questions?: string[], settings?: { minContribution, favorsPerPlayer, exclusivePool, tiebreak: "first" \| "random", betCreation: "upfront" \| "during", withdrawMinutes, hostPlays } }` |
+| `POST /api/series` | Create a lobby. `{ title, description?, plannedBetCount, initialBankroll, loserCount, stakeMode: "SHARED_FAVOR_POOL" \| "PLEDGE" \| "MONEY", questions?: string[] (YES/NO) or bets?: [{ question, outcomes?: string[], tieRule?: "refund" \| "first_listed" }] (not both), settings?: { minContribution, favorsPerPlayer, exclusivePool, tiebreak: "first" \| "random", betCreation: "upfront" \| "during", withdrawMinutes, hostPlays } }` |
 | `POST /api/series/join` | Join by invite code `{ code }` |
 | `GET /api/series/:id` | One series with its roster |
 | `POST /api/series/:id/join` · `/leave` | Join by id (repeat is harmless) · leave the lobby |
@@ -51,11 +51,12 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
 | `POST /api/series/favors/:favorId/consent` | Agree or stop agreeing to someone's favor `{ consent }` (shared pool) |
 | `POST /api/series/:id/ready` | `{ ready }`; in a shared pool this also agrees to every favor in it |
 | `POST /api/series/:id/start` | Host starts: coins once, bets open, rules lock (repeat is harmless) |
-| `GET` · `POST /api/series/:id/bets` | List bets with wagers and results · host writes one `{ question }` |
+| `GET` · `POST /api/series/:id/bets` | List bets with wagers and results · host writes one `{ question, outcomes?: string[] (2–10), tieRule?: "refund" \| "first_listed" }`; no outcomes = YES/NO |
+| `PATCH /api/series/:id/bets/:betId` | Host edits a draft bet: `{ question?, kind?: "binary" \| "multi", outcomes?: [{ id?, label }] (in order; ids keep the outcome, missing ones are removed), tieRule? }`. 409 `outcomes_locked` once the bet has opened |
 | `DELETE /api/series/:id/bets/:betId` | Host deletes a bet that hasn't opened |
-| `POST /api/series/:id/bets/:betId/wagers` | `{ outcome: "YES" \| "NO", amount }` |
+| `POST /api/series/:id/bets/:betId/wagers` | `{ outcomeId, amount }` (the older `{ outcome: "YES" \| "NO", amount }` still works) |
 | `POST /api/series/:id/bets/:betId/withdraw` | Take your whole wager back inside the window |
-| `POST /api/series/:id/bets/:betId/lock` · `/resolve` · `/cancel` | Host stops wagers (one-sided pools refund at once) · settles `{ outcome }` · cancels with refunds |
+| `POST /api/series/:id/bets/:betId/lock` · `/resolve` · `/cancel` | Host stops wagers (one-sided pools refund at once) · settles `{ outcomeId }` (or `{ outcome: "YES" \| "NO" }`), or reports a tie on a multiple-choice bet with `{ tiedOutcomeIds: [2+ ids] }` · cancels with refunds |
 | `POST /api/series/:id/complete` | Host ends once nothing is open (it also ends itself after the last planned bet) |
 | `GET /api/series/:id/leaderboard` | rank, display_name, balance (settled), available, at_stake, is_loser |
 | `GET /api/series/:id/assignments` | What each loser owes and its status |
@@ -75,13 +76,16 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
   - in `upfront` mode, every bet is written.
 
   Starting hands out coins once, opens every written bet and draws the random tiebreak order.
-- **Wagers.** Add to your side, never switch. You can't spend more than your free coins. The host can bet too unless they sit out. Withdrawals are allowed for `withdrawMinutes` after a bet opens (0 = never).
+- **Bets and outcomes.** A bet is YES/NO (the default) or multiple choice: 2 to 10 outcomes, each 1 to 60 characters, unique ignoring case. Every outcome is a row in `series_bet_outcomes` with a stable id; wagers, winners and results point at it. The host can add, rename, reorder and remove outcomes, change the kind and set the tie rule only while the bet is a draft; they lock when betting on it opens (at start, or immediately for a bet added mid-series).
+- **Wagers.** Pick one of the bet's outcomes and add to it; never switch. You can't spend more than your free coins. The host can bet too unless they sit out. Withdrawals are allowed for `withdrawMinutes` after a bet opens (0 = never); withdrawing lets you pick again.
 - **Settling.** Winners split the whole pool by stake. Rounding leftovers go one coin each to the biggest winning stakes, earlier wager first, so payouts always add up to the pool. These cases refund everyone:
-  - one-sided pools;
-  - nobody on the winning side;
+  - one-sided pools (every coin on one outcome);
+  - nobody on the winning outcome;
+  - a tie under the `refund` rule;
   - cancels.
 
   Each bet settles exactly once, under a row lock.
+- **Ties (multiple choice).** There is only ever one winning outcome. Each multiple-choice bet fixes its tie rule before betting: `refund` (everyone gets their coins back) or `first_listed` (the earliest-listed tied outcome wins). The host reports which outcomes tied (2 or more); YES/NO bets can't tie.
 - **Standings.** Ranked by settled coins. Ties: "first" means first to reach the score, then the earlier wager on that bet, then join order. "random" uses the order drawn at start. The bottom X lose. The order freezes when the series ends.
 - **The end.**
   - Shared pool: rank i picks for rank n−i+1. They can only pick favors that loser wrote or agreed to. Exclusive pools pick in rank order, one favor each. The loser accepts or declines; a decline means the winner picks again. Nothing is binding until accepted.
@@ -94,6 +98,7 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
 | --- | --- | --- |
 | `npm run test:series-sql` | The migrations in an in-process Postgres (PGlite) with RLS, as the `authenticated` role | Nothing |
 | `node supabase/tests/local-supabase.mjs` | A stand-in Supabase (email Auth, RPC and simple table reads on PGlite) for running the whole app offline. Start the Next app and `frontend/` with `SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local`. In memory, test only | Nothing |
+| `npm run test:outcomes-local` | Multiple-choice bets over HTTP through the Next API, with users signed up on the stand-in. Start the stand-in and the Next app first (commands in the script header) | Nothing |
 | `npm run test:series` | The real project, with disposable users | `.env.local` and `.supabase-test-secret` |
 
 ## Notes

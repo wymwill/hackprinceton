@@ -18,7 +18,9 @@ export async function GET(req: NextRequest) {
 /**
  * Create a lobby; the caller hosts it.
  * Body: { title, description?, plannedBetCount, initialBankroll, loserCount,
- *   stakeMode: "SHARED_FAVOR_POOL" | "PLEDGE" | "MONEY", questions?: string[] (0..plannedBetCount),
+ *   stakeMode: "SHARED_FAVOR_POOL" | "PLEDGE" | "MONEY",
+ *   questions?: string[] (YES/NO bets) or bets?: [{ question, outcomes?: string[] (2..10), tieRule?: "refund" | "first_listed" }]
+ *     (0..plannedBetCount, not both),
  *   settings?: { minContribution, favorsPerPlayer, exclusivePool, tiebreak, betCreation, withdrawMinutes, hostPlays } }
  */
 export async function POST(req: NextRequest) {
@@ -34,6 +36,7 @@ export async function POST(req: NextRequest) {
         p_stake_mode: text(body.stakeMode),
         p_questions: Array.isArray(body.questions) ? body.questions.map(text) : [],
         p_settings: body.settings && typeof body.settings === "object" ? body.settings : {},
+        ...(Array.isArray(body.bets) ? { p_bets: body.bets } : {}),
       }),
     201
   );
