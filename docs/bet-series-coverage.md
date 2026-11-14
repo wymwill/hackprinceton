@@ -85,6 +85,7 @@ As of 2026-11-14 every item is covered.
 | Host adds, renames, reorders, removes outcomes; they lock when betting opens | Outcome editor; Lobby → Edit | `PATCH …/bets/:betId` (`outcomes_locked` after opening) | "renames, reorders, adds and removes…", "outcomes lock when betting opens" |
 | Numerical ranges: unit, precision, generated or manual ranges, open ends, no gaps/overlaps | Series creation and New bet dialog → Numerical range | `POST …/bets` `{ kind: "range", ranges, unit, decimals }` (0010) | ranges suite: "creating range bets" |
 | Host enters the measured value; the matching range wins | Bet page, Host controls → Actual result | `…/resolve` `{ value }` | ranges suite: "the temperature market" |
+| Pledge changes un-ready everyone; favors show who pledged them | Lobby → Pledged favors | `propose_series_favor` / `withdraw_series_favor` (0011) | "pledge mode: changing or taking back a pledge un-readies everyone…" |
 | Ties decided by a rule set before betting | Bet page, Host controls → It's a tie | `…/resolve` `{ tiedOutcomeIds }`, tie rule `refund` / `first_listed` | ties suite |
 | Several bets open at once | Dashboard, Open tab | all written bets open at start | "coins are handed out…" (bet open) |
 | Pick a side and wager; add more | Bet page ticket | `…/wagers` | "add to your side, never switch, never overspend…" |

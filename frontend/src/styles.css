@@ -1943,6 +1943,14 @@ img.avatar {
   gap: 10px;
 }
 
+/* favors: who pledged or added each one */
+.favor-row {
+  align-items: flex-start;
+}
+.favor-by {
+  font-size: 13px;
+}
+
 /* numerical ranges */
 .gen-row {
   display: grid;
