@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "bookie", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 3000 }
+    { "name": "bookie", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 3000 },
+    { "name": "bwf-dev", "runtimeExecutable": "npx", "runtimeArgs": ["next", "dev", "-p", "3100"], "port": 3100 }
   ]
 }
