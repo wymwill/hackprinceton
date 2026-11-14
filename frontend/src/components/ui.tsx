@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { pools } from "../lib/rules.ts";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { outcomeColor, shares } from "../lib/rules.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Bet, Id } from "../lib/types.ts";
 
@@ -60,13 +60,27 @@ export const Pill = ({ kind, children }: { kind: string; children: ReactNode }) 
   </span>
 );
 
+/** Each outcome's share of the pool, as one bar split by color. */
 export function PoolBar({ bet }: { bet: Bet }) {
-  const p = pools(bet);
+  const { total, list } = shares(bet);
+  const label = total ? list.map((o) => `${o.label} ${o.pct}%`).join(", ") : "No coins yet";
   return (
-    <div className={`pbar ${p.total ? "" : "empty"}`} aria-label={`${p.yesPct}% of coins on YES`}>
-      {p.total > 0 && <i className="y" style={{ width: `${p.yesPct}%` }} />}
-      <i className="n" />
+    <div className={`pbar ${total ? "" : "empty"}`} role="img" aria-label={`Pool share: ${label}`}>
+      {total > 0 &&
+        list.filter((o) => o.pool > 0).map((o) => <i key={o.id} title={`${o.label} · ${o.pct}%`} style={{ width: `${(o.pool / total) * 100}%`, background: o.color }} />)}
     </div>
+  );
+}
+
+/** A colored dot and label for one outcome. */
+export function OutcomeTag({ bet, id, strong = true }: { bet: Bet; id?: string | null; strong?: boolean }) {
+  const i = bet.outcomes.findIndex((o) => o.id === id);
+  if (i < 0) return <span className="dim">–</span>;
+  const Tag = strong ? "b" : "span";
+  return (
+    <Tag className="otag" style={{ "--oc": outcomeColor(i) } as CSSProperties}>
+      {bet.outcomes[i].label}
+    </Tag>
   );
 }
 
@@ -98,13 +112,14 @@ export function Who({ id, suffix }: { id: Id; suffix?: ReactNode }) {
 
 /** A button that asks once more before doing something that can't be undone. */
 export function ConfirmButton({
-  label, confirm, onConfirm, className = "btn", disabled,
+  label, confirm, onConfirm, className = "btn", disabled, style,
 }: {
   label: ReactNode;
   confirm: ReactNode;
   onConfirm: () => void;
   className?: string;
   disabled?: boolean;
+  style?: CSSProperties;
 }) {
   const [armed, setArmed] = useState(false);
   useEffect(() => {
@@ -116,6 +131,7 @@ export function ConfirmButton({
     <button
       type="button"
       className={`${className} ${armed ? "primary" : ""}`}
+      style={style}
       disabled={disabled}
       onClick={() => {
         if (armed) {

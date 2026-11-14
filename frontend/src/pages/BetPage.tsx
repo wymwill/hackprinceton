@@ -1,23 +1,29 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ConfirmButton, Panel, Pill, PoolBar, Who } from "../components/ui.tsx";
-import { balances, isParticipant, payoutIfWins, pools, withdrawUntil } from "../lib/rules.ts";
+import { ConfirmButton, OutcomeTag, Panel, Pill, PoolBar, Who } from "../components/ui.tsx";
+import { balances, findOutcome, isParticipant, labelOf, leader, payoutIfWins, resultText, shares, TIE_RULE_TEXT, withdrawUntil } from "../lib/rules.ts";
 import { ago, countdown, fmt, signed, useNow } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Bet, Series, Side } from "../lib/types.ts";
+import type { Bet, Id, Series } from "../lib/types.ts";
 
-function SideColumn({ bet, side }: { bet: Bet; side: Side }) {
+/** YES/NO keep their yes/no styling; other outcomes use their own color (--oc). */
+const tone = (bet: Bet, i: number) => (bet.kind === "binary" ? (i === 0 ? "yes" : "no") : "oc");
+const ocStyle = (color: string) => ({ "--oc": color }) as CSSProperties;
+
+/** Who has coins on one outcome, biggest first. */
+function OutcomeColumn({ bet, id }: { bet: Bet; id: Id }) {
   const { me } = useStore();
-  const list = bet.wagers.filter((w) => w.side === side).sort((a, b) => b.amount - a.amount);
-  const total = list.reduce((a, w) => a + w.amount, 0);
+  const { list } = shares(bet);
+  const o = list.find((x) => x.id === id)!;
+  const wagers = bet.wagers.filter((w) => w.outcomeId === id).sort((a, b) => b.amount - a.amount);
   const max = Math.max(1, ...bet.wagers.map((w) => w.amount));
   return (
-    <div className={`side-col ${side}`}>
+    <div className={`side-col ${tone(bet, o.index)}`} style={ocStyle(o.color)}>
       <h4>
-        {side.toUpperCase()} <span>{fmt(total)}</span>
+        {o.label} <span>{fmt(o.pool)}</span>
       </h4>
-      {list.length === 0 && <div className="side-empty">Nobody yet.</div>}
-      {list.map((w) => (
+      {wagers.length === 0 && <div className="side-empty">Nobody yet.</div>}
+      {wagers.map((w) => (
         <div key={w.userId} className={`lvl ${w.userId === me ? "mine" : ""}`}>
           <i className="bar" style={{ width: `${(w.amount / max) * 100}%` }} />
           <Who id={w.userId} />
@@ -32,30 +38,60 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
   const { me, api, skew } = useStore();
   const [params] = useSearchParams();
   const mine = bet.wagers.find((w) => w.userId === me);
-  const [pick, setPick] = useState<Side>(mine?.side ?? (params.get("side") === "no" ? "no" : "yes"));
+  const { list, total } = shares(bet);
+  // A link can preselect an outcome: ?outcome=<id>, or the older ?side=yes|no.
+  const [pick, setPick] = useState<Id>(() => mine?.outcomeId ?? findOutcome(bet, params.get("outcome") ?? params.get("side"))?.id ?? list[0].id);
   const [amount, setAmount] = useState(50);
   const now = useNow(1000) + skew;
-  const side = mine?.side ?? pick;
+  const chosen = list.find((o) => o.id === (mine?.outcomeId ?? pick)) ?? list[0];
   const free = balances(s).get(me)?.available ?? 0;
   const until = withdrawUntil(bet, s.settings);
   const canWithdraw = !!mine && until !== null && now < until;
-  const payout = payoutIfWins(bet, me, side, amount > 0 ? amount : 0);
+  const payout = payoutIfWins(bet, me, chosen.id, amount > 0 ? amount : 0);
   const stake = (mine?.amount ?? 0) + (amount > 0 ? amount : 0);
+  const binary = bet.kind === "binary";
 
   return (
     <Panel label={mine ? "Add to your wager" : "Place a wager"} className="ticket" right={`${fmt(free)} free`}>
-      <div className="seg">
-        <button type="button" className={side === "yes" ? "on yes" : ""} disabled={!!mine && mine.side !== "yes"} onClick={() => setPick("yes")}>
-          Yes
-        </button>
-        <button type="button" className={side === "no" ? "on no" : ""} disabled={!!mine && mine.side !== "no"} onClick={() => setPick("no")}>
-          No
-        </button>
-      </div>
+      {binary ? (
+        <div className="seg" role="radiogroup" aria-label="Your pick">
+          {list.map((o, i) => (
+            <button
+              key={o.id}
+              type="button"
+              role="radio"
+              aria-checked={chosen.id === o.id}
+              className={chosen.id === o.id ? `on ${i === 0 ? "yes" : "no"}` : ""}
+              disabled={!!mine && mine.outcomeId !== o.id}
+              onClick={() => setPick(o.id)}
+            >
+              {i === 0 ? "Yes" : "No"}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="opick" role="radiogroup" aria-label="Your pick">
+          {list.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              role="radio"
+              aria-checked={chosen.id === o.id}
+              className={chosen.id === o.id ? "on" : ""}
+              style={ocStyle(o.color)}
+              disabled={!!mine && mine.outcomeId !== o.id}
+              onClick={() => setPick(o.id)}
+            >
+              <span className="lbl">{o.label}</span>
+              <span className="num">{total ? `${o.pct}%` : "–"}</span>
+            </button>
+          ))}
+        </div>
+      )}
       {mine && (
         <p className="hint">
-          You're on <b className={mine.side === "yes" ? "yes-t" : "no-t"}>{mine.side.toUpperCase()}</b> with {fmt(mine.amount)} coins.
-          {canWithdraw ? " Withdraw to switch sides." : " You can add more to your side."}
+          You're on <OutcomeTag bet={bet} id={mine.outcomeId} /> with {fmt(mine.amount)} coins.
+          {canWithdraw ? " Withdraw to pick something else." : " You can add more to it."}
         </p>
       )}
       <label className="field">
@@ -77,7 +113,7 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
           Your stake <b>{fmt(stake)}</b>
         </div>
         <div className="kv win">
-          If {side.toUpperCase()} wins <b>{fmt(payout)}</b>
+          If {chosen.label} wins <b>{fmt(payout)}</b>
         </div>
         <div className="kv">
           Profit <b>{signed(payout - stake)}</b>
@@ -88,11 +124,12 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
       </div>
       <button
         type="button"
-        className={`submit ${side}`}
+        className={`submit ${binary ? (chosen.index === 0 ? "yes" : "no") : "oc"}`}
+        style={binary ? undefined : ocStyle(chosen.color)}
         disabled={!(amount >= 1) || amount > free}
-        onClick={() => api.wager(s.id, bet.id, side, amount, `${fmt(amount)} on ${side.toUpperCase()}.`)}
+        onClick={() => api.wager(s.id, bet.id, chosen.id, amount, `${fmt(amount)} on ${chosen.label}.`)}
       >
-        {mine ? "Add" : "Bet"} {fmt(amount > 0 ? amount : 0)} on {side.toUpperCase()}
+        {mine ? "Add" : "Bet"} {fmt(amount > 0 ? amount : 0)} on {chosen.label}
       </button>
       {canWithdraw && (
         <ConfirmButton
@@ -107,9 +144,45 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
   );
 }
 
+/** Multiple choice only: the host ticks the outcomes that tied, and the bet's tie rule decides. */
+function TieReport({ s, bet }: { s: Series; bet: Bet }) {
+  const { api } = useStore();
+  const [tied, setTied] = useState<Id[]>([]);
+  const first = bet.outcomes.find((o) => tied.includes(o.id));
+  return (
+    <details className="tie-report">
+      <summary>It's a tie</summary>
+      <div className="stack" style={{ marginTop: 10 }}>
+        <p className="hint">{TIE_RULE_TEXT[bet.tieRule]} This was set before betting started.</p>
+        {bet.outcomes.map((o) => (
+          <label key={o.id} className="check">
+            <input
+              type="checkbox"
+              checked={tied.includes(o.id)}
+              onChange={(e) => setTied((t) => (e.target.checked ? [...t, o.id] : t.filter((x) => x !== o.id)))}
+            />
+            <span>{o.label}</span>
+          </label>
+        ))}
+        <ConfirmButton
+          className="btn"
+          disabled={tied.length < 2}
+          label={tied.length < 2 ? "Pick at least two" : `Report a ${tied.length}-way tie`}
+          confirm={bet.tieRule === "refund" ? "Refund everyone?" : `${first?.label} wins as listed first. Confirm?`}
+          onConfirm={() =>
+            api.resolveTie(s.id, bet.id, tied, bet.tieRule === "refund" ? "Tie: everyone got their coins back." : `Tie: ${first?.label} wins as listed first.`)
+          }
+        />
+      </div>
+    </details>
+  );
+}
+
 function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
   const { api } = useStore();
   if (bet.status !== "open" && bet.status !== "closed") return null;
+  const { list } = shares(bet);
+  const binary = bet.kind === "binary";
   return (
     <Panel label="Host controls">
       <div className="stack">
@@ -118,14 +191,23 @@ function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
             <button type="button" className="btn" onClick={() => api.lockBet(s.id, bet.id, "Betting locked.")}>
               Lock betting
             </button>
-            <p className="hint">Stops new wagers. If everyone is on one side, locking refunds them right away.</p>
+            <p className="hint">Stops new wagers. If every coin is on one outcome, locking refunds them right away.</p>
           </>
         )}
-        <span className="cap">Resolve</span>
-        <div className="resolve-grid">
-          <ConfirmButton className="y" label="Yes" confirm="Confirm YES" onConfirm={() => api.resolveBet(s.id, bet.id, "yes", "Resolved YES.")} />
-          <ConfirmButton className="n" label="No" confirm="Confirm NO" onConfirm={() => api.resolveBet(s.id, bet.id, "no", "Resolved NO.")} />
+        <span className="cap">Resolve: what happened?</span>
+        <div className={binary ? "resolve-grid" : "resolve-list"}>
+          {list.map((o, i) => (
+            <ConfirmButton
+              key={o.id}
+              className={binary ? (i === 0 ? "y" : "n") : "oc"}
+              style={binary ? undefined : ocStyle(o.color)}
+              label={binary ? (i === 0 ? "Yes" : "No") : o.label}
+              confirm={`Confirm ${o.label}`}
+              onConfirm={() => api.resolveBet(s.id, bet.id, o.id, `Resolved: ${o.label}.`)}
+            />
+          ))}
         </div>
+        {!binary && <TieReport s={s} bet={bet} />}
         <ConfirmButton
           className="btn danger"
           label="Cancel bet"
@@ -140,11 +222,15 @@ function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
 
 export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
   const { me, name, skew } = useStore();
-  const p = pools(bet);
+  const { total, list } = shares(bet);
+  const top = leader(bet);
   const now = useNow(1000) + skew;
   const until = withdrawUntil(bet, s.settings);
   const playing = isParticipant(s, me);
   const index = s.bets.indexOf(bet) + 1;
+  const binary = bet.kind === "binary";
+  const winner = list.find((o) => o.id === bet.outcomeId);
+  const tied = bet.tiedOutcomeIds ?? [];
 
   return (
     <>
@@ -154,12 +240,13 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
             <Pill kind={bet.status}>{bet.status === "closed" ? "Betting locked" : bet.status}</Pill>
             <span className="cap">
               Bet {index} of {s.settings.betCount}
+              {!binary && ` · ${bet.outcomes.length} options`}
             </span>
           </span>
           <h1 style={{ marginTop: 14 }}>{bet.question}</h1>
           <div className="sub">
             <span>
-              Pool <b className="num">{fmt(p.total)}</b>
+              Pool <b className="num">{fmt(total)}</b>
             </span>
             <span>
               Players <b>{bet.wagers.length}</b>
@@ -178,29 +265,37 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
               </span>
             )}
           </div>
+          {!binary && <p className="hint" style={{ marginTop: 8 }}>{TIE_RULE_TEXT[bet.tieRule]}</p>}
         </div>
-        <div className="readout">
+        {(bet.status === "open" || bet.status === "closed") && (
+        <div className="readout" title="Share of the coins in the pool, not a probability">
           <div className="v">
-            {p.yesPct}
-            <small>%</small>
+            {!total ? "–" : binary ? list[0].pct : top!.pct}
+            {total > 0 && <small>%</small>}
           </div>
-          <span className="cap">of coins on yes</span>
+          <span className="cap">{!total ? "no coins yet" : binary ? "of the pool on yes" : `of the pool on ${top!.label}`}</span>
         </div>
+        )}
       </section>
 
       <div className="grid2">
         <div className="col">
           {bet.status === "resolved" && (
             <Panel className="outcome-banner-wrap" bodyClass="outcome-banner">
-              <span className={`o ${bet.outcome === "yes" ? "yes-t" : bet.outcome === "no" ? "no-t" : "dim"}`}>
-                {bet.outcome ? bet.outcome.toUpperCase() : "Refunded"}
+              <span className="o otag" style={winner ? ocStyle(winner.color) : undefined}>
+                {winner ? winner.label : tied.length ? "Tie" : "Refunded"}
               </span>
               <span className="lead">
-                {bet.refunded
-                  ? bet.outcome
-                    ? "Nobody was on the other side, so every coin went back."
-                    : "Everyone was on one side when betting locked, so every coin went back."
-                  : "Winners split the pool in proportion to their stakes."}
+                {tied.length
+                  ? bet.outcomeId
+                    ? `${tied.map((id) => labelOf(bet, id)).join(" and ")} tied. ${labelOf(bet, bet.outcomeId)} was listed first, so it wins.` +
+                      (bet.refunded ? " Nobody was on it alone, so every coin went back." : "")
+                    : `${tied.map((id) => labelOf(bet, id)).join(" and ")} tied, so every coin went back.`
+                  : bet.refunded
+                    ? bet.outcomeId
+                      ? "Nobody was on another outcome, so every coin went back."
+                      : "Every coin was on one outcome when betting locked, so it all went back."
+                    : "Winners split the pool in proportion to their stakes."}
               </span>
             </Panel>
           )}
@@ -212,17 +307,19 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
           <Panel label="Who's on what" right="Visible to everyone">
             <PoolBar bet={bet} />
             <div style={{ height: 16 }} />
-            <div className="sides">
-              <SideColumn bet={bet} side="yes" />
-              <SideColumn bet={bet} side="no" />
+            <div className={`sides ${binary ? "" : "many"}`}>
+              {list.map((o) => (
+                <OutcomeColumn key={o.id} bet={bet} id={o.id} />
+              ))}
             </div>
           </Panel>
           {bet.results && bet.status === "resolved" && (
-            <Panel label="Payouts">
+            <Panel label="Payouts" right={resultText(bet)}>
               <table className="table">
                 <thead>
                   <tr>
                     <th>Player</th>
+                    <th>Pick</th>
                     <th className="r">Stake</th>
                     <th className="r">Paid</th>
                     <th className="r">Net</th>
@@ -233,6 +330,9 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
                     <tr key={r.userId} className={r.userId === me ? "me" : ""}>
                       <td>
                         <Who id={r.userId} />
+                      </td>
+                      <td>
+                        <OutcomeTag bet={bet} id={r.outcomeId} strong={false} />
                       </td>
                       <td className="r num">{fmt(r.stake)}</td>
                       <td className="r num">{fmt(r.payout)}</td>

@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Session } from "@supabase/supabase-js";
 import SignIn from "../pages/SignIn.tsx";
 import { supabase } from "./supabase.ts";
-import type { AppState, Db, Id, Me, Series, Settings, Side } from "./types.ts";
+import type { AppState, BetDraft, Db, Id, Me, Series, Settings } from "./types.ts";
 
 /**
  * Talks to the Bet Series API (src/app/api/series in the Next app, rules in
@@ -43,9 +43,15 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return (data as { result: T }).result;
 }
 
-type Act = <T = unknown>(method: "POST" | "DELETE", path: string, body?: unknown, okText?: string) => Promise<T | undefined>;
+type Act = <T = unknown>(method: "POST" | "PATCH" | "DELETE", path: string, body?: unknown, okText?: string) => Promise<T | undefined>;
 
-export type CreateSeriesInput = { name: string; description: string; settings: Settings; questions: string[] };
+export type CreateSeriesInput = { name: string; description: string; settings: Settings; bets: BetDraft[] };
+
+/** A draft as the API wants it. YES/NO bets send no outcomes. */
+const betBody = (d: BetDraft) =>
+  d.kind === "multi"
+    ? { question: d.question.trim(), outcomes: d.outcomes.map((o) => o.label.trim()), tieRule: d.tieRule }
+    : { question: d.question.trim() };
 
 const STAKE_MODE: Record<Settings["mode"], string> = { pool: "SHARED_FAVOR_POOL", pledge: "PLEDGE", money: "MONEY" };
 
@@ -54,7 +60,7 @@ function makeApi(act: Act) {
   const s = (id: Id) => `/series/${encodeURIComponent(id)}`;
   const b = (id: Id, betId: Id) => `${s(id)}/bets/${encodeURIComponent(betId)}`;
   return {
-    createSeries: ({ name, description, settings: st, questions }: CreateSeriesInput, ok?: string) =>
+    createSeries: ({ name, description, settings: st, bets }: CreateSeriesInput, ok?: string) =>
       act<{ id: Id }>(
         "POST",
         "/series",
@@ -65,7 +71,7 @@ function makeApi(act: Act) {
           initialBankroll: st.startingCoins,
           loserCount: st.losers,
           stakeMode: STAKE_MODE[st.mode],
-          questions,
+          bets: bets.map(betBody),
           settings: {
             minContribution: st.minContribution,
             favorsPerPlayer: st.favorsPerPlayer,
@@ -88,13 +94,25 @@ function makeApi(act: Act) {
       act("POST", `/series/favors/${encodeURIComponent(favorId)}/consent`, { consent }, ok),
     setReady: (id: Id, ready: boolean, ok?: string) => act("POST", `${s(id)}/ready`, { ready }, ok),
     start: (id: Id, ok?: string) => act("POST", `${s(id)}/start`, undefined, ok),
-    addBet: (id: Id, question: string, ok?: string) => act("POST", `${s(id)}/bets`, { question }, ok),
+    addBet: (id: Id, draft: BetDraft, ok?: string) => act("POST", `${s(id)}/bets`, betBody(draft), ok),
+    /** Edit a draft bet. Outcomes keep their ids, so renames and moves don't lose anything. */
+    updateBet: (id: Id, betId: Id, d: BetDraft, ok?: string) =>
+      act(
+        "PATCH",
+        b(id, betId),
+        d.kind === "multi"
+          ? { question: d.question.trim(), kind: "multi", outcomes: d.outcomes.map((o) => ({ id: o.id, label: o.label.trim() })), tieRule: d.tieRule }
+          : { question: d.question.trim(), kind: "binary" },
+        ok
+      ),
     removeDraftBet: (id: Id, betId: Id, ok?: string) => act("DELETE", b(id, betId), undefined, ok),
-    wager: (id: Id, betId: Id, side: Side, amount: number, ok?: string) =>
-      act("POST", `${b(id, betId)}/wagers`, { outcome: side.toUpperCase(), amount }, ok),
+    wager: (id: Id, betId: Id, outcomeId: Id, amount: number, ok?: string) =>
+      act("POST", `${b(id, betId)}/wagers`, { outcomeId, amount }, ok),
     withdraw: (id: Id, betId: Id, ok?: string) => act("POST", `${b(id, betId)}/withdraw`, undefined, ok),
     lockBet: (id: Id, betId: Id, ok?: string) => act("POST", `${b(id, betId)}/lock`, undefined, ok),
-    resolveBet: (id: Id, betId: Id, outcome: Side, ok?: string) => act("POST", `${b(id, betId)}/resolve`, { outcome: outcome.toUpperCase() }, ok),
+    resolveBet: (id: Id, betId: Id, outcomeId: Id, ok?: string) => act("POST", `${b(id, betId)}/resolve`, { outcomeId }, ok),
+    /** Multiple-choice only: these outcomes tied. The bet's tie rule decides the result. */
+    resolveTie: (id: Id, betId: Id, tiedOutcomeIds: Id[], ok?: string) => act("POST", `${b(id, betId)}/resolve`, { tiedOutcomeIds }, ok),
     cancelBet: (id: Id, betId: Id, ok?: string) => act("POST", `${b(id, betId)}/cancel`, undefined, ok),
     completeSeries: (id: Id, ok?: string) => act("POST", `${s(id)}/complete`, undefined, ok),
     chooseFavor: (id: Id, loserId: Id, favorId: Id, ok?: string) => act("POST", `${s(id)}/favors/assign`, { loserId, favorId }, ok),

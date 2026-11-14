@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { StandingsTable } from "../components/Standings.tsx";
-import { ConfirmButton, Panel, Pill, Who } from "../components/ui.tsx";
-import { agreesTo, standings } from "../lib/rules.ts";
+import { ConfirmButton, OutcomeTag, Panel, Pill, Who } from "../components/ui.tsx";
+import { agreesTo, resultText, standings } from "../lib/rules.ts";
 import { MODE_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Assignment, Series } from "../lib/types.ts";
@@ -216,9 +216,7 @@ export default function Results({ s }: { s: Series }) {
                     <span className="num dim">{String(i + 1).padStart(2, "0")} </span>
                     <span className="bright">{b.question}</span>
                   </span>
-                  <span className={b.outcome === "yes" ? "yes-t" : b.outcome === "no" ? "no-t" : "dim"}>
-                    {b.status === "canceled" ? "Canceled" : b.outcome ? b.outcome.toUpperCase() : "Refunded"}
-                  </span>
+                  {b.outcomeId && b.status !== "canceled" ? <OutcomeTag bet={b} id={b.outcomeId} /> : <span className="dim">{resultText(b)}</span>}
                 </Link>
               ))}
             </div>
