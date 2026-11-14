@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { AuthMode } from "@/lib/authConfig";
-import { Button, card } from "@/components/ui";
+import { Button, card, input } from "@/components/ui";
 
-/** Sign in with Google through Supabase. In demo mode there's nothing to sign in to. */
+/** Sign in with Google or email through Supabase. In demo mode there's nothing to sign in to. */
 export default function Login({ mode, supabase }: { mode: AuthMode; supabase: { url: string; key: string } | null }) {
   const params = useSearchParams();
   const next = params.get("next") ?? "/";
@@ -22,6 +22,47 @@ export default function Login({ mode, supabase }: { mode: AuthMode; supabase: { 
       .then((s: { external?: Record<string, boolean> } | null) => setGoogleOn(s ? (s.external?.google ?? false) : null))
       .catch(() => setGoogleOn(null));
   }, [supabase]);
+
+  // Email and password: works without any provider setup, so people can get in before Google is on.
+  const [emailMode, setEmailMode] = useState<"in" | "up">("in");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const emailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    const client = createBrowserClient(supabase.url, supabase.key);
+    if (emailMode === "in") {
+      const { error } = await client.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message === "Email not confirmed" ? "Confirm your email first: check your inbox for the link." : error.message);
+        setBusy(false);
+        return;
+      }
+      // The session is in cookies now; a full load lets the server see it.
+      window.location.assign(next);
+      return;
+    }
+    const { data, error } = await client.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name.trim() || undefined },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
+    });
+    if (error) setError(error.message);
+    else if (data.session) {
+      window.location.assign(next);
+      return;
+    } else setNotice("Check your email to confirm your account, then sign in.");
+    setBusy(false);
+  };
 
   const signIn = async () => {
     if (!supabase) return;
@@ -59,7 +100,43 @@ export default function Login({ mode, supabase }: { mode: AuthMode; supabase: { 
         )}
 
         {mode === "supabase" && googleOn === false && (
-          <p className="font-body-sm text-body-sm text-on-surface-variant">Google sign-in isn't turned on in Supabase yet. See <code className="font-num text-on-surface">docs/supabase-setup.md</code>, step 3.</p>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">Google sign-in isn't set up yet. Use email for now.</p>
+        )}
+
+        {mode === "supabase" && (
+          <>
+            <div className="w-full flex items-center gap-3 font-body-sm text-body-sm text-on-surface-variant" aria-hidden>
+              <span className="h-px flex-1 bg-outline-variant" />
+              or with email
+              <span className="h-px flex-1 bg-outline-variant" />
+            </div>
+            <form onSubmit={emailSubmit} className="w-full flex flex-col gap-3 text-left">
+              {emailMode === "up" && <input className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" maxLength={40} autoComplete="name" aria-label="Your name" />}
+              <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" autoComplete="email" required aria-label="Email" />
+              <input
+                className={input}
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                minLength={6}
+                autoComplete={emailMode === "in" ? "current-password" : "new-password"}
+                required
+                aria-label="Password"
+              />
+              <Button type="submit" tone="primary" className="w-full h-11" disabled={busy}>
+                {emailMode === "in" ? "Sign in" : "Create account"}
+              </Button>
+            </form>
+            <button
+              type="button"
+              className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface"
+              onClick={() => (setEmailMode(emailMode === "in" ? "up" : "in"), setError(null), setNotice(null))}
+            >
+              {emailMode === "in" ? "New here? Create an account" : "Have an account? Sign in"}
+            </button>
+            {notice && <p className="w-full rounded-xl bg-primary-container/10 ring-1 ring-primary-container/40 px-3 py-2 font-body-sm text-body-sm text-on-surface">{notice}</p>}
+          </>
         )}
 
         {mode === "unconfigured" && (

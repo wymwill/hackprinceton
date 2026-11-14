@@ -32,7 +32,7 @@ export async function identify(req: NextRequest): Promise<Identity> {
   const meta = (claims.user_metadata ?? {}) as Record<string, unknown>;
   const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
   const email = str(claims.email);
-  const name = (str(meta.full_name) ?? str(meta.name) ?? email?.split("@")[0] ?? "Friend").slice(0, 40);
+  const name = (str(meta.display_name) ?? str(meta.full_name) ?? str(meta.name) ?? email?.split("@")[0] ?? "Friend").slice(0, 40);
   const avatar = str(meta.avatar_url) ?? str(meta.picture);
   return { kind: "supabase", authId: claims.sub, name, avatarUrl: avatar?.startsWith("https://") ? avatar : undefined };
 }
