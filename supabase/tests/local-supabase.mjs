@@ -8,18 +8,21 @@
 // by the real migrations in PGlite. Data lives in memory and is gone when it
 // stops. Never point real users at it.
 //
+// Admin: POST /auth/v1/admin/users and DELETE /auth/v1/admin/users/:id, with SERVICE_KEY as the bearer.
 // Test hook: POST /__test/realtime/drop closes every Realtime connection, so tests
 // can check that clients reconnect and catch up without duplicates.
 //
 //   node supabase/tests/local-supabase.mjs            # http://localhost:54399
 //   SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local npm run dev
+//   MIGRATIONS_UP_TO=202611140013 node supabase/tests/local-supabase.mjs   # a database without clan chat
 import http from "node:http";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { createDb } from "./harness.mjs";
 
 const PORT = Number(process.env.PORT ?? 54399);
 const SECRET = randomBytes(32);
-const t = await createDb();
+// MIGRATIONS_UP_TO=202611140013 stops before that migration, to see how the app behaves on a database that's behind.
+const t = await createDb({ upTo: process.env.MIGRATIONS_UP_TO || undefined });
 const accounts = new Map(); // email -> { id, password, meta }
 const refreshTokens = new Map(); // token -> user id
 
@@ -228,6 +231,28 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, userJson(accounts.get(claims.email), claims.email));
     }
     if (url.pathname === "/auth/v1/logout") return send(res, 204);
+    // Admin user management, for scripts that make temporary users. Needs SERVICE_KEY as the bearer.
+    if (url.pathname.startsWith("/auth/v1/admin/users")) {
+      if (!process.env.SERVICE_KEY || bearer !== process.env.SERVICE_KEY) return authError(res, 401, "This endpoint requires a valid service key.");
+      if (req.method === "POST" && url.pathname === "/auth/v1/admin/users") {
+        const { email, password, user_metadata } = await readBody(req);
+        if (accounts.has(email)) return authError(res, 422, "User already registered");
+        const id = randomUUID();
+        accounts.set(email, { id, password, meta: user_metadata ?? {} });
+        await t.db.query("insert into auth.users(id, email, raw_user_meta_data) values ($1, $2, $3)", [id, email, user_metadata ?? {}]);
+        return send(res, 200, userJson(accounts.get(email), email));
+      }
+      const dm = url.pathname.match(/^\/auth\/v1\/admin\/users\/([0-9a-f-]{36})$/);
+      if (req.method === "GET" && dm) {
+        const found = [...accounts].find(([, a]) => a.id === dm[1]);
+        return found ? send(res, 200, userJson(found[1], found[0])) : authError(res, 404, "User not found");
+      }
+      if (req.method === "DELETE" && dm) {
+        await t.db.query("delete from auth.users where id = $1", [dm[1]]);
+        for (const [email, a] of accounts) if (a.id === dm[1]) accounts.delete(email);
+        return send(res, 200, {});
+      }
+    }
     if (url.pathname === "/__test/realtime/drop" && req.method === "POST") {
       const n = sockets.size;
       for (const sock of sockets) sock.destroy();
