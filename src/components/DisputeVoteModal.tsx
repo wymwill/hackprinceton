@@ -32,7 +32,7 @@ export default function DisputeVoteModal({
         aria-modal="true"
         aria-label="Dispute vote"
         onClick={(e) => e.stopPropagation()}
-        className="w-[560px] max-w-[92vw] rounded-2xl bg-surface-container border border-secondary-container/50 p-6 flex flex-col gap-4 shadow-[0_0_40px_rgba(172,0,55,0.35)]"
+        className="w-[560px] max-w-[92vw] rounded-2xl bg-surface-container border border-secondary-container/50 p-6 flex flex-col gap-4 shadow-[0_0_40px_rgba(190,60,90,0.17)]"
       >
         <div className="flex items-center justify-between">
           <h2 className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">⚖️ Squad Tribunal · #BET-8704</h2>
@@ -82,7 +82,7 @@ export default function DisputeVoteModal({
           <button
             onClick={() => setMine("uphold")}
             className={`py-3 rounded-xl font-headline-sm text-headline-sm font-bold transition-all ${
-              mine === "uphold" ? "bg-primary-container text-on-primary shadow-[0_0_20px_rgba(16,230,104,0.4)]" : "bg-surface-container-high text-on-surface hover:bg-surface-bright"
+              mine === "uphold" ? "bg-primary-container text-on-primary shadow-[0_0_20px_rgba(52,211,153,0.2)]" : "bg-surface-container-high text-on-surface hover:bg-surface-bright"
             }`}
           >
             👍 Uphold verdict
@@ -90,7 +90,7 @@ export default function DisputeVoteModal({
           <button
             onClick={() => setMine("overturn")}
             className={`py-3 rounded-xl font-headline-sm text-headline-sm font-bold transition-all ${
-              mine === "overturn" ? "bg-secondary-container text-on-secondary-container shadow-[0_0_20px_rgba(172,0,55,0.45)]" : "bg-surface-container-high text-on-surface hover:bg-surface-bright"
+              mine === "overturn" ? "bg-secondary-container text-on-secondary-container shadow-[0_0_20px_rgba(190,60,90,0.23)]" : "bg-surface-container-high text-on-surface hover:bg-surface-bright"
             }`}
           >
             👎 Overturn

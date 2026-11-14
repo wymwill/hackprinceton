@@ -16,19 +16,19 @@ export default function Sidebar() {
       <div className="flex flex-col gap-space-lg">
         <Link href="/" className="flex items-center justify-between">
           <div className="flex items-center gap-space-sm">
-            <span className="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center text-lg shadow-[0_0_14px_rgba(16,230,104,0.45)]">
+            <span className="w-8 h-8 rounded-xl bg-primary-container text-on-primary flex items-center justify-center text-lg">
               🎲
             </span>
-            <span className="font-headline-sm text-headline-sm text-on-surface uppercase tracking-tight">Bookie</span>
+            <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight">Bookie</span>
           </div>
-          <span className="font-label-sm text-label-sm px-space-xs py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container uppercase font-bold tracking-wider">
-            AI Stakes
+          <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-tertiary-container/15 text-tertiary border border-tertiary-container/25">
+            AI Bookie
           </span>
         </Link>
 
         <div className="flex flex-col gap-space-xs">
           <div className="flex items-center justify-between px-space-xs">
-            <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">Squads</span>
+            <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">Your groups</span>
             <span className="material-symbols-outlined text-sm text-on-surface-variant">tune</span>
           </div>
           <div className="flex flex-col gap-1">
@@ -56,7 +56,7 @@ export default function Sidebar() {
                     </div>
                   </div>
                   {active ? (
-                    <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(16,230,104,0.6)]" />
+                    <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(52,211,153,0.3)]" />
                   ) : g.unread > 0 ? (
                     <span className="font-label-sm text-label-sm px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold">
                       {g.unread}
@@ -66,7 +66,7 @@ export default function Sidebar() {
               );
             })}
             <button
-              onClick={() => toast("New group invite link copied. Bring your most delusional friends. 🔗", "lime")}
+              onClick={() => toast("New group invite link copied. Bring your most confident friends. 🔗", "lime")}
               className="flex items-center justify-center gap-space-xs p-space-sm rounded-lg border border-dashed border-outline-variant text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all"
             >
               <span className="material-symbols-outlined text-sm">add</span>
@@ -85,7 +85,7 @@ export default function Sidebar() {
                 aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-all ${
                   active
-                    ? "bg-primary-container text-on-primary-container font-bold shadow-[0_0_16px_rgba(16,230,104,0.3)]"
+                    ? "bg-primary-container/15 text-primary font-semibold ring-1 ring-primary-container/30"
                     : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
                 }`}
               >
@@ -100,7 +100,7 @@ export default function Sidebar() {
       <div className="flex flex-col gap-space-md pt-space-md">
         <button
           onClick={() => openCreateBet()}
-          className="w-full flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(16,230,104,0.4)] hover:shadow-[0_0_28px_rgba(16,230,104,0.65)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+          className="w-full flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(52,211,153,0.2)] hover:shadow-[0_0_28px_rgba(52,211,153,0.33)] hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
           <span>+ Create Bet</span>
           <span className="text-base">🎲</span>

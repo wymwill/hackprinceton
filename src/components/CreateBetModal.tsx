@@ -37,7 +37,7 @@ export default function CreateBetModal({
   const chip = (active: boolean) =>
     `px-3 py-1.5 rounded-lg font-label-md text-label-md transition-all ${
       active
-        ? "bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(16,230,104,0.35)]"
+        ? "bg-primary-container text-on-primary font-bold shadow-[0_0_12px_rgba(52,211,153,0.17)]"
         : "bg-surface-container-high text-on-surface-variant hover:text-on-surface"
     }`;
 
@@ -122,7 +122,7 @@ export default function CreateBetModal({
           </div>
         </div>
 
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-tertiary-container/10 border border-tertiary-container/30 shadow-[0_0_20px_rgba(157,108,255,0.15)]">
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-tertiary-container/10 border border-tertiary-container/30 shadow-[0_0_20px_rgba(167,139,250,0.07)]">
           <span className="w-9 h-9 shrink-0 rounded-lg bg-on-tertiary-container/40 flex items-center justify-center text-lg">🤖</span>
           <div className="flex flex-col gap-1 flex-1">
             <div className="flex items-center justify-between">
@@ -143,7 +143,7 @@ export default function CreateBetModal({
           <button
             disabled={!title.trim()}
             onClick={() => onPosted(title.trim())}
-            className="flex-[2] py-3 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(16,230,104,0.4)] hover:shadow-[0_0_28px_rgba(16,230,104,0.65)] disabled:opacity-40 disabled:shadow-none transition-all"
+            className="flex-[2] py-3 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(52,211,153,0.2)] hover:shadow-[0_0_28px_rgba(52,211,153,0.33)] disabled:opacity-40 disabled:shadow-none transition-all"
           >
             Post to group · {stake}
           </button>

@@ -22,19 +22,19 @@ export default function Header() {
         </div>
       </div>
       <div className="flex items-center gap-space-md">
-        <div className="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-tertiary-container/20 border border-tertiary/20 shadow-[0_0_12px_rgba(157,108,255,0.2)]">
+        <div className="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-tertiary-container/12 border border-tertiary-container/25">
           <span className="font-label-sm text-label-sm text-tertiary font-medium flex items-center gap-1 whitespace-nowrap">
             <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
-            AI Bookie: Roasting live 🤖⚡
+            AI Bookie is watching 🤖
           </span>
         </div>
         <button
-          onClick={() => toast("🤖 Bookie: Jake just checked in at the gym. Odds are trembling.", "purple")}
+          onClick={() => toast("🤖 Bookie: Jake just checked in at the gym. Odds just shifted in his favor.", "purple")}
           className="relative p-space-xs rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
           aria-label="Notifications"
         >
           <span className="material-symbols-outlined">notifications</span>
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-secondary shadow-[0_0_6px_rgba(255,77,109,0.8)]" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-secondary shadow-[0_0_6px_rgba(251,113,133,0.4)]" />
         </button>
       </div>
     </header>

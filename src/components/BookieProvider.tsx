@@ -19,9 +19,9 @@ export function useBookie() {
 }
 
 const TONE = {
-  lime: "border-primary-container/50 shadow-[0_0_24px_rgba(16,230,104,0.35)]",
-  coral: "border-secondary-container shadow-[0_0_24px_rgba(172,0,55,0.45)]",
-  purple: "border-tertiary-container/50 shadow-[0_0_24px_rgba(157,108,255,0.35)]",
+  lime: "border-primary-container/50 shadow-[0_0_24px_rgba(52,211,153,0.17)]",
+  coral: "border-secondary-container shadow-[0_0_24px_rgba(190,60,90,0.23)]",
+  purple: "border-tertiary-container/50 shadow-[0_0_24px_rgba(167,139,250,0.17)]",
 };
 
 export default function BookieProvider({ children }: { children: React.ReactNode }) {

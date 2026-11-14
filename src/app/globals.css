@@ -1,63 +1,68 @@
 @import "tailwindcss";
 
-/* Bookie design tokens (from the Stitch DESIGN.md export) */
+/* Bookie "Warm Slate Social" tokens (from the Stitch DESIGN.md export) */
 @theme {
-  --color-surface: #0f131c;
-  --color-surface-dim: #0f131c;
-  --color-surface-bright: #353942;
-  --color-surface-container-lowest: #0a0e16;
-  --color-surface-container-low: #181c24;
-  --color-surface-container: #1c2028;
-  --color-surface-container-high: #262a33;
-  --color-surface-container-highest: #31353e;
-  --color-surface-variant: #31353e;
-  --color-surface-tint: #08e467;
-  --color-on-surface: #dfe2ee;
-  --color-on-surface-variant: #bacbb8;
+  --color-surface: #151921;
+  --color-surface-dim: #151921;
+  --color-surface-bright: #353f55;
+  --color-surface-container-lowest: #11151c;
+  --color-surface-container-low: #1b202c;
+  --color-surface-container: #222938;
+  --color-surface-container-high: #2a3244;
+  --color-surface-container-highest: #323b50;
+  --color-surface-variant: #2a3244;
+  --color-surface-tint: #45dfa4;
+  --color-on-surface: #f1f5f9;
+  --color-on-surface-variant: #a3b1c4;
   --color-inverse-surface: #dfe2ee;
   --color-inverse-on-surface: #2c3039;
-  --color-outline: #859583;
-  --color-outline-variant: #3c4b3c;
-  --color-background: #0f131c;
-  --color-on-background: #dfe2ee;
+  --color-outline: #7c8aa0;
+  --color-outline-variant: #414d64;
+  --color-background: #151921;
+  --color-on-background: #f1f5f9;
 
-  /* lime — wins & primary actions */
-  --color-primary: #77ff93;
-  --color-on-primary: #003914;
-  --color-primary-container: #10e668;
-  --color-on-primary-container: #006127;
-  --color-inverse-primary: #006e2d;
-  --color-primary-fixed: #68ff8b;
-  --color-primary-fixed-dim: #08e467;
-  --color-on-primary-fixed: #002109;
-  --color-on-primary-fixed-variant: #005320;
+  /* mint: wins & primary actions */
+  --color-primary: #5af0b3;
+  --color-on-primary: #0f2a20;
+  --color-primary-container: #34d399;
+  --color-on-primary-container: #0b3d2b;
+  --color-inverse-primary: #006c4b;
+  --color-primary-fixed: #68fcbf;
+  --color-primary-fixed-dim: #45dfa4;
+  --color-on-primary-fixed: #002114;
+  --color-on-primary-fixed-variant: #005137;
 
-  /* coral — losses & dares */
-  --color-secondary: #ffb2b8;
-  --color-on-secondary: #67001e;
-  --color-secondary-container: #ac0037;
-  --color-on-secondary-container: #ffb7bc;
-  --color-secondary-fixed: #ffdadb;
-  --color-secondary-fixed-dim: #ffb2b8;
-  --color-on-secondary-fixed: #40000f;
-  --color-on-secondary-fixed-variant: #91002d;
+  /* peach rose: losses & dares */
+  --color-secondary: #fda4af;
+  --color-on-secondary: #4c0519;
+  --color-secondary-container: #7f2a3e;
+  --color-on-secondary-container: #ffc2c9;
+  --color-secondary-fixed: #ffdadc;
+  --color-secondary-fixed-dim: #fda4af;
+  --color-on-secondary-fixed: #400010;
+  --color-on-secondary-fixed-variant: #891933;
 
-  /* purple — the AI bookie */
-  --color-tertiary: #ecdeff;
-  --color-on-tertiary: #3e008e;
-  --color-tertiary-container: #d3bdff;
-  --color-on-tertiary-container: #652ec4;
-  --color-tertiary-fixed: #eaddff;
-  --color-tertiary-fixed-dim: #d2bbff;
-  --color-on-tertiary-fixed: #25005a;
-  --color-on-tertiary-fixed-variant: #581ab7;
+  /* lavender: the AI bookie */
+  --color-tertiary: #ddd0ff;
+  --color-on-tertiary: #381385;
+  --color-tertiary-container: #a78bfa;
+  --color-on-tertiary-container: #2e1a66;
+  --color-tertiary-fixed: #e8ddff;
+  --color-tertiary-fixed-dim: #cebdff;
+  --color-on-tertiary-fixed: #21005e;
+  --color-on-tertiary-fixed-variant: #4f319c;
 
   --color-error: #ffb4ab;
   --color-on-error: #690005;
   --color-error-container: #93000a;
   --color-on-error-container: #ffdad6;
 
-  --radius-sm: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
 
   --spacing-gutter: 1rem;
   --spacing-margin: 1rem;
@@ -72,8 +77,8 @@
   --spacing-margin-desktop: 3rem;
 
   --font-display: var(--font-space-grotesk), sans-serif;
-  --font-body: var(--font-hanken-grotesk), sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-body: var(--font-plus-jakarta), sans-serif;
+  --font-mono: var(--font-plus-jakarta), sans-serif;
 
   --font-display-lg: var(--font-display);
   --font-display-lg-mobile: var(--font-display);
@@ -88,49 +93,49 @@
   --font-label-md: var(--font-mono);
   --font-label-sm: var(--font-mono);
 
-  --text-display-lg: 48px;
-  --text-display-lg--line-height: 52px;
-  --text-display-lg--letter-spacing: -0.03em;
+  --text-display-lg: 40px;
+  --text-display-lg--line-height: 48px;
+  --text-display-lg--letter-spacing: -0.02em;
   --text-display-lg--font-weight: 700;
   --text-display-lg-mobile: 36px;
   --text-display-lg-mobile--line-height: 40px;
   --text-display-lg-mobile--letter-spacing: -0.02em;
   --text-display-lg-mobile--font-weight: 700;
-  --text-headline-lg: 32px;
-  --text-headline-lg--line-height: 38px;
-  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 36px;
+  --text-headline-lg--letter-spacing: -0.01em;
   --text-headline-lg--font-weight: 700;
   --text-headline-lg-mobile: 26px;
   --text-headline-lg-mobile--line-height: 32px;
   --text-headline-lg-mobile--letter-spacing: -0.01em;
   --text-headline-lg-mobile--font-weight: 700;
-  --text-headline-md: 22px;
-  --text-headline-md--line-height: 28px;
+  --text-headline-md: 20px;
+  --text-headline-md--line-height: 26px;
   --text-headline-md--letter-spacing: -0.01em;
   --text-headline-md--font-weight: 600;
-  --text-headline-sm: 18px;
-  --text-headline-sm--line-height: 24px;
+  --text-headline-sm: 17px;
+  --text-headline-sm--line-height: 22px;
   --text-headline-sm--font-weight: 600;
   --text-body-lg: 16px;
   --text-body-lg--line-height: 24px;
   --text-body-md: 14px;
   --text-body-md--line-height: 20px;
-  --text-body-md--letter-spacing: 0.01em;
+  --text-body-md--letter-spacing: 0em;
   --text-body-sm: 12px;
-  --text-body-sm--line-height: 16px;
+  --text-body-sm--line-height: 18px;
   --text-body-sm--letter-spacing: 0.01em;
   --text-label-lg: 14px;
   --text-label-lg--line-height: 18px;
-  --text-label-lg--letter-spacing: 0.04em;
+  --text-label-lg--letter-spacing: 0.01em;
   --text-label-lg--font-weight: 600;
   --text-label-md: 12px;
   --text-label-md--line-height: 16px;
-  --text-label-md--letter-spacing: 0.04em;
-  --text-label-md--font-weight: 500;
-  --text-label-sm: 10px;
-  --text-label-sm--line-height: 12px;
-  --text-label-sm--letter-spacing: 0.06em;
-  --text-label-sm--font-weight: 500;
+  --text-label-md--letter-spacing: 0.02em;
+  --text-label-md--font-weight: 600;
+  --text-label-sm: 11px;
+  --text-label-sm--line-height: 14px;
+  --text-label-sm--letter-spacing: 0.03em;
+  --text-label-sm--font-weight: 600;
 }
 
 @layer base {
@@ -138,7 +143,7 @@
   *,
   ::before,
   ::after {
-    border-color: var(--color-surface-container-highest);
+    border-color: #2f384a;
   }
   html,
   body {
@@ -149,6 +154,7 @@
   }
   body {
     overscroll-behavior: none;
+    font-variant-numeric: tabular-nums;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {

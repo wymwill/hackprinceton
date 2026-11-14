@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import BookieProvider from "@/components/BookieProvider";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({ variable: "--font-space-grotesk", subsets: ["latin"] });
-const hankenGrotesk = Hanken_Grotesk({ variable: "--font-hanken-grotesk", subsets: ["latin"] });
-const jetbrainsMono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"] });
+const plusJakarta = Plus_Jakarta_Sans({ variable: "--font-plus-jakarta", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Bookie — bets with friends, settled by AI",
@@ -16,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`dark ${spaceGrotesk.variable} ${hankenGrotesk.variable} ${jetbrainsMono.variable} antialiased`}>
+    <html lang="en" className={`dark ${spaceGrotesk.variable} ${plusJakarta.variable} antialiased`}>
       <head>
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
