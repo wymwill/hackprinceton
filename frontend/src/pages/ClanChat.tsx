@@ -138,13 +138,15 @@ function Chat({ clan }: { clan: Clan }) {
           <b className="bright">{clan.name}</b>
           <span className="dim"> · {clan.members.length} member{clan.members.length === 1 ? "" : "s"}</span>
         </div>
-        <span className={`conn ${chat.connection}`} role="status">
-          <i aria-hidden />
-          {chat.connection === "live" ? "Live" : chat.connection === "connecting" ? "Connecting…" : "Reconnecting…"}
-        </span>
+        {!chat.unavailable && (
+          <span className={`conn ${chat.connection}`} role="status">
+            <i aria-hidden />
+            {chat.connection === "live" ? "Live" : chat.connection === "connecting" ? "Connecting…" : "Reconnecting…"}
+          </span>
+        )}
       </header>
 
-      {chat.connection === "offline" && !chat.loading && (
+      {chat.connection === "offline" && !chat.loading && !chat.unavailable && (
         <div className="chat-banner" role="status">
           You're offline from live updates. New messages still arrive every few seconds, and you can keep sending.
         </div>
@@ -153,6 +155,14 @@ function Chat({ clan }: { clan: Clan }) {
       <div className="chat-list" ref={list} onScroll={onScroll} aria-live="polite" aria-relevant="additions">
         {chat.loading ? (
           <Empty title="Loading messages…" />
+        ) : chat.unavailable ? (
+          <Empty title="Clan chat isn't set up yet">
+            This server's database doesn't have clan chat yet. Whoever runs Alea needs to apply the clan chat migration
+            (supabase/migrations/202611140013_clan_chat.sql). The rest of your clan still works.{" "}
+            <button type="button" className="btn sm" onClick={chat.reload}>
+              Check again
+            </button>
+          </Empty>
         ) : chat.error && chat.messages.length === 0 ? (
           <Empty title="Couldn't load the chat">
             {chat.error}{" "}
@@ -208,7 +218,7 @@ function Chat({ clan }: { clan: Clan }) {
         </button>
       )}
 
-      <Composer onSend={chat.send} disabled={chat.loading} />
+      <Composer onSend={chat.send} disabled={chat.loading || chat.unavailable} />
     </section>
   );
 }

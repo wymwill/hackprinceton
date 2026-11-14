@@ -10,7 +10,7 @@
  * that id is sent again, so a retry can't post twice either.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { request, useStore } from "./store.tsx";
+import { ApiError, request, useStore } from "./store.tsx";
 import { supabase } from "./supabase.ts";
 import type { ChatMessage, ChatPage, ChatStatus, Id } from "./types.ts";
 
@@ -63,6 +63,8 @@ export function useClanChat(clanId: Id) {
   const [loading, setLoading] = useState(true);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** The server's database doesn't have clan chat yet (migration 0013): nothing to load, poll or subscribe to. */
+  const [unavailable, setUnavailable] = useState(false);
   const [connection, setConnection] = useState<Connection>("connecting");
   /** Where you had read up to when the chat opened, for the "new messages" line. */
   const [readAtOpen, setReadAtOpen] = useState<number | null>(null);
@@ -118,8 +120,10 @@ export function useClanChat(clanId: Id) {
       lastMarked.current = page.lastReadId;
       loaded.current = true;
       setError(null);
+      setUnavailable(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+      setUnavailable(e instanceof ApiError && e.code === "migrations_missing");
     } finally {
       setLoading(false);
     }
@@ -135,6 +139,7 @@ export function useClanChat(clanId: Id) {
 
   // Live updates.
   useEffect(() => {
+    if (unavailable) return;
     if (!supabase) {
       setConnection("offline");
       return;
@@ -165,10 +170,11 @@ export function useClanChat(clanId: Id) {
       window.removeEventListener("offline", offline);
       supabase?.removeChannel(channel);
     };
-  }, [clanId, merge, resync]);
+  }, [clanId, merge, resync, unavailable]);
 
   // Fallback: poll while the live connection is down, and check occasionally while it's up.
   useEffect(() => {
+    if (unavailable) return;
     const ms = connection === "live" ? LIVE_CHECK_MS : OFFLINE_POLL_MS;
     const t = window.setInterval(() => !document.hidden && resync(connection !== "live"), ms);
     const onBack = () => !document.hidden && resync();
@@ -179,7 +185,7 @@ export function useClanChat(clanId: Id) {
       document.removeEventListener("visibilitychange", onBack);
       window.removeEventListener("online", onBack);
     };
-  }, [connection, resync]);
+  }, [connection, resync, unavailable]);
 
   const loadOlder = useCallback(async () => {
     const first = Math.min(...byIdRef.current.keys());
@@ -257,7 +263,7 @@ export function useClanChat(clanId: Id) {
   );
 
   const messages = useMemo(() => [...byId.values()].sort((a, b) => a.id - b.id), [byId]);
-  return { messages, pending, hasMore, loading, loadingOlder, error, connection, readAtOpen, loadOlder, send, retry, discard, remove, markRead, reload: loadFirst };
+  return { messages, pending, hasMore, loading, loadingOlder, error, unavailable, connection, readAtOpen, loadOlder, send, retry, discard, remove, markRead, reload: loadFirst };
 }
 
 /** Unread messages in your clan's chat, for badges. Checks every so often and right after you read. */
