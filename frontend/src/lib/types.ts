@@ -225,6 +225,8 @@ export type ClanRow = { rank: number; id: Id; name: string; members: number; wag
 export type SocialState = {
   me: Person & { friendCode: string; wagered: number };
   friends: (Person & { since: string })[];
+  clans: Clan[];
+  /** Kept by the API for older clients; new screens use clans. */
   clan: Clan | null;
   clanBoard: ClanRow[];
 };
