@@ -3,6 +3,7 @@
  * supabase/migrations) and sends standings and start blockers already worked
  * out; these only read that data or estimate payouts for the wager ticket.
  */
+import { fmtValue } from "./ranges.ts";
 import type { Bet, Favor, Id, Series, Settings, Standing } from "./types.ts";
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -64,6 +65,10 @@ export function findOutcome(bet: Bet, ref?: string | null) {
 /** How a resolved bet ended, in words: the winner, or what the tie rule did. */
 export function resultText(bet: Bet) {
   if (bet.status === "canceled") return "Canceled";
+  if (bet.kind === "range" && bet.resultValue != null) {
+    const v = fmtValue(Number(bet.resultValue), bet.unit ?? "", bet.decimals ?? 0);
+    return bet.outcomeId ? `${v} → ${labelOf(bet, bet.outcomeId)}` : `${v} · outside every range`;
+  }
   const tied = (bet.tiedOutcomeIds ?? []).map((id) => labelOf(bet, id));
   if (tied.length) return bet.outcomeId ? `${labelOf(bet, bet.outcomeId)} (tie, listed first)` : `Tie: ${tied.join(" & ")}`;
   return bet.outcomeId ? labelOf(bet, bet.outcomeId) : "Refunded";

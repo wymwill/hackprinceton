@@ -112,7 +112,13 @@ export default function CreateSeries() {
                       value={d.question}
                       onChange={(e) => setDraft(i, { ...d, question: e.target.value })}
                       maxLength={300}
-                      placeholder={d.kind === "multi" ? "Who will score highest on the midterm?" : "Will Sam hit the gym 5 times this week?"}
+                      placeholder={
+                        d.kind === "range"
+                          ? "What will tomorrow's high temperature be?"
+                          : d.kind === "multi"
+                            ? "Who will score highest on the midterm?"
+                            : "Will Sam hit the gym 5 times this week?"
+                      }
                       aria-label={`Bet ${i + 1}`}
                     />
                     {drafts.length > 1 && (

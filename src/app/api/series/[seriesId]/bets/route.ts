@@ -11,7 +11,8 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/series/[seri
 
 /**
  * Host writes a bet: in the lobby, or mid-series when allowed (it opens right away).
- * Body: { question, outcomes?: string[] (2..10, unique), tieRule?: "refund" | "first_listed" }.
+ * Body: { question, outcomes?: string[] (2..10, unique), tieRule?: "refund" | "first_listed" }, or for a
+ * numerical range { question, kind: "range", ranges: [{ lower, upper }], unit?, decimals? }.
  * No outcomes = a YES/NO bet.
  */
 export async function POST(req: NextRequest, ctx: RouteContext<"/api/series/[seriesId]/bets">) {

@@ -45,7 +45,7 @@ function Favors({ s }: { s: Series }) {
       <div className="stack">
         <p className="hint">
           {pledge
-            ? `Pledge the favor you'll do if you finish in the bottom ${s.settings.losers}. Everyone can see every pledge before agreeing.`
+            ? `Pledge the favor you'll do if you finish in the bottom ${s.settings.losers}. Everyone can see who pledged what. Changing or removing a pledge resets everyone's "ready".`
             : `Add up to ${s.settings.favorsPerPlayer} favor${s.settings.favorsPerPlayer === 1 ? "" : "s"} (at least 1). The top ${s.settings.losers} pick from this pool for the bottom ${s.settings.losers}, but only favors that player agreed to. Changing the pool resets everyone's "ready".`}
         </p>
         {canAdd && (
@@ -65,10 +65,12 @@ function Favors({ s }: { s: Series }) {
         <div className="people">
           {s.favors.length === 0 && <span className="hint">No favors yet.</span>}
           {s.favors.map((f) => (
-            <div key={f.id} className="person">
-              <span style={{ minWidth: 0 }}>
+            <div key={f.id} className="person favor-row">
+              <span className="stack" style={{ gap: 4, minWidth: 0 }}>
                 <span className="bright">{f.text}</span>
-                <span className="dim"> · {f.authorId === me ? "you" : pledge ? "pledged" : "added"}</span>
+                <span className="favor-by">
+                  <Who id={f.authorId} suffix={<span className="dim"> · {pledge ? "pledged" : "added"}</span>} />
+                </span>
               </span>
               <span className="row" style={{ gap: 8 }}>
                 {!pledge && <Agreement s={s} f={f} />}
@@ -181,7 +183,11 @@ export default function Lobby({ s }: { s: Series }) {
                         <span className="bright">{b.question}</span>
                       </span>
                       <span className="hint">
-                        {b.kind === "binary" ? "Yes / No" : `${b.outcomes.map((o) => o.label).join(" · ")} — ${b.tieRule === "refund" ? "tie refunds" : "tie: first listed wins"}`}
+                        {b.kind === "binary"
+                          ? "Yes / No"
+                          : b.kind === "range"
+                            ? `Range${b.unit ? ` in ${b.unit}` : ""}: ${b.outcomes.map((o) => o.label).join(" · ")}`
+                            : `${b.outcomes.map((o) => o.label).join(" · ")} — ${b.tieRule === "refund" ? "tie refunds" : "tie: first listed wins"}`}
                       </span>
                     </span>
                     {isHost && (

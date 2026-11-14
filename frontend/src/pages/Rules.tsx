@@ -44,9 +44,16 @@ export function RulesList({ s }: { s: Series }) {
       </div>
       <div className="rule" />
       <ul className="hint" style={{ paddingLeft: 18, display: "grid", gap: 4 }}>
-        <li>Pick YES or NO and wager coins. You can add more coins to your side any time betting is open.</li>
+        <li>
+          Pick an outcome and wager coins: YES or NO, one of the host's options, or a numerical range. You can add more coins to
+          your pick any time betting is open, but not switch.
+        </li>
+        <li>Range bets: each range includes its lower number and stops just before the next. The host enters the measured result and the range holding it wins.</li>
         <li>Winners split the whole pool in proportion to their stakes.</li>
-        <li>If everyone is on one side, or the host cancels, everyone gets their coins back. Locking a one-sided bet refunds it at once.</li>
+        <li>
+          If every coin is on one outcome, nobody backed the result, or the host cancels, everyone gets their coins back. Locking
+          a one-sided bet refunds it at once.
+        </li>
         <li>The host decides each result, even when they're playing.</li>
         <li>The leaderboard only moves when a bet is resolved.</li>
         {st.mode === "pledge" && <li>The bottom {st.losers} do the favor they pledged.</li>}
