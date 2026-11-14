@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { supabaseConfig } from "@/lib/authConfig";
 import { AppError } from "./errors";
 import { errorResponse, readJson } from "./http";
+import { migrationsMissing } from "./migrations";
 
 /**
  * The Bet Series API. The rules live in Postgres (supabase/migrations): every
@@ -64,7 +65,8 @@ const STATUS: Record<string, number> = {
 
 type PgError = { message: string; hint?: string | null; code?: string | null; details?: string | null };
 
-function toAppError(error: PgError): AppError {
+/** `path` is the request's path, so a missing function can be blamed on the right feature. */
+function toAppError(error: PgError, path = ""): AppError {
   const code = error.hint && /^[a-z_]+$/.test(error.hint) ? error.hint : undefined;
   if (code) return new AppError(STATUS[code] ?? 400, code, error.message);
   // An id in the URL that isn't a UUID.
@@ -72,10 +74,8 @@ function toAppError(error: PgError): AppError {
   if (error.code === "PGRST301" || error.code === "PGRST303" || /jwt/i.test(error.message)) {
     return new AppError(401, "unauthorized", "Your session expired. Sign in again.");
   }
-  if (error.code === "PGRST202" || error.code === "42883") {
-    console.error("Bet Series RPC missing:", error.message);
-    return new AppError(500, "migrations_missing", "The database is missing the Bet Series functions. Apply supabase/migrations.");
-  }
+  const missing = migrationsMissing(error, path);
+  if (missing) return missing;
   console.error("Bet Series request failed:", error);
   return new AppError(500, "series_request_failed", "Something went wrong. Try again.");
 }
@@ -106,12 +106,13 @@ export type SeriesCtx = {
 
 /** Run one Series action for the signed-in caller and answer `{ result }`. */
 export async function seriesAction(req: Request, action: (c: SeriesCtx) => Promise<unknown>, status = 200) {
+  const path = new URL(req.url).pathname;
   try {
     const { client, userId } = await callerClient(req);
     const body = req.method === "GET" || req.method === "DELETE" ? {} : await readJson(req);
     const rpc = async (fn: string, args?: Record<string, unknown>) => {
       const { data, error } = await client.rpc(fn, args);
-      if (error) throw toAppError(error);
+      if (error) throw toAppError(error, path);
       return data;
     };
     const from: SeriesCtx["from"] = (table: string) => client.from(table);
@@ -119,7 +120,7 @@ export async function seriesAction(req: Request, action: (c: SeriesCtx) => Promi
     return Response.json({ result: result ?? null }, { status });
   } catch (err) {
     if (err && typeof err === "object" && "message" in err && !(err instanceof AppError) && "code" in err) {
-      return errorResponse(toAppError(err as PgError));
+      return errorResponse(toAppError(err as PgError, path));
     }
     return errorResponse(err);
   }

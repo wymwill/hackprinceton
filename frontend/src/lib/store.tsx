@@ -16,8 +16,9 @@ const POLL_MS = 2500;
 
 type Toast = { id: number; text: string; tone: "ok" | "err" };
 
-class ApiError extends Error {
-  constructor(public status: number, message: string) {
+/** A refused or failed API call: the HTTP status, the server's stable error code, and its message. */
+export class ApiError extends Error {
+  constructor(public status: number, message: string, public code?: string) {
     super(message);
   }
 }
@@ -41,7 +42,7 @@ export async function request<T>(method: string, path: string, body?: unknown): 
     throw new ApiError(0, "Can't reach the server.");
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, data?.error?.message ?? `The server said ${res.status}.`);
+  if (!res.ok) throw new ApiError(res.status, data?.error?.message ?? `The server said ${res.status}.`, data?.error?.code);
   return (data as { result: T }).result;
 }
 
