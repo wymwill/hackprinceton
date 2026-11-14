@@ -106,9 +106,15 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
 
 ## Catching up a project that ran 0012 early
 
-The live project got `0012_friends_and_clans.sql` before `0009`–`0011` were merged, so it has 0001–0008 and 0012 but not 0009 (multiple choice), 0010 (ranges), 0011 (pledge resets) or 0013 (clan chat). Until they're applied, those features answer 503 `migrations_missing`, naming the missing function and the migration. `supabase db push` won't apply migrations older than the newest one already applied without `--include-all`, so use the catch-up SQL instead:
+The reported state is 0001–0008 and 0012 applied, with 0009 (multiple choice), 0010 (ranges), 0011 (pledge resets) and 0013 (clan chat) missing. On 2026-11-14, read-only API checks against `opixwxaamxffvcjblmjr` confirmed that clans exist, while outcomes/chat tables and all six public chat RPCs are missing from the API cache, and the range columns and chat read cursor do not exist. This supports the reported mismatch; it does **not** establish the migration ledger, 0011 function bodies, private data, RLS policies, or publication state. No production writes were made.
 
-1. **Check where the database is** (read-only, SQL editor):
+The recovery script and earlier instructions were already committed at the start of this inspection (`main`, `0c769dc`; clean working tree). The hardened script now rejects partial migration columns and a missing publication or disabled INSERT/UPDATE publication events. It uses a 5-second lock timeout and a 120-second per-statement timeout. These checks do not replace inspecting the actual database.
+
+**Production execution, migration-history repair, and the live write test below require owner approval.** The local tests use synthetic data reproducing the reported migration order; they are not a copy or backup of production.
+
+1. **Run the full read-only audit first:** paste `supabase/diagnostics/clan-chat.sql` into the target project's SQL editor. It runs in a read-only transaction and reports the ledger (in notices), schema, all chat functions/grants, policy definitions, triggers, publication flags, data totals, and legacy wager compatibility. Review every result set; if the editor only shows the last result, select individual queries inside a read-only transaction. Compare both favor-function definitions with migration 0011: its pledge paths must reset every participant's readiness. Public API checks can be repeated with `node scripts/inspect-clan-chat-live.mjs`, but cannot replace this audit. The script uses GET only, which PostgREST executes in [read-only transactions](https://postgrest.org/en/stable/references/transactions.html).
+
+   This smaller query summarizes the key preconditions:
 
    ```sql
    select
@@ -118,16 +124,16 @@ The live project got `0012_friends_and_clans.sql` before `0009`–`0011` were me
              where table_schema = 'public' and table_name = 'series_bets' and column_name = 'unit') as has_0010_ranges,
      to_regclass('public.clan_messages') is not null              as has_0013_chat,
      (select count(*) from public.series_wagers where outcome is null or outcome not in ('YES','NO'))
-       + (select count(*) from public.series_bet_results where side not in ('YES','NO'))
+       + (select count(*) from public.series_bet_results where side is null or side not in ('YES','NO'))
        + (select count(*) from public.series_bets where winning_outcome not in ('YES','NO')) as not_yes_no,
      (select count(*) from public.bet_series)                     as series,
      (select count(*) from public.series_wagers)                  as wagers,
      (select coalesce(sum(balance), 0) from public.bet_series_participants) as coins;
    ```
 
-   Expect `true, false, false, false` and `not_yes_no = 0` (the catch-up stops otherwise). Note the three counts.
-2. **Make a backup** (Database → Backups, or `pg_dump`) and pick a quiet moment: the migration briefly locks the bet tables.
-3. **Generate and run the catch-up SQL**: `node scripts/catchup-sql.mjs > catchup.sql`, then paste the whole file into the SQL editor and run it once. It applies 0009, 0010, 0011 and 0013 in one transaction after a preflight check, so it either all applies or nothing changes, and a second run stops at the preflight. It only adds tables, columns, functions and policies, and fills in the new columns on existing rows; no existing value changes. `upgrade.test.mjs` runs this same SQL on a copy of the live project's state and checks all of that, including a failure partway through.
+   Expect `true, false, false, false`, `not_yes_no = 0`, and zero orphan references in the full audit. Save all aggregate totals. If the schema or ledger differs, stop and choose only the missing migrations; do not bypass guards or mark migrations applied to hide the mismatch.
+2. **Confirm a restorable backup**, then pause app writes for the recovery window. Inspect unexpected custom triggers/functions before proceeding. The migration takes locks and backfills outcome IDs on existing wagers, results and winning bets; a transaction prevents partial application, but does not undo a successful commit.
+3. **Generate the exact SQL for review:** `node scripts/catchup-sql.mjs > /tmp/alea-catchup.sql`. This only creates a local file. After approval, paste the **entire file**, including `begin` and `commit`, into the SQL editor for project `opixwxaamxffvcjblmjr` and run once. It applies 0009, 0010, 0011 and 0013 in order; no reset, truncation or deletion of existing application rows is needed. It adds schema, replaces functions/constraints/policies, and fills new columns. Tests verify that every original column value is preserved on representative existing data. If any statement errors or times out, execute `rollback;` if the session is still in a transaction and investigate; do not run a remaining fragment or disable the checks. A second run stops at preflight.
 4. **Check the result** (read-only):
 
    ```sql
@@ -146,11 +152,13 @@ The live project got `0012_friends_and_clans.sql` before `0009`–`0011` were me
      (select coalesce(sum(balance), 0) from public.bet_series_participants) as coins;
    ```
 
-   Everything should be `true`, with the same three counts as before.
-5. **If you use the Supabase CLI later**, record what was applied: `supabase migration repair --status applied 202611140009 202611140010 202611140011 202611140013`.
-6. **Check live chat with two accounts**: `node scripts/verify-clan-chat-live.mjs --yes` makes three temporary users, a temporary clan and a few messages, checks live delivery, privacy, deleting and leaving, then removes all of it. It needs `.supabase-test-secret`, like `npm run test:series`. Or open the app in two browsers signed in as two members of the same clan.
+   Everything should be `true`, with the same three counts as before. Rerun the full audit too: all six public RPCs must grant authenticated EXECUTE, no helper or chat RPC may grant anon EXECUTE, all six helpers must deny authenticated EXECUTE, and the only chat SELECT policy should be for authenticated members using `is_clan_member(clan_id)`. Authenticated users get SELECT but no direct writes; anon gets no table access. All three chat triggers must be enabled. `supabase_realtime` must include `public.clan_messages` with INSERT and UPDATE enabled (deletions are soft updates). Compare every saved data total. The transaction reloads the PostgREST schema cache on commit; refresh the app afterwards. Do not grant anonymous access to resolve permission errors.
+5. **Reconcile migration history after successful SQL verification and approval.** On a CLI installation linked to the correct project, first run `supabase migration list --linked`. If the ledger already records 0001–0008 and 0012, record the four newly applied migrations with `supabase migration repair --linked --status applied 202611140009 202611140010 202611140011 202611140013`, then list again. If earlier SQL-editor migrations have no ledger entries, verify their schema before recording them individually. Repair edits history; it does not execute schema SQL. Never mark a failed migration applied. See [Supabase's migration-history guidance](https://supabase.com/docs/guides/deployment/database-migrations). Avoid a blind `db push --include-all`, which could replay earlier SQL-editor migrations absent from the ledger.
+6. **After separate approval for test writes, check live chat:** `node scripts/verify-clan-chat-live.mjs --yes` creates three temporary users, a temporary clan and messages, checks actual Supabase Realtime delivery/privacy, then attempts cleanup. It requires `.supabase-test-secret`; no such credential is configured in this checkout. This test was **not** run during the read-only investigation. Alternatively, approve a manual test using two clan members and an outsider. Local WebSocket tests simulate Realtime; production delivery remains unverified until this step passes.
 
 ## Tests
+
+Recovery verification on 2026-11-14: all 87 SQL tests passed, including original-row preservation, rollback after a late failure, partial-schema/Realtime guards, and the read-only audit before/after recovery. Local API checks passed for chat (9), multiple-choice bets (9), ranges (8), and missing migration 0013 (four chat endpoints return the specific 503 while social/series reads remain 200). Typecheck and lint passed. Production write tests and browser UI verification were not run; the browser connection was unavailable.
 
 | Command | Runs against | Needs |
 | --- | --- | --- |
