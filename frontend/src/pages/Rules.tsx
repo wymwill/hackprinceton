@@ -1,7 +1,7 @@
 import { Panel, Who } from "../components/ui.tsx";
 import { MODE_LABEL, STATUS_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "../lib/types.ts";
+import type { Series } from "@rules/types.ts";
 
 export function RulesList({ s }: { s: Series }) {
   const { name } = useStore();
