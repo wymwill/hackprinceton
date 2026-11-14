@@ -29,6 +29,8 @@ type Ctx = {
   createGroup: (input: { name: string; emoji: string; mode: "tokens" | "points"; startingBalance?: number }) => Promise<{ id: string } | null>;
   joinGroup: (code: string) => Promise<{ id: string } | null>;
   updateGroup: (patch: Record<string, unknown>) => Promise<boolean>;
+  resetInvite: () => Promise<boolean>;
+  removeMember: (userId: string) => Promise<boolean>;
   createMarket: (input: NewMarketInput) => Promise<{ id: string } | null>;
   trade: (marketId: string, action: "buy" | "sell", side: Side, amount: number) => Promise<{ contracts: number; amount: number } | null>;
   pick: (marketId: string, side: Side) => Promise<boolean>;
@@ -174,6 +176,8 @@ export default function AppProvider({ children }: { children: React.ReactNode })
     createGroup: (input) => post("/api/groups", input),
     joinGroup: (code) => post("/api/groups/join", { code }),
     updateGroup: (patch) => ok(send("PATCH", `/api/groups/${g}`, patch)),
+    resetInvite: () => ok(post(`/api/groups/${g}/invite`)),
+    removeMember: (userId) => ok(send("DELETE", `/api/groups/${g}/members/${encodeURIComponent(userId)}`)),
     createMarket: (input) => post(`/api/groups/${g}/markets`, input),
     trade: (marketId, action, side, amount) => post(`/api/markets/${marketId}/trade`, { action, side, amount }),
     pick: (marketId, side) => ok(post(`/api/markets/${marketId}/pick`, { side })),

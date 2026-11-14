@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     { "name": "bookie", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 3000 },
-    { "name": "bwf-dev", "runtimeExecutable": "npx", "runtimeArgs": ["next", "dev", "-p", "3100"], "port": 3100 },
+    { "name": "bwf-dev", "runtimeExecutable": "npx", "runtimeArgs": ["next", "dev", "-H", "127.0.0.1", "-p", "3100"], "port": 3100 },
     { "name": "bet-series", "runtimeExecutable": "sh", "runtimeArgs": ["-c", "cd frontend && BWF_API_ORIGIN=http://localhost:3100 npm run dev"], "port": 5173 }
   ]
 }

@@ -13,8 +13,19 @@ const IMAGE_TYPES: Record<string, { ext: string; magic: (b: Buffer) => boolean }
   "image/webp": { ext: "webp", magic: (b) => b.subarray(0, 4).toString("latin1") === "RIFF" && b.subarray(8, 12).toString("latin1") === "WEBP" },
 };
 
-/** Parse a JSON or multipart body. Images are checked by type, size and magic bytes, then saved under a random name. */
+/** Room for the text fields and multipart boundaries on top of the image itself. */
+const MAX_BODY = MAX_BYTES + 64 * 1024;
+
+/**
+ * Parse a JSON or multipart body. Images are checked by type, size and magic bytes, then saved under a random name.
+ * Call it only after the caller is identified, so signed-out requests never get read or written to disk.
+ */
 export async function readEvidenceBody(req: Request) {
+  const declared = Number(req.headers.get("content-length"));
+  if (!req.headers.has("content-length") || !Number.isFinite(declared) || declared > MAX_BODY) {
+    // Without a length the body would be read in full before the size check, so it's refused too.
+    throw new AppError(413, "image_too_large", "Images must be 5 MB or smaller.");
+  }
   if ((req.headers.get("content-type") ?? "").startsWith("multipart/form-data")) {
     const form = await req.formData();
     const file = form.get("file");
