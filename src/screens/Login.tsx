@@ -41,21 +41,23 @@ export default function Login({ mode, supabase }: { mode: AuthMode; supabase: { 
           <p className="font-body-md text-body-md text-on-surface-variant">Bet with your friends on real life. No money, just bragging rights and dares.</p>
         </div>
 
-        {mode === "supabase" && (
-          <Button className="w-full h-12 bg-white! text-[#1f1f1f]! hover:brightness-95" onClick={signIn} disabled={busy}>
+        {mode !== "demo" && (
+          // Shown before the keys exist too, so the page looks finished; it only works once Supabase is set up.
+          <Button className="w-full h-12 bg-white! text-[#1f1f1f]! hover:brightness-95" onClick={signIn} disabled={busy || mode !== "supabase"}>
             <GoogleMark />
             {busy ? "Opening Google…" : "Continue with Google"}
           </Button>
         )}
 
         {mode === "unconfigured" && (
-          <div className="flex flex-col gap-2 text-left font-body-sm text-body-sm text-on-surface-variant">
-            <p className="text-on-surface font-semibold">Sign-in isn&apos;t set up on this server yet.</p>
-            <p>
-              Set <code className="font-num text-on-surface">SUPABASE_URL</code> and <code className="font-num text-on-surface">SUPABASE_PUBLISHABLE_KEY</code> in <code className="font-num">.env.local</code> and restart. For a local demo without accounts, run with{" "}
+          <details className="w-full text-left font-body-sm text-body-sm text-on-surface-variant">
+            <summary className="cursor-pointer text-center">Sign-in is being set up</summary>
+            <p className="mt-2">
+              Google sign-in turns on once <code className="font-num text-on-surface">SUPABASE_URL</code> and <code className="font-num text-on-surface">SUPABASE_PUBLISHABLE_KEY</code> are in{" "}
+              <code className="font-num">.env.local</code> and the server restarts. See Sign-in in the README. For a local demo without accounts, run with{" "}
               <code className="font-num text-on-surface">BWF_AUTH=demo</code>.
             </p>
-          </div>
+          </details>
         )}
 
         {mode === "demo" && (
