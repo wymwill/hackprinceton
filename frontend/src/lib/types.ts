@@ -211,3 +211,20 @@ export type RangeDraft = {
   openBelow: boolean;
   openAbove: boolean;
 };
+
+/** Someone on the Friends or Clans screens. */
+export type Person = { id: Id; name: string; avatarUrl?: string | null };
+
+export type ClanMember = Person & { wagered: number; joinedAt: string };
+
+export type Clan = { id: Id; name: string; code: string; ownerId: Id; createdAt: string; members: ClanMember[] };
+
+export type ClanRow = { rank: number; id: Id; name: string; members: number; wagered: number; mine: boolean };
+
+/** What GET /api/social/state sends: `my_social_state` in supabase/migrations/202611140012_friends_and_clans.sql. */
+export type SocialState = {
+  me: Person & { friendCode: string; wagered: number };
+  friends: (Person & { since: string })[];
+  clan: Clan | null;
+  clanBoard: ClanRow[];
+};

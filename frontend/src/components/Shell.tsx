@@ -158,6 +158,9 @@ function Sidebar({ current }: { current?: Series }) {
           {current.status !== "lobby" && <NavLink to={`/s/${current.id}/leaderboard`}>Leaderboard</NavLink>}
           <NavLink to={`/s/${current.id}/rules`}>Rules &amp; players</NavLink>
           {current.hostId === me && current.status === "active" && <span className="cap" style={{ padding: "10px 4px 0" }}>You're the host</span>}
+          <span className="cap" style={{ padding: "14px 4px 0" }}>You</span>
+          <NavLink to="/friends">Friends</NavLink>
+          <NavLink to="/clans">Clans</NavLink>
         </nav>
       ) : (
         <nav className="nav" aria-label="Main">
@@ -165,6 +168,8 @@ function Sidebar({ current }: { current?: Series }) {
             All series
           </NavLink>
           <NavLink to="/new">New series</NavLink>
+          <NavLink to="/friends">Friends</NavLink>
+          <NavLink to="/clans">Clans</NavLink>
           <NavLink to="/profile">Profile</NavLink>
         </nav>
       )}

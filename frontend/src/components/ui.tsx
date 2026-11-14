@@ -96,6 +96,12 @@ export function Avatar({ id, size }: { id: Id; size?: "lg" }) {
   return url ? <img className={cls} src={url} alt="" referrerPolicy="no-referrer" /> : <span className={cls}>{initialsOf(name(id))}</span>;
 }
 
+/** A picture or initials for anyone, from their name and picture link (Friends and Clans list people outside your series). */
+export function PersonAvatar({ name, url, me }: { name: string; url?: string | null; me?: boolean }) {
+  const cls = `avatar ${me ? "me" : ""}`;
+  return url ? <img className={cls} src={url} alt="" referrerPolicy="no-referrer" /> : <span className={cls}>{initialsOf(name)}</span>;
+}
+
 export function Who({ id, suffix }: { id: Id; suffix?: ReactNode }) {
   const { name, me } = useStore();
   return (

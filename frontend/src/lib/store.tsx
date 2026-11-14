@@ -28,7 +28,8 @@ async function token() {
   return data.session?.access_token ?? "";
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+/** Call the API as the signed-in player. Throws ApiError with the server's message. */
+export async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {

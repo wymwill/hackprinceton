@@ -1992,3 +1992,66 @@ img.avatar {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* /friends and /clans */
+.social {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.social .col {
+  gap: 28px;
+}
+.social .pbody {
+  padding: 26px 24px 22px;
+}
+.share-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+.qr {
+  width: 220px;
+  height: 220px;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+}
+.qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.share-code {
+  font-family: var(--mono);
+  font-size: 28px;
+  letter-spacing: 0.08em;
+  color: var(--bright);
+  user-select: all;
+}
+.people {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.people li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.people li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 18px;
+  color: var(--fg);
+  line-height: 1.5;
+}

@@ -51,6 +51,11 @@ const STATUS: Record<string, number> = {
   not_picked: 409,
   not_accepted: 409,
   withdraw_closed: 409,
+  friend_not_found: 404,
+  clan_not_found: 404,
+  friend_self: 409,
+  already_in_clan: 409,
+  not_in_clan: 409,
 };
 
 type PgError = { message: string; hint?: string | null; code?: string | null; details?: string | null };
