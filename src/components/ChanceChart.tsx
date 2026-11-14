@@ -41,7 +41,7 @@ export default function ChanceChart({ market, now, height = 180 }: { market: Mar
     <svg ref={ref} viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height }} role="img" aria-label={`Chance of Yes over time, now ${market.chance}%`}>
       {[25, 50, 75].map((v) => (
         <g key={v}>
-          <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} stroke="#433f4f" strokeDasharray="2 4" />
+          <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} stroke="#4a4460" strokeDasharray="2 4" />
           <text x={W - pad.r + 6} y={y(v) + 4} fill="#d2cbd8" fontSize="12" fontFamily="var(--font-num)">
             {v}%
           </text>

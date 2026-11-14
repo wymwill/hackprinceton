@@ -97,7 +97,7 @@ export default function Market() {
             <h2 className={label}>{group.mode === "tokens" ? `Who holds what (${holders.length})` : `Picks (${m.picks.length})`}</h2>
             {group.mode === "tokens" ? (
               holders.length ? (
-                <ul className="flex flex-col divide-y divide-[#433f4f]">
+                <ul className="flex flex-col divide-y divide-[#4a4460]">
                   {holders.map((p) => (
                     <li key={p.userId} className="flex items-center justify-between py-2 font-body-md text-body-md">
                       <span className="flex items-center gap-2">

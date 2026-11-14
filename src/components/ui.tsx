@@ -4,17 +4,17 @@ import { useEffect } from "react";
 
 /** Small shared building blocks so screens stay consistent. */
 
-export const card = "rounded-2xl bg-surface-container ring-1 ring-[#433f4f]";
+export const card = "rounded-2xl bg-surface-container ring-1 ring-[#4a4460]";
 export const label = "font-label-sm text-label-sm uppercase text-on-surface-variant";
 export const input =
   "w-full rounded-xl bg-surface-container-lowest ring-1 ring-outline-variant/60 focus:ring-primary-container px-3 py-2.5 text-on-surface placeholder:text-outline outline-none font-body-md text-body-md";
 
 const BTN = {
-  primary: "bg-primary-container text-on-primary hover:brightness-110 shadow-[0_0_20px_rgba(206,76,59,0.2)]",
+  primary: "bg-primary-container text-on-primary hover:brightness-110 shadow-[0_0_20px_rgba(232,80,60,0.35)]",
   quiet: "bg-surface-container-high text-on-surface hover:bg-surface-container-highest ring-1 ring-outline-variant/40",
   bookie: "bg-tertiary-container/15 text-tertiary ring-1 ring-tertiary-container/50 hover:bg-tertiary-container/25",
-  yes: "bg-primary-container/15 text-primary ring-1 ring-primary-container/40 hover:bg-primary-container/25",
-  no: "bg-secondary/10 text-secondary ring-1 ring-secondary/40 hover:bg-secondary/20",
+  yes: "bg-primary-container/25 text-primary ring-1 ring-primary-container/60 hover:bg-primary-container/35",
+  no: "bg-secondary/15 text-secondary ring-1 ring-secondary/50 hover:bg-secondary/25",
 };
 
 export function Button({

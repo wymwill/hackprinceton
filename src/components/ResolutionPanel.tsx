@@ -84,7 +84,7 @@ function EvidenceSection({ market: m, now }: { market: MarketView; now: number }
         ))}
       </ul>
       {canPost && (
-        <form onSubmit={submit} className="flex flex-col gap-2 pt-2 border-t border-[#433f4f]">
+        <form onSubmit={submit} className="flex flex-col gap-2 pt-2 border-t border-[#4a4460]">
           <textarea className={`${input} min-h-[64px]`} value={text} onChange={(e) => setText(e.target.value)} placeholder="What happened? A check in, a screenshot, a witness…" maxLength={500} aria-label="Evidence" />
           <div className="flex flex-wrap items-center gap-2">
             <select className={`${input} w-auto py-2`} value={claims} onChange={(e) => setClaims(e.target.value as Side | "")} aria-label="What does this show">
@@ -258,7 +258,7 @@ function ReceiptCard({ market: m, group }: { market: MarketView; group: GroupVie
           </thead>
           <tbody>
             {rows.map((x) => (
-              <tr key={x.userId} className="border-t border-[#433f4f]">
+              <tr key={x.userId} className="border-t border-[#4a4460]">
                 <td className="py-1.5">{name(x.userId)}</td>
                 <td className="py-1.5 text-right font-num">{group.mode === "tokens" ? x.payout : x.points}</td>
                 <td className={`py-1.5 text-right font-num ${x.result === "won" ? "text-primary" : x.result === "lost" ? "text-secondary" : "text-on-surface-variant"}`}>
