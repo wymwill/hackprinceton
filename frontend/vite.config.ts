@@ -7,11 +7,15 @@ import react from "@vitejs/plugin-react";
 // other variable can end up in the browser bundle. A frontend/.env.local wins.
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = { ...loadEnv(mode, root, ""), ...loadEnv(mode, process.cwd(), "") };
   const pick = (...names: string[]) => names.map((n) => env[n]).find((v) => v) ?? "";
   return {
     plugins: [react()],
+    // Built into the Next app's public/ folder and served from /app/ (next.config.ts sends every
+    // page to /app/index.html). In development Next forwards pages here instead.
+    base: command === "build" ? "/app/" : "/",
+    build: { outDir: "../public/app", emptyOutDir: true },
     define: {
       __SUPABASE_URL__: JSON.stringify(pick("VITE_SUPABASE_URL", "SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_URL")),
       __SUPABASE_KEY__: JSON.stringify(
@@ -25,9 +29,14 @@ export default defineConfig(({ mode }) => {
       ),
     },
     server: {
+      host: "127.0.0.1",
       port: 5173,
-      // The Bet Series API runs inside the Next app (src/app/api/series). Start it with `npm run dev` at the repo root.
-      proxy: { "/api": env.BWF_API_ORIGIN || "http://localhost:3000" },
+      strictPort: true,
+      // Pages usually arrive through the Next server on :3000, which can't pass websockets on,
+      // so live reload connects to Vite directly.
+      hmr: { clientPort: 5173 },
+      // Opening :5173 directly also works: the Bet Series API runs inside the Next app (src/app/api/series).
+      proxy: { "/api": env.BWF_API_ORIGIN || "http://127.0.0.1:3000" },
     },
   };
 });

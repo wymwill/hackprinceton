@@ -6,18 +6,11 @@ Players sign in with Supabase Auth (Google, or email and password). Every action
 
 ## Run it
 
-1. Put `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in `.env.local` at the repo root. Setup is in `docs/supabase-series.md`.
-2. Start both apps:
+From the repo root: `npm install`, then `npm run dev`, then open http://localhost:3000. That starts this Vite app on :5173 and the Next API on :3000; Next forwards pages here. Opening :5173 directly also works, with `/api` proxied to :3000 (set `BWF_API_ORIGIN` to point it elsewhere).
 
-```bash
-npm run dev                    # repo root: Next app and the API on :3000
-cd frontend && npm run dev     # http://localhost:5173
-npm run build                  # here: type-check and production build
-```
+`npm run build` at the root builds this app into `public/app/` for the Next server to serve. Here, `npm run build` just type-checks and builds.
 
-The proxy targets `http://localhost:3000`; set `BWF_API_ORIGIN` to point it elsewhere.
-
-**No Supabase project yet?** `node supabase/tests/local-supabase.mjs` starts an in-memory stand-in (email sign-in only, test use only). Start both apps with `SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local` in front of `npm run dev`.
+**No Supabase project yet?** `node supabase/tests/local-supabase.mjs` starts an in-memory stand-in (email sign-in only, test use only). Start the app with `SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local` in front of `npm run dev`.
 
 ## Screens
 

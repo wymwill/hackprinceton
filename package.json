@@ -1,40 +1,33 @@
 {
-  "name": "betting-with-friends",
+  "name": "alea",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 127.0.0.1",
-    "dev:lan": "next dev -H 0.0.0.0",
-    "build": "next build",
+    "dev": "node scripts/dev.mjs",
+    "dev:lan": "node scripts/dev.mjs --lan",
+    "build": "npm --prefix frontend run build && next build",
     "start": "next start",
+    "postinstall": "npm --prefix frontend install --no-audit --no-fund",
     "lint": "eslint",
-    "test:unit": "node --test 'src/**/*.test.ts'",
-    "test:e2e": "node scripts/e2e.mjs",
+    "typecheck": "tsc --noEmit && npm --prefix frontend run typecheck",
     "test:series-sql": "node --test supabase/tests/series.test.mjs supabase/tests/upgrade.test.mjs",
     "test:series": "node scripts/e2e-series.mjs",
     "create:demo-users": "node scripts/create-demo-users.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^1.8.0",
-    "@langchain/anthropic": "^1.6.5",
-    "@langchain/core": "^1.4.1",
-    "deepagents": "^1.16.5",
-    "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.0",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "zod": "^4.6.7"
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.14",
-    "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
-    "tailwindcss": "4.3.3",
     "typescript": "^5"
   }
 }
