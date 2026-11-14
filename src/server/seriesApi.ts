@@ -1,0 +1,126 @@
+import "server-only";
+import { createClient } from "@supabase/supabase-js";
+import { supabaseConfig } from "@/lib/authConfig";
+import { AppError } from "./errors";
+import { errorResponse, readJson } from "./http";
+
+/**
+ * The Bet Series API. The rules live in Postgres (supabase/migrations): every
+ * write is one security-definer RPC that locks the series row, so balance checks
+ * and settlement can't race, even across server instances.
+ *
+ * Callers send `Authorization: Bearer <Supabase access token>`. The token goes
+ * along on every query, so `auth.uid()` and row-level security see that player.
+ * Nothing in a request body can pick who is acting or what role they have.
+ *
+ * Uses the same SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY as sign-in (the
+ * NEXT_PUBLIC_ names work too; see src/lib/authConfig.ts).
+ */
+
+/** HTTP status for each error code the SQL raises (in the error's `hint`). Anything else is a 400. */
+const STATUS: Record<string, number> = {
+  unauthorized: 401,
+  not_host: 403,
+  not_member: 403,
+  not_player: 403,
+  not_winner: 403,
+  not_author: 403,
+  not_loser: 403,
+  series_not_found: 404,
+  bet_not_found: 404,
+  favor_not_found: 404,
+  series_not_lobby: 409,
+  series_not_active: 409,
+  series_not_complete: 409,
+  series_over: 409,
+  bet_not_open: 409,
+  bets_still_open: 409,
+  favor_proposals_closed: 409,
+  questions_locked: 409,
+  planned_questions_full: 409,
+  planned_questions_required: 409,
+  one_person: 409,
+  too_few_participants: 409,
+  favors_missing: 409,
+  not_ready: 409,
+  already_picked: 409,
+  favor_taken: 409,
+  picks_in_order: 409,
+  assignment_not_pending: 409,
+  not_picked: 409,
+  not_accepted: 409,
+  withdraw_closed: 409,
+};
+
+type PgError = { message: string; hint?: string | null; code?: string | null; details?: string | null };
+
+function toAppError(error: PgError): AppError {
+  const code = error.hint && /^[a-z_]+$/.test(error.hint) ? error.hint : undefined;
+  if (code) return new AppError(STATUS[code] ?? 400, code, error.message);
+  // An id in the URL that isn't a UUID.
+  if (error.code === "22P02") return new AppError(404, "not_found", "That doesn't exist.");
+  if (error.code === "PGRST301" || error.code === "PGRST303" || /jwt/i.test(error.message)) {
+    return new AppError(401, "unauthorized", "Your session expired. Sign in again.");
+  }
+  if (error.code === "PGRST202" || error.code === "42883") {
+    console.error("Bet Series RPC missing:", error.message);
+    return new AppError(500, "migrations_missing", "The database is missing the Bet Series functions. Apply supabase/migrations.");
+  }
+  console.error("Bet Series request failed:", error);
+  return new AppError(500, "series_request_failed", "Something went wrong. Try again.");
+}
+
+/** A Supabase client that acts as the signed-in caller. */
+async function callerClient(req: Request) {
+  const config = supabaseConfig();
+  if (!config) throw new AppError(503, "auth_not_configured", "Sign-in isn't set up on this server yet.");
+  const token = req.headers.get("authorization")?.match(/^Bearer\s+(\S+)$/i)?.[1];
+  if (!token) throw new AppError(401, "unauthorized", "Sign in to continue.");
+  const client = createClient(config.url, config.key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data, error } = await client.auth.getClaims(token);
+  if (error || !data?.claims?.sub) throw new AppError(401, "unauthorized", "Your session expired. Sign in again.");
+  return { client, userId: data.claims.sub };
+}
+
+export type SeriesCtx = {
+  userId: string;
+  body: Record<string, unknown>;
+  /** Call an RPC as the caller. Throws an AppError with the rule's message when it says no. */
+  rpc: (fn: string, args?: Record<string, unknown>) => Promise<unknown>;
+  /** Read a table as the caller (row-level security applies). */
+  from: ReturnType<typeof createClient>["from"];
+};
+
+/** Run one Series action for the signed-in caller and answer `{ result }`. */
+export async function seriesAction(req: Request, action: (c: SeriesCtx) => Promise<unknown>, status = 200) {
+  try {
+    const { client, userId } = await callerClient(req);
+    const body = req.method === "GET" || req.method === "DELETE" ? {} : await readJson(req);
+    const rpc = async (fn: string, args?: Record<string, unknown>) => {
+      const { data, error } = await client.rpc(fn, args);
+      if (error) throw toAppError(error);
+      return data;
+    };
+    const from: SeriesCtx["from"] = (table: string) => client.from(table);
+    const result = await action({ userId, body, rpc, from });
+    return Response.json({ result: result ?? null }, { status });
+  } catch (err) {
+    if (err && typeof err === "object" && "message" in err && !(err instanceof AppError) && "code" in err) {
+      return errorResponse(toAppError(err as PgError));
+    }
+    return errorResponse(err);
+  }
+}
+
+/** Throw the readable error for a failed table read. */
+export function check<T>({ data, error }: { data: T; error: PgError | null }): T {
+  if (error) throw toAppError(error);
+  return data;
+}
+
+/** "yes"/"YES" → "YES"; anything else passes through for the SQL to refuse. */
+export const side = (v: unknown) => (typeof v === "string" ? v.toUpperCase() : v);
+export const text = (v: unknown) => (typeof v === "string" ? v : "");

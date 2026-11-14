@@ -50,6 +50,12 @@ The flow: `/login` sends you to Google through Supabase, Google returns to `/aut
 | `npm run lint` | ESLint |
 | `npm run test:unit` | Node test runner over `src/**/*.test.ts` (the LMSR pricing math) |
 | `npm run test:e2e` | End-to-end tests. Run `npm run build` first. It starts the production server four times on throwaway data files: demo mode (empty seed, then demo seed), Supabase mode against a local test signing key (real token verification, no Supabase project needed), and with nothing configured. Uses `BOOKIE_AI=stub` by default and never calls the real API. |
+| `npm run test:series-sql` | Bet Series rules: the Supabase migrations in an in-process Postgres (PGlite), no project or keys needed |
+| `npm run test:series` | Bet Series against the real Supabase project (needs `.supabase-test-secret`) |
+
+## Bet Series
+
+Friends play a series of YES/NO bets for virtual coins; the bottom players owe favors. The screens are the Vite app in `frontend/`, the API is `src/app/api/series/*`, and the rules and data live in Supabase (`supabase/migrations/`). It uses the same `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` as sign-in. Setup, every route and the rules: `docs/supabase-series.md`. Requirement-by-requirement coverage: `docs/bet-series-coverage.md`.
 
 ## Screens
 

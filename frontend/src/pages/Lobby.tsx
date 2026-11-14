@@ -2,11 +2,36 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { NewBetModal } from "../components/Standings.tsx";
 import { ConfirmButton, Panel, Pill, Who } from "../components/ui.tsx";
-import { isParticipant, startBlockers } from "@rules/engine.ts";
+import { agreesTo, isParticipant, participantIds } from "../lib/rules.ts";
 import { ago } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "@rules/types.ts";
+import type { Favor, Series } from "../lib/types.ts";
 import { RulesList } from "./Rules.tsx";
+
+/** Shared pool: who has agreed to this favor, and a toggle for everyone but its author. */
+function Agreement({ s, f }: { s: Series; f: Favor }) {
+  const { me, api } = useStore();
+  const players = participantIds(s);
+  const count = players.filter((p) => agreesTo(f, p)).length;
+  const mine = f.agreedBy.includes(me);
+  const canToggle = isParticipant(s, me) && f.authorId !== me;
+  return (
+    <span className="row" style={{ gap: 8 }}>
+      <span className={`cap ${count === players.length ? "up" : ""}`} title="Players who agreed, counting the author">
+        {count}/{players.length} agree
+      </span>
+      {canToggle && (
+        <button
+          type="button"
+          className={`btn sm ${mine ? "" : "primary"}`}
+          onClick={() => api.agreeToFavor(f.id, !mine, mine ? "Agreement taken back. You're not ready." : "You agreed to this favor.")}
+        >
+          {mine ? "✓ Agreed" : "Agree"}
+        </button>
+      )}
+    </span>
+  );
+}
 
 function Favors({ s }: { s: Series }) {
   const { me, api } = useStore();
@@ -21,7 +46,7 @@ function Favors({ s }: { s: Series }) {
         <p className="hint">
           {pledge
             ? `Pledge the favor you'll do if you finish in the bottom ${s.settings.losers}. Everyone can see every pledge before agreeing.`
-            : `Add up to ${s.settings.favorsPerPlayer} favor${s.settings.favorsPerPlayer === 1 ? "" : "s"} (at least 1). The top ${s.settings.losers} pick from this pool for the bottom ${s.settings.losers}. Changing the pool resets everyone's "ready".`}
+            : `Add up to ${s.settings.favorsPerPlayer} favor${s.settings.favorsPerPlayer === 1 ? "" : "s"} (at least 1). The top ${s.settings.losers} pick from this pool for the bottom ${s.settings.losers}, but only favors that player agreed to. Changing the pool resets everyone's "ready".`}
         </p>
         {canAdd && (
           <form
@@ -45,11 +70,14 @@ function Favors({ s }: { s: Series }) {
                 <span className="bright">{f.text}</span>
                 <span className="dim"> · {f.authorId === me ? "you" : pledge ? "pledged" : "added"}</span>
               </span>
-              {f.authorId === me && (
-                <button type="button" className="btn ghost sm" onClick={() => api.removeFavor(s.id, f.id)}>
-                  Remove
-                </button>
-              )}
+              <span className="row" style={{ gap: 8 }}>
+                {!pledge && <Agreement s={s} f={f} />}
+                {f.authorId === me && (
+                  <button type="button" className="btn ghost sm" onClick={() => api.removeFavor(s.id, f.id)}>
+                    Remove
+                  </button>
+                )}
+              </span>
             </div>
           ))}
         </div>
@@ -58,15 +86,39 @@ function Favors({ s }: { s: Series }) {
   );
 }
 
+function Invite({ s }: { s: Series }) {
+  const { toast } = useStore();
+  const link = `${window.location.origin}/join/${s.code}`;
+  const copy = (value: string, what: string) =>
+    navigator.clipboard?.writeText(value).then(
+      () => toast(`${what} copied.`),
+      () => toast(`Couldn't copy. It's ${value}`, "err")
+    );
+  return (
+    <div style={{ minWidth: 240 }}>
+      <span className="cap">Invite code</span>
+      <div className="invite" style={{ marginTop: 6 }}>
+        <span>{s.code}</span>
+        <button type="button" className="btn sm ghost" onClick={() => copy(s.code, "Code")}>
+          Copy
+        </button>
+      </div>
+      <button type="button" className="btn sm block" style={{ marginTop: 8 }} onClick={() => copy(link, "Invite link")}>
+        Copy invite link
+      </button>
+    </div>
+  );
+}
+
 export default function Lobby({ s }: { s: Series }) {
-  const { db, me, api, toast } = useStore();
+  const { me, api } = useStore();
   const nav = useNavigate();
   const [writing, setWriting] = useState(false);
   const isHost = s.hostId === me;
   const member = s.members.find((m) => m.userId === me);
   const playing = isParticipant(s, me);
-  const blockers = startBlockers(db, s);
-  const invited = s.members.filter((m) => m.status === "invited");
+  const pool = s.settings.mode === "pool";
+  const unagreed = pool ? s.favors.filter((f) => !agreesTo(f, me)).length : 0;
 
   return (
     <>
@@ -79,58 +131,29 @@ export default function Lobby({ s }: { s: Series }) {
           <h1 style={{ marginTop: 14 }}>{s.name}</h1>
           <p>{s.description || "Players join, read the rules and submit favors. Rules lock when betting starts."}</p>
         </div>
-        <div style={{ minWidth: 240 }}>
-          <span className="cap">Invite code</span>
-          <div className="invite" style={{ marginTop: 6 }}>
-            <span>{s.code}</span>
-            <button
-              type="button"
-              className="btn sm ghost"
-              onClick={() => {
-                navigator.clipboard?.writeText(s.code).then(
-                  () => toast("Code copied."),
-                  () => toast("Couldn't copy. The code is " + s.code, "err")
-                );
-              }}
-            >
-              Copy
-            </button>
-          </div>
-        </div>
+        <Invite s={s} />
       </section>
-
-      {!member && (
-        <p className="notice">
-          <b>You're not in this series.</b>{" "}
-          <button type="button" className="btn sm primary" onClick={() => api.joinSeries(s.id, "You're in.")}>
-            Join
-          </button>
-        </p>
-      )}
-      {member?.status === "invited" && (
-        <p className="notice">
-          <b>You're invited.</b> Review the rules below, then join.{" "}
-          <button type="button" className="btn sm primary" onClick={() => api.joinSeries(s.id, "You're in.")}>
-            Join
-          </button>
-        </p>
-      )}
 
       <div className="grid2">
         <div className="col">
           <Panel label="Rules" right="Locked at start">
             <RulesList s={s} />
-            {playing && (
+            {playing && member && (
               <>
                 <div className="rule" />
                 <label className="check">
                   <input
                     type="checkbox"
-                    checked={member!.ready}
+                    checked={member.ready}
                     onChange={(e) => api.setReady(s.id, e.target.checked, e.target.checked ? "You're ready." : undefined)}
                   />
                   <span>
-                    I've read the rules{s.settings.mode === "money" ? "" : " and agree to do a favor from this lobby if I finish in the bottom " + s.settings.losers}
+                    I've read the rules
+                    {s.settings.mode === "money"
+                      ? ""
+                      : pool
+                        ? ` and agree to every favor in the pool${unagreed ? ` (this agrees to the ${unagreed} you haven't yet)` : ""}. I'll do the one picked for me if I finish in the bottom ${s.settings.losers}`
+                        : ` and will do my pledge if I finish in the bottom ${s.settings.losers}`}
                     . I'm ready.
                   </span>
                 </label>
@@ -173,25 +196,22 @@ export default function Lobby({ s }: { s: Series }) {
         </div>
 
         <div className="col">
-          <Panel label="Players" right={`${s.members.length - invited.length} joined`}>
+          <Panel label="Players" right={`${participantIds(s).length} playing`}>
             <div className="people">
               {s.members.map((m) => {
                 const host = m.userId === s.hostId;
-                const plays = !host || s.settings.hostPlays;
                 const favors = s.favors.filter((f) => f.authorId === m.userId).length;
                 return (
                   <div key={m.userId} className="person">
                     <Who id={m.userId} />
                     <span className="row">
                       {host && <span className="pill host">Host</span>}
-                      {m.status === "invited" ? (
-                        <span className="pill draft">Invited</span>
-                      ) : plays ? (
+                      {m.plays ? (
                         <span className={`pill ${m.ready ? "open" : "canceled"}`}>{m.ready ? "Ready" : "Not ready"}</span>
                       ) : (
                         <span className="cap">Not playing</span>
                       )}
-                      {s.settings.mode === "pool" && plays && m.status === "joined" && <span className="cap">{favors} favor{favors === 1 ? "" : "s"}</span>}
+                      {pool && m.plays && <span className="cap">{favors} favor{favors === 1 ? "" : "s"}</span>}
                       {isHost && !host && (
                         <ConfirmButton className="btn ghost sm danger" label="Kick" confirm="Sure?" onConfirm={() => api.kick(s.id, m.userId, "Player removed.")} />
                       )}
@@ -218,9 +238,9 @@ export default function Lobby({ s }: { s: Series }) {
           {isHost && (
             <Panel label="Start">
               <div className="stack">
-                {blockers.length ? (
+                {s.blockers.length ? (
                   <div className="stack" style={{ gap: 8 }}>
-                    {blockers.map((b) => (
+                    {s.blockers.map((b) => (
                       <p key={b} className="notice">
                         {b}
                       </p>
@@ -229,14 +249,14 @@ export default function Lobby({ s }: { s: Series }) {
                 ) : (
                   <p className="notice ok">
                     <b>Everyone's ready.</b> Starting gives each player {s.settings.startingCoins.toLocaleString()} coins and
-                    locks the rules{invited.length ? `. ${invited.length} unanswered invite${invited.length === 1 ? "" : "s"} will be dropped` : ""}.
+                    locks the rules.
                   </p>
                 )}
                 <ConfirmButton
                   className="btn block"
                   label="Start betting"
                   confirm="Lock rules and start?"
-                  disabled={blockers.length > 0}
+                  disabled={s.blockers.length > 0}
                   onConfirm={() => api.start(s.id, "Betting is live.")}
                 />
               </div>

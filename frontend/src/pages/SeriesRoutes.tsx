@@ -3,7 +3,7 @@ import { Shell } from "../components/Shell.tsx";
 import { StandingsTable } from "../components/Standings.tsx";
 import { Empty, Panel } from "../components/ui.tsx";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "@rules/types.ts";
+import type { Series } from "../lib/types.ts";
 import BetPage from "./BetPage.tsx";
 import Dashboard from "./Dashboard.tsx";
 import Lobby from "./Lobby.tsx";
@@ -21,7 +21,7 @@ function Missing() {
     <Shell>
       <Panel>
         <Empty title="Series not found">
-          It may have been reset. <Link to="/" className="red-t">Back to your series</Link>
+          You may not be in it, or it may have been removed. <Link to="/" className="red-t">Back to your series</Link>
         </Empty>
       </Panel>
     </Shell>

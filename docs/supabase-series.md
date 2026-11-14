@@ -1,0 +1,104 @@
+# Bet Series on Supabase
+
+Bet Series keeps its data in Supabase Postgres, and its rules live there as SQL functions. The Next app's `/api/series/*` routes are thin wrappers that call one function each, acting as the signed-in player. The Bet Series screens are the Vite app in `frontend/`.
+
+```
+frontend/ (Vite, :5173)  ──/api──▶  Next app (:3000) src/app/api/series/*  ──RPC──▶  Supabase Postgres
+   Supabase Auth in the browser          Bearer token → auth.uid()                 supabase/migrations/*.sql
+```
+
+The rest of the Next app (groups, markets, the AI Bookie) still uses its own JSON store. Only Bet Series is on Supabase.
+
+## What you need
+
+From the Supabase project (Project Settings → API):
+
+| Value | Where it goes |
+| --- | --- |
+| Project URL | `SUPABASE_URL` |
+| Publishable key (also called the anon key) | `SUPABASE_PUBLISHABLE_KEY` |
+
+Put both in `.env.local` at the repo root. The Next app and `frontend/` both read them from there; `frontend/vite.config.ts` picks up only these two values, so no other variable reaches the browser. The `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` names from the first version of this branch also work.
+
+Never use the `service_role` / secret key in either app. Only `scripts/e2e-series.mjs` and `scripts/create-demo-users.mjs` need it, and they read it from the git-ignored `.supabase-test-secret` file.
+
+## Set up the project
+
+1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0007_full_bet_series_rules.sql` is the newest. It upgrades data made with 0001–0006 in place (tested in `supabase/tests/upgrade.test.mjs`).
+2. **Turn on sign-in methods** (Authentication → Sign In / Providers). Email with password works with no setup. For Google, follow `docs/supabase-setup.md`.
+3. **Allow the redirect URLs** (Authentication → URL Configuration): add `http://localhost:5173/**` for the frontend, `http://localhost:3000/**` for the Next app, and the deployed origins later.
+4. Run it:
+
+   ```bash
+   npm run dev                    # repo root: Next app and the API on :3000
+   cd frontend && npm run dev     # Bet Series screens on http://localhost:5173
+   ```
+
+## API
+
+Every route needs `Authorization: Bearer <Supabase access token>`. Responses are `{ "result": ... }`; errors are `{ "error": { "code", "message" } }`, where `message` is written for players. The status is 401 (not signed in), 403 (not allowed: `not_host`, `not_member`…), 404 (not found), 409 (wrong moment: `series_not_lobby`, `bet_not_open`, start blockers…) or 400 (bad input).
+
+| Route | Does |
+| --- | --- |
+| `GET /api/series/state` | Everything the app shows: you, the server clock, and every series you're in with members, favors, bets, wagers, results, standings, start blockers, assignments and activity |
+| `GET /api/series` | Your series (all statuses), newest first |
+| `POST /api/series` | Create a lobby. `{ title, description?, plannedBetCount, initialBankroll, loserCount, stakeMode: "SHARED_FAVOR_POOL" \| "PLEDGE" \| "MONEY", questions?: string[], settings?: { minContribution, favorsPerPlayer, exclusivePool, tiebreak: "first" \| "random", betCreation: "upfront" \| "during", withdrawMinutes, hostPlays } }` |
+| `POST /api/series/join` | Join by invite code `{ code }` |
+| `GET /api/series/:id` | One series with its roster |
+| `POST /api/series/:id/join` · `/leave` | Join by id (repeat is harmless) · leave the lobby |
+| `DELETE /api/series/:id/participants/:userId` | Host removes a player (lobby only) |
+| `GET` · `POST /api/series/:id/favors` | List favors · add one `{ description }` (pledge mode replaces yours) |
+| `DELETE /api/series/:id/favors/:favorId` | Take back your favor (lobby only) |
+| `POST /api/series/favors/:favorId/consent` | Agree or stop agreeing to someone's favor `{ consent }` (shared pool) |
+| `POST /api/series/:id/ready` | `{ ready }`; in a shared pool this also agrees to every favor in it |
+| `POST /api/series/:id/start` | Host starts: coins once, bets open, rules lock (repeat is harmless) |
+| `GET` · `POST /api/series/:id/bets` | List bets with wagers and results · host writes one `{ question }` |
+| `DELETE /api/series/:id/bets/:betId` | Host deletes a bet that hasn't opened |
+| `POST /api/series/:id/bets/:betId/wagers` | `{ outcome: "YES" \| "NO", amount }` |
+| `POST /api/series/:id/bets/:betId/withdraw` | Take your whole wager back inside the window |
+| `POST /api/series/:id/bets/:betId/lock` · `/resolve` · `/cancel` | Host stops wagers (one-sided pools refund at once) · settles `{ outcome }` · cancels with refunds |
+| `POST /api/series/:id/complete` | Host ends once nothing is open (it also ends itself after the last planned bet) |
+| `GET /api/series/:id/leaderboard` | rank, display_name, balance (settled), available, at_stake, is_loser |
+| `GET /api/series/:id/assignments` | What each loser owes and its status |
+| `POST /api/series/:id/favors/assign` | Winner picks a favor for their paired loser `{ loserId, favorId }` |
+| `POST /api/series/assignments/:assignmentId/respond` | Loser accepts or declines `{ accept }` |
+| `POST /api/series/:id/favor-done` | Loser marks an accepted favor done |
+
+## Rules the SQL enforces
+
+- **Modes.** Shared favor pool (C), self-pledged favors (B), real money (A, recorded only, nothing is charged).
+- **Lobby.** Joining is idempotent. The host can kick and players can leave until start. In a shared pool each player adds 1 to `favorsPerPlayer` favors. Any change to the pool resets everyone's ready. Ready requires your own favor, and in a shared pool it agrees to every favor in it.
+- **Start.** Blockers, in order:
+  - at least 2 players;
+  - a shared pool needs 2X players, other modes more than X;
+  - every player has a favor (not money mode);
+  - everyone is ready;
+  - in `upfront` mode, every bet is written.
+
+  Starting hands out coins once, opens every written bet and draws the random tiebreak order.
+- **Wagers.** Add to your side, never switch. You can't spend more than your free coins. The host can bet too unless they sit out. Withdrawals are allowed for `withdrawMinutes` after a bet opens (0 = never).
+- **Settling.** Winners split the whole pool by stake. Rounding leftovers go one coin each to the biggest winning stakes, earlier wager first, so payouts always add up to the pool. These cases refund everyone:
+  - one-sided pools;
+  - nobody on the winning side;
+  - cancels.
+
+  Each bet settles exactly once, under a row lock.
+- **Standings.** Ranked by settled coins. Ties: "first" means first to reach the score, then the earlier wager on that bet, then join order. "random" uses the order drawn at start. The bottom X lose. The order freezes when the series ends.
+- **The end.**
+  - Shared pool: rank i picks for rank n−i+1. They can only pick favors that loser wrote or agreed to. Exclusive pools pick in rank order, one favor each. The loser accepts or declines; a decline means the winner picks again. Nothing is binding until accepted.
+  - Pledge: the bottom X owe their own pledge.
+  - Money: the bottom X owe the minimum.
+
+## Tests
+
+| Command | Runs against | Needs |
+| --- | --- | --- |
+| `npm run test:series-sql` | The migrations in an in-process Postgres (PGlite) with RLS, as the `authenticated` role | Nothing |
+| `node supabase/tests/local-supabase.mjs` | A stand-in Supabase (email Auth, RPC and simple table reads on PGlite) for running the whole app offline. Start the Next app and `frontend/` with `SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local`. In memory, test only | Nothing |
+| `npm run test:series` | The real project, with disposable users | `.env.local` and `.supabase-test-secret` |
+
+## Notes
+
+- **Identity** is always the verified Supabase user. Nothing in a request body picks who is acting.
+- **Concurrency.** Writes lock the series row, so balance checks and settlement are safe across server instances.
+- **Hosting.** Bet Series data is in Supabase. The Next app's other features still write `.data/bookie.json`, so they need a host with a persistent disk.

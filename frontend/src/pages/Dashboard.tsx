@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { NewBetModal, StandingsTable } from "../components/Standings.tsx";
 import { ConfirmButton, Empty, Panel, Pill, PoolBar } from "../components/ui.tsx";
-import { balances, isParticipant, pools, standings } from "@rules/engine.ts";
+import { balances, isParticipant, pools, standings } from "../lib/rules.ts";
 import { ago, fmt, ordinal, signed } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Bet, Series } from "@rules/types.ts";
+import type { Bet, Series } from "../lib/types.ts";
 
 const STATUS: Record<Bet["status"], string> = {
   draft: "Draft",
@@ -70,8 +70,14 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
       ) : bet.status === "resolved" ? (
         <div className="settled">
           <span>
-            Result <b className={bet.outcome === "yes" ? "yes-t" : "no-t"}>{bet.outcome!.toUpperCase()}</b>
-            {bet.refunded && <span className="dim"> · refunded</span>}
+            {bet.outcome ? (
+              <>
+                Result <b className={bet.outcome === "yes" ? "yes-t" : "no-t"}>{bet.outcome.toUpperCase()}</b>
+                {bet.refunded && <span className="dim"> · refunded</span>}
+              </>
+            ) : (
+              "One-sided · refunded"
+            )}
           </span>
           {result && <b className={`num ${result.net > 0 ? "up" : result.net < 0 ? "down" : "dim"}`}>{signed(result.net)}</b>}
         </div>
@@ -183,13 +189,13 @@ export default function Dashboard({ s }: { s: Series }) {
                       : "This series locked its bets before it started."}
                   </p>
                 )}
-                <p className="hint">Open a bet to close betting, resolve it, or cancel it.</p>
+                <p className="hint">Open a bet to lock betting, resolve it, or cancel it.</p>
                 <ConfirmButton
                   className="btn"
                   label="End series now"
                   confirm="End and rank everyone?"
                   disabled={unsettled > 0}
-                  onConfirm={() => api.endSeries(s.id, "Series over.")}
+                  onConfirm={() => api.completeSeries(s.id, "Series over.")}
                 />
                 {unsettled > 0 && <p className="hint">Resolve or cancel {unsettled} open bet{unsettled === 1 ? "" : "s"} before ending early.</p>}
               </div>

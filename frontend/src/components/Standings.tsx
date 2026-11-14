@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { standings } from "@rules/engine.ts";
+import { standings } from "../lib/rules.ts";
 import { fmt, signed } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Series } from "@rules/types.ts";
+import type { Series } from "../lib/types.ts";
 import { Modal, Who } from "./ui.tsx";
 
 /** Ranked by settled coins; the dashed line marks where the bottom X start. */
@@ -54,7 +54,7 @@ export function NewBetModal({ s, onClose }: { s: Series; onClose: () => void }) 
       >
         <label className="field">
           <span>Question</span>
-          <textarea className="input" value={q} onChange={(e) => setQ(e.target.value)} maxLength={140} placeholder="Placeholder placeholder?" autoFocus />
+          <textarea className="input" value={q} onChange={(e) => setQ(e.target.value)} maxLength={300} placeholder="Placeholder placeholder?" autoFocus />
         </label>
         <p className="hint">
           {left} of {s.settings.betCount} bet{s.settings.betCount === 1 ? "" : "s"} left to write. You decide the result

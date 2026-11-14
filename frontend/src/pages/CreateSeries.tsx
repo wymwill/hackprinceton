@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shell } from "../components/Shell.tsx";
 import { Panel } from "../components/ui.tsx";
-import { DEFAULT_SETTINGS } from "@rules/engine.ts";
+import { DEFAULT_SETTINGS } from "../lib/rules.ts";
 import { MODE_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Id, Mode, Settings } from "@rules/types.ts";
+import type { Mode, Settings } from "../lib/types.ts";
 
 const MODES: { mode: Mode; letter: string; blurb: string }[] = [
   { mode: "money", letter: "A", blurb: "Players chip in real money instead of favors. Shown for the demo; no money moves." },
@@ -32,20 +32,21 @@ function Seg<T extends string | number | boolean>({
 }
 
 export default function CreateSeries() {
-  const { db, me, api } = useStore();
+  const { api } = useStore();
   const nav = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [invite, setInvite] = useState<Id[]>([]);
+  const [questions, setQuestions] = useState<string[]>([""]);
   const [st, setSt] = useState<Settings>({ ...DEFAULT_SETTINGS });
   const set = <K extends keyof Settings>(k: K, v: Settings[K]) => setSt((s) => ({ ...s, [k]: v }));
 
-  const friends = db.users.filter((u) => u.id !== me);
-  const expected = invite.length + (st.hostPlays ? 1 : 0);
   const needed = st.mode === "pool" ? 2 * st.losers : st.losers + 1;
+  const written = questions.map((q) => q.trim()).filter(Boolean);
+  const tooMany = written.length > st.betCount;
+  const setQuestion = (i: number, v: string) => setQuestions((qs) => qs.map((q, j) => (j === i ? v : q)));
 
   const submit = async () => {
-    const s = await api.createSeries({ name, description, settings: st, invite }, "Series created. Share the code to fill the lobby.");
+    const s = await api.createSeries({ name, description, settings: st, questions: written }, "Series created. Share the invite link to fill the lobby.");
     if (s) nav(`/s/${s.id}`);
   };
 
@@ -86,26 +87,7 @@ export default function CreateSeries() {
                 <span>Starting coins per player</span>
                 <input className="input" type="number" min={100} max={100000} step={100} value={st.startingCoins} onChange={(e) => set("startingCoins", Number(e.target.value))} />
               </label>
-              <div className="field">
-                <span>Invite friends</span>
-                <div className="row wrap">
-                  {friends.map((u) => {
-                    const on = invite.includes(u.id);
-                    return (
-                      <button
-                        key={u.id}
-                        type="button"
-                        className={`btn sm ${on ? "primary" : ""}`}
-                        onClick={() => setInvite((xs) => (on ? xs.filter((x) => x !== u.id) : [...xs, u.id]))}
-                      >
-                        {on ? "✓ " : "+ "}
-                        {u.name}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="hint">Anyone else can join with the invite code until betting starts.</p>
-              </div>
+              <p className="hint">After you create it, share the invite link or code. Friends sign in and join from the lobby.</p>
               <label className="check">
                 <input type="checkbox" checked={st.hostPlays} onChange={(e) => set("hostPlays", e.target.checked)} />
                 <span>I'm playing too. (The host still decides every result.)</span>
@@ -113,7 +95,44 @@ export default function CreateSeries() {
             </div>
           </Panel>
 
-          <Panel label="02 · Mode">
+          <Panel label="02 · Bets" right={`${written.length}/${st.betCount} written`}>
+            <div className="stack">
+              <p className="hint">
+                Write the YES/NO questions now, or add them in the lobby.{" "}
+                {st.betCreation === "upfront"
+                  ? `All ${st.betCount} have to be written before betting starts.`
+                  : "You can also add the rest while the series runs."}
+              </p>
+              {questions.map((q, i) => (
+                <div key={i} className="row">
+                  <span className="num dim" style={{ width: 22 }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <input
+                    className="input text"
+                    value={q}
+                    onChange={(e) => setQuestion(i, e.target.value)}
+                    maxLength={300}
+                    placeholder="Placeholder placeholder?"
+                    aria-label={`Bet ${i + 1}`}
+                  />
+                  {questions.length > 1 && (
+                    <button type="button" className="btn ghost sm" onClick={() => setQuestions((qs) => qs.filter((_, j) => j !== i))}>
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+              {questions.length < st.betCount && (
+                <button type="button" className="btn" onClick={() => setQuestions((qs) => [...qs, ""])}>
+                  + Another question
+                </button>
+              )}
+              {tooMany && <p className="notice">This series has {st.betCount} bets. Remove {written.length - st.betCount} question{written.length - st.betCount === 1 ? "" : "s"}.</p>}
+            </div>
+          </Panel>
+
+          <Panel label="03 · Mode">
             <div className="stack">
               <div className="choice-grid">
                 {MODES.map((m) => (
@@ -165,7 +184,7 @@ export default function CreateSeries() {
             </div>
           </Panel>
 
-          <Panel label="03 · Advanced rules">
+          <Panel label="04 · Advanced rules">
             <div className="stack">
               <div className="field">
                 <span>Ties on the leaderboard</span>
@@ -236,22 +255,16 @@ export default function CreateSeries() {
               Bottom who lose <b>{st.losers}</b>
             </div>
             <div className="kv">
-              Players so far <b>{expected}</b>
+              Questions written <b>{written.length}</b>
             </div>
             <div className="rule" />
-            {expected < needed ? (
-              <p className="notice">
-                <b>Needs {needed}+ players</b> to start
-                {st.mode === "pool" ? `, so the top ${st.losers} can pick for the bottom ${st.losers}` : ""}. More can join
-                with the code.
-              </p>
-            ) : (
-              <p className="notice ok">
-                <b>Enough players</b> invited to start once everyone's ready.
-              </p>
-            )}
+            <p className="notice">
+              <b>Needs {needed}+ players</b> to start
+              {st.mode === "pool" ? `, so the top ${st.losers} can pick for the bottom ${st.losers}` : ""}
+              {st.hostPlays ? ", counting you" : ""}. Friends join with the invite link.
+            </p>
             <div style={{ height: 14 }} />
-            <button type="button" className="btn primary block" onClick={submit}>
+            <button type="button" className="btn primary block" onClick={submit} disabled={!name.trim() || tooMany}>
               Create series
             </button>
           </Panel>
