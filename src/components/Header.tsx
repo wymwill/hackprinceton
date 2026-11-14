@@ -3,7 +3,7 @@
 import { useBookie } from "./BookieProvider";
 
 export default function Header() {
-  const { toast } = useBookie();
+  const { toast, state, switchUser } = useBookie();
   return (
     <header className="fixed top-0 left-[260px] right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-gutter-desktop">
       <div className="flex items-center gap-space-md flex-1 max-w-xl">
@@ -22,6 +22,23 @@ export default function Header() {
         </div>
       </div>
       <div className="flex items-center gap-space-md">
+        {state && (
+          <label className="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container-high font-label-sm text-label-sm text-on-surface-variant">
+            <span className="whitespace-nowrap">Playing as</span>
+            <select
+              value={state.me}
+              onChange={(e) => switchUser(e.target.value)}
+              aria-label="Switch which friend you're playing as"
+              className="bg-transparent text-on-surface font-semibold outline-none cursor-pointer"
+            >
+              {state.users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-tertiary-container/12 border border-tertiary-container/25">
           <span className="font-label-sm text-label-sm text-tertiary font-medium flex items-center gap-1 whitespace-nowrap">
             <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />

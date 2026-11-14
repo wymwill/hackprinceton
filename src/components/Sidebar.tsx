@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { GROUPS, ME, NAV } from "@/lib/data";
+import Avatar from "./Avatar";
 import { useBookie } from "./BookieProvider";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { openCreateBet, toast } = useBookie();
+  const { openCreateBet, toast, me } = useBookie();
+  const profile = me ?? { name: ME.name, title: ME.title, avatar: ME.avatar, balance: ME.points };
   const [activeGroup, setActiveGroup] = useState(GROUPS[0].id);
 
   return (
@@ -107,14 +109,14 @@ export default function Sidebar() {
         </button>
         <Link href="/profile" className="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-lowest">
           <div className="flex items-center gap-space-sm truncate">
-            <img alt="Profile" className="w-8 h-8 rounded-full object-cover" src={ME.avatar} />
+            <Avatar name={profile.name} src={profile.avatar} size={32} />
             <div className="flex flex-col truncate">
-              <span className="font-label-md text-label-md text-on-surface font-semibold truncate">{ME.name}</span>
-              <span className="font-label-sm text-label-sm text-secondary-fixed-dim truncate">{ME.title}</span>
+              <span className="font-label-md text-label-md text-on-surface font-semibold truncate">{profile.name}</span>
+              <span className="font-label-sm text-label-sm text-secondary-fixed-dim truncate">{profile.title}</span>
             </div>
           </div>
           <div className="flex items-center px-space-xs py-0.5 rounded-full bg-surface-container-high">
-            <span className="font-label-sm text-label-sm text-primary font-bold">{ME.points.toLocaleString()} P</span>
+            <span className="font-label-sm text-label-sm text-primary font-bold">{profile.balance.toLocaleString()} P</span>
           </div>
         </Link>
       </div>

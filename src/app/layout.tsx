@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import BookieProvider from "@/components/BookieProvider";
 import Header from "@/components/Header";
@@ -25,7 +26,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="bg-surface font-body-md text-body-md text-on-surface">
         <BookieProvider>
-          <Sidebar />
+          {/* Sidebar reads the URL, so dynamic routes like /bets/[id] fill it in at request time. */}
+          <Suspense fallback={<aside className="fixed left-0 top-0 h-full w-[260px] bg-surface-container-low z-50" />}>
+            <Sidebar />
+          </Suspense>
           <div className="pl-[260px]">
             <Header />
             {children}

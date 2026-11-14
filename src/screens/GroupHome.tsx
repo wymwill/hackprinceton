@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useBookie } from "@/components/BookieProvider";
 import Countdown from "@/components/Countdown";
 import { ME } from "@/lib/data";
+import GroupFeed from "@/components/GroupFeed";
 
 type Msg = { id: number; who: "me" | "bookie"; text: string };
 
@@ -257,6 +258,8 @@ export default function GroupHome() {
             {/* Feed Container */}
             {" "}
             <div className="flex flex-col gap-space-md">
+              {/* Live group bets from the server */}
+              <GroupFeed />
               {/* Feed Item 1: AI Bookie Message Card */}
               {" "}
               <article className="relative overflow-clip rounded-xl bg-surface-container-low p-space-md shadow-md transition-all">
