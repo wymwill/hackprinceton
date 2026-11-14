@@ -217,6 +217,7 @@ function betView(db: Db, bet: Bet, now: number): BetView {
     entries,
     history: bet.history,
     receipt: db.receipts.find((r) => r.id === bet.receiptId),
+    bookie: bet.bookie,
   };
 }
 

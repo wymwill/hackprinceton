@@ -58,6 +58,15 @@ npm run test:e2e                                     # terminal 2 (BOOKIE_URL de
 
 It creates, joins, overspends, races, auto-closes, settles, re-settles, fires 8 settle requests at once, and checks balances, receipts, stats and point conservation.
 
+## AI Bookie (LangChain Deep Agents)
+
+When someone posts a bet, the AI Bookie sets an opening line: a chance for each outcome, a one-line take and a roast.
+
+- **Setup:** copy `.env.example` to `.env.local` and set `ANTHROPIC_API_KEY`. Without a key the Bookie uses a simple track-record formula instead, so everything still works.
+- **Flow:** `POST /api/bets` saves the bet marked "thinking" and responds right away. After the response, `setOpeningLine` in `src/server/ai/bookie.ts` runs a Deep Agent on Claude Opus 5.5, saves its line on the bet, and the screens show it on their next poll.
+- **Tools the agent can call:** `get_bet`, `get_track_record` and `submit_line`. Tools read the same store as the rest of the app.
+- **Safety:** the line is advisory only and never moves points. A 45 second timeout and any error fall back to the formula.
+
 ## Layout
 
 - `src/app/globals.css`: design tokens from Stitch's `DESIGN.md` (colors, type scale, spacing) as a Tailwind v4 `@theme`

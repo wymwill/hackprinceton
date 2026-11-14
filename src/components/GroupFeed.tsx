@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ago, timeLeft, useNow } from "@/lib/bets/format";
 import Avatar from "./Avatar";
+import BookieLineCard from "./BookieLineCard";
 import { liveStatus, useBookie } from "./BookieProvider";
 import QuickBetSheet from "./QuickBetSheet";
 
@@ -49,6 +50,7 @@ export default function GroupFeed({ groupId = "gym-arc" }: { groupId?: string })
             <Link href={`/bets/${b.id}`} className="font-headline-sm text-headline-sm text-on-surface hover:text-primary leading-snug">
               {b.emoji} {b.proposition}
             </Link>
+            {s !== "settled" && <BookieLineCard bet={b} compact />}
             <div className="flex flex-wrap gap-2">
               {b.outcomes.map((o, i) => (
                 <button

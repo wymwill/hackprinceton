@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { Entry, Outcome, Receipt } from "@/lib/bets/types";
+import type { BookieLine, Entry, Outcome, Receipt } from "@/lib/bets/types";
 
 /**
  * Bookie's persistence: one JSON file on disk, written atomically.
@@ -32,6 +32,7 @@ export type Bet = {
   deadline: string;
   history: number[][];
   receiptId?: string;
+  bookie?: BookieLine;
 };
 
 export type LedgerRow = {
