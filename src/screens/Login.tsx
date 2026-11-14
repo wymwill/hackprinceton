@@ -3,7 +3,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { AuthMode } from "@/lib/authConfig";
 import { Button, card } from "@/components/ui";
 
@@ -13,6 +13,15 @@ export default function Login({ mode, supabase }: { mode: AuthMode; supabase: { 
   const next = params.get("next") ?? "/";
   const [error, setError] = useState(params.get("error"));
   const [busy, setBusy] = useState(false);
+  // Google only works once it is turned on in the Supabase project; check before offering it.
+  const [googleOn, setGoogleOn] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!supabase) return;
+    fetch(`${supabase.url}/auth/v1/settings`, { headers: { apikey: supabase.key } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s: { external?: Record<string, boolean> } | null) => setGoogleOn(s ? (s.external?.google ?? false) : null))
+      .catch(() => setGoogleOn(null));
+  }, [supabase]);
 
   const signIn = async () => {
     if (!supabase) return;
@@ -43,10 +52,14 @@ export default function Login({ mode, supabase }: { mode: AuthMode; supabase: { 
 
         {mode !== "demo" && (
           // Shown before the keys exist too, so the page looks finished; it only works once Supabase is set up.
-          <Button className="w-full h-12 bg-white! text-[#1f1f1f]! hover:brightness-95" onClick={signIn} disabled={busy || mode !== "supabase"}>
+          <Button className="w-full h-12 bg-white! text-[#1f1f1f]! hover:brightness-95" onClick={signIn} disabled={busy || mode !== "supabase" || googleOn === false}>
             <GoogleMark />
             {busy ? "Opening Google…" : "Continue with Google"}
           </Button>
+        )}
+
+        {mode === "supabase" && googleOn === false && (
+          <p className="font-body-sm text-body-sm text-on-surface-variant">Google sign-in isn't turned on in Supabase yet. See <code className="font-num text-on-surface">docs/supabase-setup.md</code>, step 3.</p>
         )}
 
         {mode === "unconfigured" && (
