@@ -3,7 +3,7 @@
 Bet Series keeps its data in Supabase Postgres, and its rules live there as SQL functions. The Next app's `/api/series/*` routes are thin wrappers that call one function each, acting as the signed-in player. The Bet Series screens are the Vite app in `frontend/`.
 
 ```
-frontend/ (Vite, :5173)  ──/api──▶  Next app (:3000) src/app/api/series/*  ──RPC──▶  Supabase Postgres
+frontend/ (served at :3000)  ──/api──▶  Next app (:3000) src/app/api/series/*  ──RPC──▶  Supabase Postgres
    Supabase Auth in the browser          Bearer token → auth.uid()                 supabase/migrations/*.sql
 ```
 
@@ -24,14 +24,13 @@ Never use the `service_role` / secret key in either app. Only `scripts/e2e-serie
 
 ## Set up the project
 
-1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0007_full_bet_series_rules.sql` is the newest. It upgrades data made with 0001–0006 in place (tested in `supabase/tests/upgrade.test.mjs`).
+1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0008_avatar_uploads.sql` (the profile-picture bucket) is the newest; `0007_full_bet_series_rules.sql` holds the rules. It upgrades data made with 0001–0006 in place (tested in `supabase/tests/upgrade.test.mjs`).
 2. **Turn on sign-in methods** (Authentication → Sign In / Providers). Email with password works with no setup. For Google, follow `docs/supabase-setup.md`.
-3. **Allow the redirect URLs** (Authentication → URL Configuration): add `http://localhost:5173/**` for the frontend, `http://localhost:3000/**` for the Next app, and the deployed origins later.
+3. **Allow the redirect URLs** (Authentication → URL Configuration): add `http://localhost:3000/**`, and `https://<your-domain>/**` once deployed.
 4. Run it:
 
    ```bash
-   npm run dev                    # repo root: Next app and the API on :3000
-   cd frontend && npm run dev     # Bet Series screens on http://localhost:5173
+   npm run dev                    # repo root: open http://localhost:3000
    ```
 
 ## API

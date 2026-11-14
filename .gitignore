@@ -52,3 +52,6 @@ next-env.d.ts
 /.supabase-token*
 /.supabase-test-secret
 /.supabase-demo-users.csv
+
+# Bet Series app, built into Next by `npm run build`
+/public/app/
