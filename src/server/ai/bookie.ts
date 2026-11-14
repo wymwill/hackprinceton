@@ -5,8 +5,10 @@ import { AppError } from "../errors";
 import { requireMember } from "../groups";
 import { aiQueue, applyBookieEstimate, positionsOf, requireMarket, settledRecords, statusOf } from "../markets";
 import { newId, read, transact, type Db, type StoredEvidence } from "../store";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { agentFailureReason, askAgent, type AgentContext, type AgentOutput, type AgentRecord } from "./agent";
 import { AiUnavailable, estimateOdds, reviewEvidence, suggestDare, writeRoast } from "./claude";
-import { aiMode } from "./config";
+import { AI_MODEL, aiMode } from "./config";
 
 /**
  * The Bookie around the market lifecycle. Model calls take seconds, so they
@@ -23,42 +25,94 @@ function log(db: Db, groupId: string, marketId: string | undefined, kind: "odds"
 
 // ---------- odds ----------
 
+type Baseline = ReturnType<typeof baselineEstimate>;
+
+/** Clamp and check a model's odds against the facts it was given. Shared by the Deep Agent and the single call. */
+function fromModel(output: AgentOutput, base: Baseline, model: string, via: BookieEstimate["via"], at: string): BookieEstimate {
+  const ids = new Set(base.facts.map((f) => f.id));
+  const cited = output.cited_fact_ids.filter((id) => ids.has(id));
+  const chance = Math.round(Math.min(95, Math.max(5, output.chance)));
+  const lo = Math.round(Math.min(chance, Math.max(1, output.range_low)));
+  const hi = Math.round(Math.max(chance, Math.min(99, output.range_high)));
+  return {
+    chance,
+    range: [lo, hi],
+    uncertainty: output.uncertainty,
+    explanation: output.explanation.trim().slice(0, 300),
+    facts: cited.length ? base.facts.filter((f) => cited.includes(f.id)) : base.facts,
+    source: "claude",
+    model,
+    via,
+    at,
+  };
+}
+
+/** Each group member's settled history, for the agent's get_track_record tool. */
+function trackRecords(db: Db, groupId: string): AgentRecord[] {
+  const settled = db.receipts
+    .filter((r) => !r.voided)
+    .flatMap((r) => {
+      const m = db.markets.find((x) => x.id === r.marketId);
+      return m && m.groupId === groupId ? [{ r, m }] : [];
+    })
+    .sort((a, b) => b.r.settledAt.localeCompare(a.r.settledAt));
+  return db.memberships
+    .filter((ms) => ms.groupId === groupId)
+    .map((ms) => ({
+      name: db.users.find((u) => u.id === ms.userId)?.name ?? ms.userId,
+      aboutThem: settled
+        .filter(({ m }) => m.subjectId === ms.userId)
+        .slice(0, 10)
+        .map(({ m, r }) => ({ question: m.question, result: r.outcome === "yes" ? ("yes" as const) : ("no" as const) })),
+      played: settled.flatMap(({ m, r }) => r.results.filter((x) => x.userId === ms.userId).map((x) => ({ question: m.question, result: x.result }))).slice(0, 10),
+    }));
+}
+
+// LangChain retries with long backoff by default, which would sit out the whole agent timeout when the API is down.
+const anthropicModel = () => new ChatAnthropic({ model: AI_MODEL, maxTokens: 8000, maxRetries: 2 });
+
 export async function refreshOdds(marketId: string, trigger: string): Promise<BookieEstimate | null> {
   const ctx = await read((db) => {
     const m = db.markets.find((x) => x.id === marketId);
     if (!m || m.receiptId) return null;
-    const subject = m.subjectId ? db.users.find((u) => u.id === m.subjectId)?.name : undefined;
+    const name = (id: string) => db.users.find((u) => u.id === id)?.name ?? id;
+    const subject = m.subjectId ? name(m.subjectId) : undefined;
     const base = baselineEstimate({ category: m.category, subjectId: m.subjectId, subjectName: subject, history: settledRecords(db, m.groupId) });
-    return { question: m.question, rule: m.rule, category: m.category, subject, base, groupId: m.groupId };
+    const agent: AgentContext = {
+      market: { question: m.question, rule: m.rule, category: m.category, deadline: m.deadline, host: name(m.hostId), subject },
+      friends: db.memberships.filter((x) => x.groupId === m.groupId).map((x) => name(x.userId)),
+      facts: base.facts,
+      baseline: base.chance,
+      records: trackRecords(db, m.groupId),
+    };
+    return { question: m.question, rule: m.rule, category: m.category, subject, base, groupId: m.groupId, agent };
   });
   if (!ctx) return null;
   const { base } = ctx;
   const at = new Date().toISOString();
   const mode = aiMode();
-  let est: BookieEstimate;
+  let est: BookieEstimate | undefined;
 
   if (mode === "claude") {
-    try {
-      const { output, model } = await estimateOdds({ question: ctx.question, rule: ctx.rule, category: ctx.category, subject: ctx.subject, facts: base.facts, baseline: base.chance });
-      const ids = new Set(base.facts.map((f) => f.id));
-      const cited = output.cited_fact_ids.filter((id) => ids.has(id));
-      const chance = Math.round(Math.min(95, Math.max(5, output.chance)));
-      const lo = Math.round(Math.min(chance, Math.max(1, output.range_low)));
-      const hi = Math.round(Math.max(chance, Math.min(99, output.range_high)));
-      est = {
-        chance,
-        range: [lo, hi],
-        uncertainty: output.uncertainty,
-        explanation: output.explanation.trim().slice(0, 300),
-        facts: cited.length ? base.facts.filter((f) => cited.includes(f.id)) : base.facts,
-        source: "claude",
-        model,
-        at,
-      };
-    } catch (err) {
-      if (!(err instanceof AiUnavailable)) throw err;
-      console.warn(`[bookie] odds for ${marketId} fell back to the baseline: ${err.message}`);
-      est = { ...base, source: "baseline", at, fallbackReason: err.message };
+    // The opening line comes from the Deep Agent. Re-checks, and any agent failure, use one structured call.
+    let agentFallbackReason: string | undefined;
+    if (trigger === "created") {
+      try {
+        est = fromModel(await askAgent(ctx.agent, anthropicModel()), base, AI_MODEL, "deep-agent", at);
+      } catch (err) {
+        agentFallbackReason = agentFailureReason(err);
+        console.warn(`[bookie] opening-line agent for ${marketId} failed, trying a single call: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+    if (!est) {
+      try {
+        const { output, model } = await estimateOdds({ question: ctx.question, rule: ctx.rule, category: ctx.category, subject: ctx.subject, facts: base.facts, baseline: base.chance });
+        est = { ...fromModel(output, base, model, "single-call", at), agentFallbackReason };
+      } catch (err) {
+        if (!(err instanceof AiUnavailable)) throw err;
+        console.warn(`[bookie] odds for ${marketId} fell back to the baseline: ${err.message}`);
+        est = { ...base, source: "baseline", at, fallbackReason: err.message, agentFallbackReason };
+      }
     }
   } else if (mode === "stub") {
     est = { ...base, explanation: `Test stub: ${base.explanation}`, source: "stub", at };
@@ -66,10 +120,12 @@ export async function refreshOdds(marketId: string, trigger: string): Promise<Bo
     est = { ...base, source: "baseline", at };
   }
 
+  const final = est;
   return transact((db) => {
-    if (!applyBookieEstimate(db, marketId, est)) return null;
-    log(db, ctx.groupId, marketId, "odds", est.source, `${trigger === "created" ? "Opening line" : "Re-check"}: ${est.chance}% Yes. ${est.explanation}`, est.model, est.facts.map((f) => f.text));
-    return est;
+    if (!applyBookieEstimate(db, marketId, final)) return null;
+    const how = final.via === "deep-agent" ? " (Deep Agent)" : "";
+    log(db, ctx.groupId, marketId, "odds", final.source, `${trigger === "created" ? "Opening line" : "Re-check"}${how}: ${final.chance}% Yes. ${final.explanation}`, final.model, final.facts.map((f) => f.text));
+    return final;
   });
 }
 
