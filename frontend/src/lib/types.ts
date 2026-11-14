@@ -125,7 +125,7 @@ export type Bet = {
   results?: BetResult[] | null;
 };
 
-/** picking: the winner hasn't chosen. pending: waiting for the loser to accept. */
+/** Picking means the winner has not chosen. Accepted means the punishment is assigned. */
 export type AssignmentStatus = "picking" | "pending" | "accepted" | "declined";
 
 export type Assignment = {

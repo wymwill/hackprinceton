@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { Shell } from "../components/Shell.tsx";
 import { StandingsTable } from "../components/Standings.tsx";
 import { Empty, Panel } from "../components/ui.tsx";
@@ -86,6 +86,7 @@ export function SeriesLeaderboard() {
 export function SeriesRules() {
   const s = useSeries();
   if (!s) return <Missing />;
+  if (s.status === "lobby") return <Navigate to={`/s/${s.id}`} replace />;
   return (
     <Shell crumbs={[crumb(s), { label: "Rules" }]}>
       <Rules s={s} />

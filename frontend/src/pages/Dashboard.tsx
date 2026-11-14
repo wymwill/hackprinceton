@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { NewBetModal, StandingsTable } from "../components/Standings.tsx";
 import { ConfirmButton, Empty, OutcomeTag, Panel, Pill, PoolBar } from "../components/ui.tsx";
 import { balances, isParticipant, leader, resultText, shares, standings } from "../lib/rules.ts";
-import { ago, fmt, ordinal, signed } from "../lib/format.ts";
+import { ago, fmt, ordinal, punishmentCopy, signed } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Bet, Series } from "../lib/types.ts";
 
@@ -26,6 +26,7 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
   const href = `/s/${s.id}/bets/${bet.id}`;
   return (
     <article className="panel bcard">
+      <Link className="bcard-link" to={href} aria-label={`Open bet: ${bet.question}`} />
       <div className="head">
         <div className="stack" style={{ gap: 8 }}>
           <Pill kind={bet.status}>{STATUS[bet.status]}</Pill>
@@ -233,7 +234,7 @@ export default function Dashboard({ s }: { s: Series }) {
             <div className="tape">
               {s.activity.slice(0, 10).map((a, i) => (
                 <div key={i} className="tape-row">
-                  <span>{a.text}</span>
+                  <span>{punishmentCopy(a.text)}</span>
                   <span className="when">{ago(a.at)}</span>
                 </div>
               ))}
