@@ -2,124 +2,110 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { GROUPS, ME, NAV } from "@/lib/data";
+import { useEffect } from "react";
+import { GROUP, NAV } from "@/lib/data";
 import Avatar from "./Avatar";
 import { useBookie } from "./BookieProvider";
 
+/** Left navigation. Fixed on desktop; a drawer on smaller screens. */
 export default function Sidebar() {
   const pathname = usePathname();
-  const { openCreateBet, toast, me } = useBookie();
-  const profile = me ?? { name: ME.name, title: ME.title, avatar: ME.avatar, balance: ME.points };
-  const [activeGroup, setActiveGroup] = useState(GROUPS[0].id);
+  const { openCreateBet, me, state, navOpen, setNavOpen } = useBookie();
+  const members = state?.users ?? [];
+
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setNavOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navOpen, setNavOpen]);
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-[260px] bg-surface-container-low z-50 flex flex-col justify-between p-space-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div className="flex flex-col gap-space-lg">
-        <Link href="/" className="flex items-center justify-between">
-          <div className="flex items-center gap-space-sm">
-            <span className="w-8 h-8 rounded-xl bg-primary-container text-on-primary flex items-center justify-center text-lg">
-              🎲
-            </span>
-            <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight">Bookie</span>
-          </div>
-          <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-tertiary-container/15 text-tertiary border border-tertiary-container/25">
-            AI Bookie
-          </span>
-        </Link>
-
-        <div className="flex flex-col gap-space-xs">
-          <div className="flex items-center justify-between px-space-xs">
-            <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">Your groups</span>
-            <span className="material-symbols-outlined text-sm text-on-surface-variant">tune</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            {GROUPS.map((g) => {
-              const active = g.id === activeGroup;
-              return (
-                <button
-                  key={g.id}
-                  onClick={() => setActiveGroup(g.id)}
-                  className={`flex items-center justify-between p-space-sm rounded-lg text-left transition-colors ${
-                    active ? "bg-surface-container-high" : "hover:bg-surface-container"
-                  }`}
-                >
-                  <div className="flex items-center gap-space-sm truncate">
-                    <span className="text-sm">{g.emoji}</span>
-                    <div className="flex flex-col truncate">
-                      <span
-                        className={`font-label-md text-label-md truncate ${active ? "text-on-surface font-semibold" : "text-on-surface-variant"}`}
-                      >
-                        {g.name}
-                      </span>
-                      {active && (
-                        <span className="font-body-sm text-body-sm text-on-surface-variant">{g.members} members active</span>
-                      )}
-                    </div>
-                  </div>
-                  {active ? (
-                    <span className="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_rgba(52,211,153,0.3)]" />
-                  ) : g.unread > 0 ? (
-                    <span className="font-label-sm text-label-sm px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold">
-                      {g.unread}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-            <button
-              onClick={() => toast("New group invite link copied. Bring your most confident friends. 🔗", "lime")}
-              className="flex items-center justify-center gap-space-xs p-space-sm rounded-lg border border-dashed border-outline-variant text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all"
-            >
-              <span className="material-symbols-outlined text-sm">add</span>
-              <span className="font-label-md text-label-md">New Group</span>
+    <>
+      {navOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setNavOpen(false)} aria-hidden />}
+      <aside
+        id="app-nav"
+        className={`fixed left-0 top-0 h-full w-[260px] bg-surface-container-low z-50 flex flex-col justify-between p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] transition-transform lg:translate-x-0 ${
+          navOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <Link href="/" onClick={() => setNavOpen(false)} className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-xl bg-primary-container text-on-primary flex items-center justify-center text-lg" aria-hidden>
+                🎲
+              </span>
+              <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight">Bookie</span>
+            </Link>
+            <button onClick={() => setNavOpen(false)} className="lg:hidden text-on-surface-variant" aria-label="Close menu">
+              <span className="material-symbols-outlined block" aria-hidden>
+                close
+              </span>
             </button>
           </div>
-        </div>
 
-        <nav className="flex flex-col gap-1">
-          {NAV.map((item) => {
-            const active = item.match(pathname);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-all ${
-                  active
-                    ? "bg-primary-container/15 text-primary font-semibold ring-1 ring-primary-container/30"
-                    : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
-                }`}
-              >
-                <span className="material-symbols-outlined">{item.icon}</span>
-                <span className="font-body-md text-body-md">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-
-      <div className="flex flex-col gap-space-md pt-space-md">
-        <button
-          onClick={() => openCreateBet()}
-          className="w-full flex items-center justify-center gap-space-xs py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(52,211,153,0.2)] hover:shadow-[0_0_28px_rgba(52,211,153,0.33)] hover:scale-[1.02] active:scale-[0.98] transition-all"
-        >
-          <span>+ Create Bet</span>
-          <span className="text-base">🎲</span>
-        </button>
-        <Link href="/profile" className="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-lowest">
-          <div className="flex items-center gap-space-sm truncate">
-            <Avatar name={profile.name} src={profile.avatar} size={32} />
-            <div className="flex flex-col truncate">
-              <span className="font-label-md text-label-md text-on-surface font-semibold truncate">{profile.name}</span>
-              <span className="font-label-sm text-label-sm text-secondary-fixed-dim truncate">{profile.title}</span>
+          {/* Group identity, compact */}
+          <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-container ring-1 ring-[#2f384a]">
+            <span className="text-lg" aria-hidden>
+              {GROUP.emoji}
+            </span>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="font-label-md text-label-md text-on-surface font-semibold truncate">{GROUP.name}</span>
+              <span className="flex items-center gap-1.5">
+                <span className="flex -space-x-1.5" aria-hidden>
+                  {members.slice(0, 5).map((u) => (
+                    <Avatar key={u.id} name={u.name} src={u.avatar} size={16} className="ring-2 ring-surface-container" />
+                  ))}
+                </span>
+                <span className="font-label-sm text-[11px] text-on-surface-variant">{members.length} friends</span>
+              </span>
             </div>
           </div>
-          <div className="flex items-center px-space-xs py-0.5 rounded-full bg-surface-container-high">
-            <span className="font-label-sm text-label-sm text-primary font-bold">{profile.balance.toLocaleString()} P</span>
-          </div>
-        </Link>
-      </div>
-    </aside>
+
+          <nav aria-label="Main" className="flex flex-col gap-1">
+            {NAV.map((item) => {
+              const active = item.match(pathname);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setNavOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                    active ? "bg-primary-container/15 text-primary font-semibold ring-1 ring-primary-container/30" : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+                  }`}
+                >
+                  <span className="material-symbols-outlined" aria-hidden>
+                    {item.icon}
+                  </span>
+                  <span className="font-body-md text-body-md">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="flex flex-col gap-3 pt-4">
+          <button
+            onClick={() => openCreateBet()}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold shadow-[0_0_20px_rgba(52,211,153,0.2)] hover:shadow-[0_0_28px_rgba(52,211,153,0.33)] active:scale-[0.98] transition-all"
+          >
+            + New market
+          </button>
+          {me && (
+            <Link href="/profile" onClick={() => setNavOpen(false)} className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-container-lowest">
+              <span className="flex items-center gap-2 min-w-0">
+                <Avatar name={me.name} src={me.avatar} size={32} />
+                <span className="flex flex-col min-w-0">
+                  <span className="font-label-md text-label-md text-on-surface font-semibold truncate">{me.name}</span>
+                  <span className="font-label-sm text-label-sm text-secondary-fixed-dim truncate">{me.title}</span>
+                </span>
+              </span>
+              <span className="shrink-0 px-2 py-0.5 rounded-full bg-surface-container-high font-label-sm text-label-sm text-primary font-bold">{me.balance.toLocaleString()} P</span>
+            </Link>
+          )}
+        </div>
+      </aside>
+    </>
   );
 }

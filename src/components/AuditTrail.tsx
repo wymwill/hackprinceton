@@ -16,13 +16,11 @@ const ICON: Record<string, string> = {
 };
 
 /** Every recorded step for a bet: entries, odds, evidence, AI reviews, and human decisions. */
-export default function AuditTrail({ bet }: { bet: BetView }) {
+export default function AuditTrail({ bet, bare = false }: { bet: BetView; bare?: boolean }) {
   const { user } = useBookie();
-  const actor = (a: string) => (a === "ai" ? "AI Bookie" : a === "system" ? "Bookie (stats)" : (user(a)?.name ?? a));
-  return (
-    <details className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md">
-      <summary className="cursor-pointer font-headline-sm text-headline-sm text-on-surface">🧾 Audit trail ({bet.audit.length})</summary>
-      <ol className="flex flex-col gap-1.5 pt-3">
+  const actor = (a: string) => (a === "ai" ? "AI Bookie" : a === "system" ? "Bookie (automatic, no AI)" : (user(a)?.name ?? a));
+  const list = (
+      <ol className={`flex flex-col gap-1.5 ${bare ? "" : "pt-3"}`}>
         {bet.audit.map((a) => (
           <li key={a.id} className="grid grid-cols-[auto_1fr] gap-x-2 font-body-sm text-body-sm">
             <span>{ICON[a.type] ?? "•"}</span>
@@ -36,6 +34,12 @@ export default function AuditTrail({ bet }: { bet: BetView }) {
           </li>
         ))}
       </ol>
+  );
+  if (bare) return list;
+  return (
+    <details className="rounded-2xl bg-surface-container border border-[#2f384a] p-space-md">
+      <summary className="cursor-pointer font-headline-sm text-headline-sm text-on-surface">🧾 Audit trail ({bet.audit.length})</summary>
+      {list}
     </details>
   );
 }
