@@ -2,7 +2,7 @@
 
 A social platform where friend groups make no-money bets on real life. The stakes are reputation points, titles and dares. An AI bookie sets the odds from each friend's track record, settles bets from connected apps and cited evidence, and roasts the losers.
 
-Built with Next.js 16 (App Router) and Tailwind v4. The UI was ported from the Google Stitch design export, and all data is mocked for now.
+Built with Next.js 16 (App Router) and Tailwind v4. The UI uses the "Warm Slate Social" palette from the Google Stitch export (soft mint, peach and lavender), and all data is mocked for now.
 
 ## Run it
 
@@ -18,6 +18,7 @@ Open http://localhost:3000. The layout is designed for a 1440px-wide desktop.
 | Route | Screen | Interactions |
 | --- | --- | --- |
 | `/` | Group Home | Live countdown, Fade/Back the bet, emoji reactions, a chat composer the AI bookie replies to, "Make it a bet" opens the bet builder, Back buttons in the right rail |
+| `/bets` | Bets (markets) | Prediction-market style browsing: category chips, search, sort, a featured bet with a 1D/1W/All chart, % chance gauges, multi-answer bets, one-tap Yes/No with a bet sheet that shows your payout, and a Your bets rail |
 | `/bets/8842` | Bet Detail | Take the Bet / Pass / contrarian play, pool updates, side bets that back either person, odds chart |
 | `/receipts/8704` | Settlement Receipt | Confetti, animated "L" stamp, Dispute opens a squad vote and updates the consensus bar, share link, download proof JSON |
 | `/leaderboard` | Leaderboard | This Week / Season / All Time tabs drive the podium and the table |
