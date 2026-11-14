@@ -1,6 +1,7 @@
 import "server-only";
 import { priceYes } from "@/lib/markets/lmsr";
 import type { AppState, DareView, EvidenceView, GroupView, MarketView, MemberView } from "@/lib/markets/types";
+import { authMode } from "@/lib/authConfig";
 import { aiStatus } from "./ai/config";
 import { balanceIn, isLocked, requireMember } from "./groups";
 import { chanceOf, DISPUTE_WINDOW_MS, positionsOf, statusOf, votersOf } from "./markets";
@@ -123,6 +124,18 @@ function dareView(db: Db, d: Db["dares"][number]): DareView {
   };
 }
 
+/**
+ * The people you can see: yourself and anyone who shares a group with you.
+ * With real accounts, nobody else's name shows up anywhere. In demo mode the
+ * "Playing as" switcher needs everyone, so it gets the full list.
+ */
+function visibleUsers(db: Db, me: string) {
+  if (authMode() === "demo") return db.users;
+  const mine = new Set(db.memberships.filter((m) => m.userId === me).map((m) => m.groupId));
+  const ids = new Set([me, ...db.memberships.filter((m) => mine.has(m.groupId)).map((m) => m.userId)]);
+  return db.users.filter((u) => ids.has(u.id));
+}
+
 export function snapshot(db: Db, me: string, groupId?: string | null): AppState {
   const myGroups = db.memberships.filter((m) => m.userId === me).map((m) => db.groups.find((g) => g.id === m.groupId)!);
   let group: GroupView | null = null;
@@ -133,7 +146,8 @@ export function snapshot(db: Db, me: string, groupId?: string | null): AppState 
   const now = Date.now();
   return {
     me,
-    users: db.users.map((u) => ({ id: u.id, name: u.name })),
+    users: visibleUsers(db, me).map((u) => ({ id: u.id, name: u.name, avatarUrl: u.avatarUrl })),
+    auth: { mode: authMode() },
     groups: myGroups.map((g) => ({ id: g.id, name: g.name, emoji: g.emoji, mode: g.mode })),
     group,
     markets: group

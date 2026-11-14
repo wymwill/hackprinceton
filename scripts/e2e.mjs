@@ -10,6 +10,8 @@
  *   BOOKIE_AI=off npm run test:e2e
  */
 import { spawn } from "node:child_process";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
+import { createServer } from "node:http";
 import { existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -37,11 +39,15 @@ function check(name, ok, detail) {
   }
 }
 
-async function startServer(seed) {
-  const file = path.join(tmpdir(), `bwf-e2e-${process.pid}-${seed}.json`);
+// Demo mode ("Playing as" cookie) unless a phase passes its own auth settings.
+const DEMO_AUTH = { BWF_AUTH: "demo" };
+const NO_AUTH = { BWF_AUTH: "", SUPABASE_URL: "", SUPABASE_PUBLISHABLE_KEY: "", NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "", NEXT_PUBLIC_SUPABASE_ANON_KEY: "" };
+
+async function startServer(seed, auth = DEMO_AUTH) {
+  const file = path.join(tmpdir(), `bwf-e2e-${process.pid}-${seed}-${auth.BWF_AUTH || (auth.SUPABASE_URL ? "supabase" : "none")}.json`);
   rmSync(file, { force: true });
   const child = spawn("node_modules/.bin/next", ["start", "-p", String(PORT)], {
-    env: { ...process.env, BWF_DATA_FILE: file, BWF_SEED: seed, BOOKIE_AI: MODE, BWF_DISPUTE_WINDOW_MS: String(WINDOW), BWF_DARE_WINDOW_MS: String(WINDOW) },
+    env: { ...process.env, ...NO_AUTH, ...auth, BWF_DATA_FILE: file, BWF_SEED: seed, BOOKIE_AI: MODE, BWF_DISPUTE_WINDOW_MS: String(WINDOW), BWF_DARE_WINDOW_MS: String(WINDOW) },
     stdio: ["ignore", "pipe", "pipe"],
   });
   let log = "";
@@ -49,8 +55,9 @@ async function startServer(seed) {
   child.stderr.on("data", (d) => (log += d));
   for (let i = 0; i < 100; i++) {
     try {
+      // Any answer means it's up (signed-out modes answer 401 or 503).
       const r = await fetch(`${BASE}/api/state`);
-      if (r.ok) return { stop: () => new Promise((res) => (child.on("exit", res), child.kill("SIGTERM"))), log: () => log };
+      if (r.status) return { stop: () => new Promise((res) => (child.on("exit", res), child.kill("SIGTERM"))), log: () => log };
     } catch {}
     await sleep(200);
   }
@@ -380,5 +387,139 @@ try {
 } finally {
   await demo.stop();
 }
+// ---------------------------------------------------------------- real sign-in
+
+/**
+ * Supabase mode, end to end, without a Supabase project: a tiny server
+ * publishes a test signing key at /auth/v1/.well-known/jwks.json, and the
+ * tests sign ES256 session tokens with it, exactly as Supabase Auth would.
+ * The app verifies them through @supabase/ssr's getClaims().
+ */
+const JWKS_PORT = PORT + 1;
+const SUPABASE_URL = `http://127.0.0.1:${JWKS_PORT}`;
+const COOKIE = "sb-127-auth-token";
+const { publicKey, privateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+const other = generateKeyPairSync("ec", { namedCurve: "P-256" });
+const KID = createHash("sha256").update(publicKey.export({ format: "der", type: "spki" })).digest("hex").slice(0, 16);
+const jwks = { keys: [{ ...publicKey.export({ format: "jwk" }), kid: KID, alg: "ES256", use: "sig" }] };
+const b64 = (v) => Buffer.from(typeof v === "string" ? v : JSON.stringify(v)).toString("base64url");
+
+function token(sub, name, { key = privateKey, expiresIn = 3600 } = {}) {
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64({ alg: "ES256", typ: "JWT", kid: KID });
+  const body = b64({ sub, aud: "authenticated", role: "authenticated", iat: now, exp: now + expiresIn, email: `${sub}@example.com`, user_metadata: { full_name: name } });
+  const sig = sign("sha256", Buffer.from(`${head}.${body}`), { key, dsaEncoding: "ieee-p1363" }).toString("base64url");
+  return `${head}.${body}.${sig}`;
+}
+
+/** The session cookie @supabase/ssr reads, for a token. */
+function sessionCookie(access_token, expiresIn = 3600) {
+  const session = { access_token, token_type: "bearer", expires_in: expiresIn, expires_at: Math.floor(Date.now() / 1000) + expiresIn, refresh_token: "test-refresh", user: { id: "x" } };
+  return `${COOKIE}=base64-${b64(session)}`;
+}
+
+function signedIn(cookie) {
+  const call = async (method, url, body, extra = "") => {
+    const res = await fetch(BASE + url, { method, redirect: "manual", headers: { cookie: [cookie, extra].filter(Boolean).join("; "), ...(body ? { "content-type": "application/json" } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    const json = await res.json().catch(() => ({}));
+    return { status: res.status, location: res.headers.get("location"), ...json };
+  };
+  return { get: (url, extra) => call("GET", url, undefined, extra), post: (url, body) => call("POST", url, body ?? {}) };
+}
+
+async function supabasePhase() {
+  console.log("\nSign-in with Supabase (test signing key, BWF_SEED=demo)");
+  const anon = signedIn("");
+  const ana = signedIn(sessionCookie(token("auth-ana", "Ana Lopez")));
+  const ben = signedIn(sessionCookie(token("auth-ben", "Ben Okafor")));
+
+  check("signed out, the API answers 401", (await anon.get("/api/state")).status === 401);
+  check("the old Playing as cookie alone is ignored", (await anon.get("/api/state", "bwf_user=sam")).status === 401);
+  check("Playing as can't be switched", (await anon.post("/api/session", { userId: "sam" })).status === 403);
+  const forged = signedIn(sessionCookie(token("auth-ana", "Ana Lopez", { key: other.privateKey })));
+  check("a token signed with another key is refused", (await forged.get("/api/state")).status === 401);
+  const expired = signedIn(sessionCookie(token("auth-ana", "Ana Lopez", { expiresIn: -60 }), -60));
+  check("an expired token is refused", (await expired.get("/api/state")).status === 401);
+
+  let a = await ana.get("/api/state");
+  check("a new account gets its own user", a.status === 200 && a.me.startsWith("u_") && a.users.length === 1 && a.users[0].name === "Ana Lopez", a);
+  check("it starts in no groups", a.groups?.length === 0, a.groups);
+  check("the demo group's people are invisible", !a.users.some((u) => ["Sam", "Jake"].includes(u.name.split(" ")[0])), a.users);
+  check("the auth mode is reported", a.auth?.mode === "supabase", a.auth);
+  const anaId = a.me;
+  check("the same account maps to the same user", (await ana.get("/api/state")).me === anaId);
+  check("a Playing as cookie can't override the session", (await ana.get("/api/state", "bwf_user=sam")).me === anaId);
+  check("you can't read a group you're not in", (await ana.get("/api/state?group=demo")).status === 404);
+
+  const g = await ana.post("/api/groups", { name: "Ana's Crew", mode: "tokens", startingBalance: 500 });
+  check("a signed-in user can create a group", g.status === 201, g);
+  const gid = g.result.id;
+  const code = (await ana.get(`/api/state?group=${gid}`)).group.inviteCode;
+
+  let b = await ben.get("/api/state");
+  check("a second account is a different user", b.status === 200 && b.me !== anaId && b.users.length === 1, b);
+  check("they can't see each other before sharing a group", !b.users.some((u) => u.id === anaId));
+  check("nor read each other's group", (await ben.get(`/api/state?group=${gid}`)).status === 404);
+  check("joining goes through the invite", (await ben.post("/api/groups/join", { code })).status === 200);
+  b = await ben.get(`/api/state?group=${gid}`);
+  check("after joining, each sees the other", b.users.some((u) => u.id === anaId) && b.users.length === 2, b.users);
+  a = await ana.get(`/api/state?group=${gid}`);
+  check("and still nobody from groups they aren't in", a.users.length === 2, a.users);
+
+  const page = await anon.get("/g/demo");
+  check("signed out, pages redirect to sign in", page.status === 307 && page.location?.endsWith("/login?next=%2Fg%2Fdemo"), page);
+  check("signed in, pages load", (await ana.get(`/g/${gid}`)).status === 200);
+  const login = await ana.get("/login?next=%2Fg%2Fdemo");
+  check("signed in, /login goes back to where you were going", login.status === 307 && login.location?.endsWith("/g/demo"), login);
+  check("the login page loads signed out", (await anon.get("/login")).status === 200);
+  const evil = await anon.get("/auth/callback?error=access_denied&next=%2F%2Fevil.example");
+  check("the callback never redirects off site", evil.status === 307 && new URL(evil.location).origin === BASE && !evil.location.includes("next=%2F%2Fevil"), evil);
+  check("install files load signed out", (await anon.get("/manifest.webmanifest")).status === 200);
+  check("signing out needs a POST", (await ana.get("/auth/signout")).status === 405);
+  const out = await fetch(`${BASE}/auth/signout`, { method: "POST", redirect: "manual", headers: { cookie: sessionCookie(token("auth-ana", "Ana Lopez")) } });
+  const cleared = out.headers.getSetCookie().some((c) => c.startsWith(`${COOKIE}=;`) || (c.startsWith(`${COOKIE}=`) && /Max-Age=0|Expires=Thu, 01 Jan 1970/i.test(c)));
+  check("signing out clears the session and goes to /login", out.status === 303 && out.headers.get("location")?.endsWith("/login") && cleared, out.headers.getSetCookie());
+}
+
+async function unconfiguredPhase() {
+  console.log("\nNo sign-in configured and no demo mode");
+  const anon = signedIn("");
+  const s = await anon.get("/api/state", "bwf_user=sam");
+  check("the API refuses instead of guessing who you are", s.status === 503 && s.error?.code === "auth_not_configured", s);
+  const page = await anon.get("/g/demo");
+  check("pages go to the login page", page.status === 307 && page.location?.includes("/login"), page);
+  const html = await fetch(`${BASE}/login`).then((r) => r.text());
+  check("which explains the setup", html.includes("SUPABASE_URL"));
+}
+
+const keyServer = createServer((req, res) => {
+  if (req.url === "/auth/v1/.well-known/jwks.json") {
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify(jwks));
+  } else {
+    res.writeHead(404).end();
+  }
+});
+await new Promise((r) => keyServer.listen(JWKS_PORT, "127.0.0.1", r));
+const supa = await startServer("demo", { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test" });
+try {
+  await supabasePhase();
+} catch (err) {
+  failed++;
+  console.error(err, supa.log());
+} finally {
+  await supa.stop();
+  keyServer.close();
+}
+const none = await startServer("demo", {});
+try {
+  await unconfiguredPhase();
+} catch (err) {
+  failed++;
+  console.error(err, none.log());
+} finally {
+  await none.stop();
+}
+
 console.log(`\n${passed} passed, ${failed} failed (BOOKIE_AI=${MODE})`);
 process.exit(failed ? 1 : 0);

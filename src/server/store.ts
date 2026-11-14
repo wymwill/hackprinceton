@@ -13,7 +13,14 @@ import type { AiLogEntry, BookieEstimate, DareSpec, DareStatus, GroupMode, Outco
  * Balances are never stored. They're the sum of a user's ledger rows in a group.
  */
 
-export type User = { id: string; name: string };
+export type User = {
+  id: string;
+  name: string;
+  /** The Supabase Auth user id this app user belongs to. Unset for demo users. */
+  authId?: string;
+  /** Profile photo from the sign-in provider (https only). */
+  avatarUrl?: string;
+};
 
 export type Group = {
   id: string;
