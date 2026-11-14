@@ -1,14 +1,20 @@
 // A stand-in for a Supabase project, for tests and offline checks only.
 //
 // It serves just what the Bet Series API and frontend use: email/password Auth
-// (sign up, sign in, refresh, get user, sign out) and PostgREST RPC calls
-// (POST /rest/v1/rpc/:fn), backed by the real migrations in PGlite. Data lives
-// in memory and is gone when it stops. Never point real users at it.
+// (sign up, sign in, refresh, get user, sign out), PostgREST RPC calls
+// (POST /rest/v1/rpc/:fn), and Realtime postgres_changes over a WebSocket for the
+// tables in the `supabase_realtime` publication, delivered only to subscribers
+// whose row-level security lets them read the row (as Supabase does). All backed
+// by the real migrations in PGlite. Data lives in memory and is gone when it
+// stops. Never point real users at it.
+//
+// Test hook: POST /__test/realtime/drop closes every Realtime connection, so tests
+// can check that clients reconnect and catch up without duplicates.
 //
 //   node supabase/tests/local-supabase.mjs            # http://localhost:54399
 //   SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local npm run dev
 import http from "node:http";
-import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { createDb } from "./harness.mjs";
 
 const PORT = Number(process.env.PORT ?? 54399);
@@ -222,6 +228,11 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, userJson(accounts.get(claims.email), claims.email));
     }
     if (url.pathname === "/auth/v1/logout") return send(res, 204);
+    if (url.pathname === "/__test/realtime/drop" && req.method === "POST") {
+      const n = sockets.size;
+      for (const sock of sockets) sock.destroy();
+      return send(res, 200, { dropped: n });
+    }
     const m = url.pathname.match(/^\/rest\/v1\/rpc\/(\w+)$/);
     if (m && req.method === "POST") {
       if (bearer && bearer !== process.env.SUPABASE_PUBLISHABLE_KEY && !claims) {
@@ -244,6 +255,177 @@ const server = http.createServer(async (req, res) => {
     console.error(err);
     return send(res, 500, { message: String(err) });
   }
+});
+
+
+// ---------- Realtime (postgres_changes only) ----------
+//
+// The Realtime protocol is Phoenix channels over a WebSocket (realtime-js uses the
+// "2.0.0" serializer: each message is a JSON array [join_ref, ref, topic, event, payload]).
+// Changes are captured by a trigger on every table in the supabase_realtime
+// publication and checked against each subscriber's RLS before they're sent.
+
+await t.db.exec(`
+  create table if not exists public._rt_changes (
+    id bigint generated always as identity primary key, tbl text not null, type text not null,
+    record jsonb, old_record jsonb, at timestamptz not null default now());
+  create or replace function public._rt_capture() returns trigger language plpgsql as $f$
+  begin
+    insert into public._rt_changes(tbl, type, record, old_record)
+    values (tg_table_name, tg_op, case when tg_op = 'DELETE' then null else to_jsonb(new) end,
+      case when tg_op = 'INSERT' then null else to_jsonb(old) end);
+    return null;
+  end $f$;
+  revoke all on public._rt_changes from anon, authenticated;
+`);
+for (const { tablename } of (await t.db.query(
+  "select tablename from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public'"
+)).rows) {
+  await t.db.exec(`create trigger _rt_capture after insert or update or delete on public.${ident(tablename)}
+    for each row execute function public._rt_capture()`);
+}
+
+const sockets = new Set();
+let bindingSeq = 1000;
+
+function wsFrame(text) {
+  const data = Buffer.from(text);
+  const head = data.length < 126 ? Buffer.from([0x81, data.length])
+    : data.length < 65536 ? Buffer.from([0x81, 126, data.length >> 8, data.length & 255])
+    : Buffer.concat([Buffer.from([0x81, 127]), (() => { const b = Buffer.alloc(8); b.writeBigUInt64BE(BigInt(data.length)); return b; })()]);
+  return Buffer.concat([head, data]);
+}
+
+/** Pull whole frames off the front of a buffer: [{ op, data }], rest. */
+function wsParse(buf) {
+  const out = [];
+  for (;;) {
+    if (buf.length < 2) break;
+    const op = buf[0] & 15;
+    let len = buf[1] & 127;
+    let off = 2;
+    if (len === 126) { if (buf.length < 4) break; len = buf.readUInt16BE(2); off = 4; }
+    else if (len === 127) { if (buf.length < 10) break; len = Number(buf.readBigUInt64BE(2)); off = 10; }
+    const masked = buf[1] & 128;
+    const need = off + (masked ? 4 : 0) + len;
+    if (buf.length < need) break;
+    let data = buf.subarray(off + (masked ? 4 : 0), need);
+    if (masked) {
+      const mask = buf.subarray(off, off + 4);
+      data = Buffer.from(data.map((b, i) => b ^ mask[i & 3]));
+    }
+    out.push({ op, data });
+    buf = buf.subarray(need);
+  }
+  return [out, buf];
+}
+
+/** One connected client: its channels and their postgres_changes bindings. */
+function realtimeSocket(sock) {
+  sockets.add(sock);
+  const channels = new Map(); // topic -> { joinRef, claims, bindings: [{ id, event, schema, table, filter }] }
+  const push = (msg) => !sock.destroyed && sock.write(wsFrame(JSON.stringify(msg)));
+  const reply = (joinRef, ref, topic, status, response = {}) => push([joinRef, ref, topic, "phx_reply", { status, response }]);
+  let buf = Buffer.alloc(0);
+  sock.on("data", (chunk) => {
+    let frames;
+    [frames, buf] = wsParse(Buffer.concat([buf, chunk]));
+    for (const { op, data } of frames) {
+      if (op === 8) return sock.end();
+      if (op === 9) { sock.write(Buffer.concat([Buffer.from([0x8a, data.length]), data])); continue; }
+      if (op !== 1) continue;
+      let joinRef, ref, topic, event, payload;
+      try { [joinRef, ref, topic, event, payload] = JSON.parse(data.toString()); } catch { continue; }
+      if (topic === "phoenix" && event === "heartbeat") { reply(null, ref, topic, "ok"); continue; }
+      if (event === "phx_join") {
+        const token = payload?.access_token;
+        const claims = token ? verify(token) : null;
+        // A user's JWT that doesn't verify (expired, forged) is refused. Anything else, like the
+        // publishable key, joins as `anon`, which RLS shows nothing (as on Supabase).
+        if (token && token.split(".").length === 3 && !claims) {
+          reply(joinRef, ref, topic, "error", { reason: "Invalid JWT" });
+          continue;
+        }
+        const bindings = (payload?.config?.postgres_changes ?? []).map((b) => ({ ...b, id: bindingSeq++ }));
+        channels.set(topic, { joinRef, claims, bindings });
+        reply(joinRef, ref, topic, "ok", { postgres_changes: bindings.map(({ id, event: e, schema, table, filter }) => ({ id, event: e, schema, table, ...(filter ? { filter } : {}) })) });
+        push([joinRef, null, topic, "system", { status: "ok", message: "Subscribed to PostgreSQL", extension: "postgres_changes", channel: topic.replace(/^realtime:/, "") }]);
+        continue;
+      }
+      if (event === "access_token") {
+        const ch = channels.get(topic);
+        const claims = verify(payload?.access_token);
+        if (ch && claims) ch.claims = claims;
+        continue;
+      }
+      if (event === "phx_leave") { channels.delete(topic); reply(joinRef, ref, topic, "ok"); continue; }
+      if (ref) reply(joinRef, ref, topic, "ok");
+    }
+  });
+  const gone = () => { sockets.delete(sock); channels.clear(); };
+  sock.on("close", gone);
+  sock.on("error", gone);
+  sock.rtChannels = channels;
+  sock.rtPush = push;
+}
+
+/** Whether this subscriber's RLS lets them read the row. */
+async function canSee(claims, table, row) {
+  if (!claims || row?.id === undefined) return false;
+  return t.db.transaction(async (tx) => {
+    await tx.query("select set_config('request.jwt.claims', $1, true), set_config('request.jwt.claim.sub', $2, true)", [JSON.stringify(claims), claims.sub]);
+    await tx.exec("set local role authenticated");
+    return (await tx.query(`select 1 from public.${ident(table)} where id::text = $1`, [String(row.id)])).rows.length > 0;
+  });
+}
+
+const filterOk = (filter, row) => {
+  if (!filter) return true;
+  const m = filter.match(/^(\w+)=eq\.(.+)$/);
+  return !!m && row && String(row[m[1]]) === m[2];
+};
+
+let lastChange = 0;
+let pumping = false;
+async function pump() {
+  if (pumping) return;
+  pumping = true;
+  try {
+    const changes = (await t.db.query("select * from public._rt_changes where id > $1 order by id", [lastChange])).rows;
+    for (const c of changes) {
+      lastChange = Number(c.id);
+      const row = c.record ?? c.old_record;
+      for (const sock of sockets) {
+        for (const [topic, ch] of sock.rtChannels) {
+          const ids = ch.bindings
+            .filter((b) => b.schema === "public" && b.table === c.tbl && (b.event === "*" || b.event === c.type) && filterOk(b.filter, row))
+            .map((b) => b.id);
+          // Like Supabase, deletes carry no row data, so they skip the RLS check; inserts and updates need it.
+          if (!ids.length || (c.type !== "DELETE" && !(await canSee(ch.claims, c.tbl, row)))) continue;
+          sock.rtPush([null, null, topic, "postgres_changes", {
+            ids,
+            data: { schema: "public", table: c.tbl, commit_timestamp: new Date(c.at).toISOString(), type: c.type, columns: [],
+              record: c.record ?? {}, old_record: c.type === "DELETE" ? { id: c.old_record?.id } : c.old_record ?? undefined, errors: null },
+          }]);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("realtime:", err);
+  } finally {
+    pumping = false;
+  }
+}
+setInterval(pump, 100).unref();
+
+server.on("upgrade", (req, sock) => {
+  const url = new URL(req.url, "http://localhost");
+  const key = req.headers["sec-websocket-key"];
+  if (url.pathname !== "/realtime/v1/websocket" || !key) return sock.destroy();
+  const accept = createHash("sha1").update(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").digest("base64");
+  sock.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`);
+  sock.setNoDelay(true);
+  realtimeSocket(sock);
 });
 
 server.listen(PORT, () => console.log(`Local Supabase stand-in on http://localhost:${PORT} (in memory, test only)`));

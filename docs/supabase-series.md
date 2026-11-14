@@ -24,7 +24,7 @@ Never use the `service_role` / secret key in either app. Only `scripts/e2e-serie
 
 ## Set up the project
 
-1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0011_pledge_changes_reset_ready.sql` is the newest; `0009_multi_outcome_bets.sql` adds multiple-choice bets, `0010_range_bets.sql` numerical ranges, and `0007_full_bet_series_rules.sql` holds most of the rules. Each upgrades existing data in place: 0007 for data made with 0001–0006, 0009 turns every existing bet into a YES/NO bet with outcome ids, and 0010 leaves existing bets as they are (all tested in `supabase/tests/upgrade.test.mjs`).
+1. **Apply the migrations** in `supabase/migrations/` in order, with `supabase db push` (from a machine linked to the project) or by pasting each file into the SQL editor. `0013_clan_chat.sql` is the newest; `0012_friends_and_clans.sql` adds friends and clans, `0009_multi_outcome_bets.sql` multiple-choice bets, `0010_range_bets.sql` numerical ranges, and `0007_full_bet_series_rules.sql` holds most of the rules. Each upgrades existing data in place: 0007 for data made with 0001–0006, 0009 turns every existing bet into a YES/NO bet with outcome ids, 0010 leaves existing bets as they are, and 0013 gives every existing clan an empty chat (all tested in `supabase/tests/upgrade.test.mjs`). 0013 also adds `clan_messages` to the `supabase_realtime` publication so chat messages arrive live; check Database → Publications afterwards.
 2. **Turn on sign-in methods** (Authentication → Sign In / Providers). Email with password works with no setup. For Google, follow `docs/supabase-setup.md`.
 3. **Allow the redirect URLs** (Authentication → URL Configuration): add `http://localhost:3000/**`, and `https://<your-domain>/**` once deployed.
 4. Run it:
@@ -63,6 +63,11 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
 | `POST /api/series/:id/favors/assign` | Winner picks a favor for their paired loser `{ loserId, favorId }` |
 | `POST /api/series/assignments/:assignmentId/respond` | Loser accepts or declines `{ accept }` |
 | `POST /api/series/:id/favor-done` | Loser marks an accepted favor done |
+| `GET /api/social/clans/:clanId/messages` | Your clan's chat, oldest first: the newest 50, `?before=<id>` for older, `?after=<id>` for newer (catching up); `?limit=` up to 100. `{ messages, hasMore, lastReadId, unread }` |
+| `POST /api/social/clans/:clanId/messages` | Send as yourself `{ body, clientId? }` (1–2,000 characters; resending a `clientId` returns the first message) |
+| `DELETE /api/social/clans/:clanId/messages/:messageId` | Delete your own message (the text is wiped; a "deleted" marker stays) |
+| `POST /api/social/clans/:clanId/read` | Mark the chat read up to `{ messageId }` |
+| `GET /api/social/chat` | Your clan and its unread count `{ clanId, lastId, unread }` |
 
 ## Rules the SQL enforces
 
@@ -92,14 +97,21 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
   - Shared pool: rank i picks for rank n−i+1. They can only pick favors that loser wrote or agreed to. Exclusive pools pick in rank order, one favor each. The loser accepts or declines; a decline means the winner picks again. Nothing is binding until accepted.
   - Pledge: the bottom X owe their own pledge.
   - Money: the bottom X owe the minimum.
+- **Clan chat (0013).** Every clan has one chat; when the clan closes (its last member leaves) its messages are deleted with it.
+  - Only current members can read it: through the functions, and through the `clan_messages` RLS policy, which is also what Supabase Realtime checks before delivering a change. Leaving cuts access at once. New members see the whole history, with nothing marked unread.
+  - Messages are written only by `send_clan_message`, as the signed-in user (403 `not_clan_member` otherwise). Text is trimmed, stray control characters dropped and long runs of blank lines shortened; 1 to 2,000 characters (emoji count once); at most 10 messages per person per 10 seconds (429 `slow_down`).
+  - Authors can delete their own messages, nobody else's (403 `not_message_author`), and not system messages.
+  - System messages (`kind: "system"`) mark clan events: `clan_created`, `member_joined`, `member_left`, `owner_changed` (from triggers, so every path is covered). Each has an `event` name and a `data` object, so later announcements such as bet results can be new events without a schema change.
+  - The app shows each message once: it keeps messages by id, sends a client id with each message (retries return the first copy), and after reconnecting fetches only what's newer than the last message it has. While the live connection is down it checks every few seconds instead.
 
 ## Tests
 
 | Command | Runs against | Needs |
 | --- | --- | --- |
 | `npm run test:series-sql` | The migrations in an in-process Postgres (PGlite) with RLS, as the `authenticated` role | Nothing |
-| `node supabase/tests/local-supabase.mjs` | A stand-in Supabase (email Auth, RPC and simple table reads on PGlite) for running the whole app offline. Start the Next app and `frontend/` with `SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local`. In memory, test only | Nothing |
+| `node supabase/tests/local-supabase.mjs` | A stand-in Supabase (email Auth, RPC, simple table reads, and Realtime postgres_changes with RLS checks, on PGlite) for running the whole app offline. Start the Next app and `frontend/` with `SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local`. In memory, test only | Nothing |
 | `npm run test:ranges-local` | Numerical range bets over HTTP through the Next API (same setup as the next row) | Nothing |
+| `npm run test:chat-local` | Clan chat over HTTP and live over the stand-in's Realtime: two members exchanging messages, other clans and nonmembers refused, deleting, a dropped connection with no duplicates, leaving | Nothing |
 | `npm run test:outcomes-local` | Multiple-choice bets over HTTP through the Next API, with users signed up on the stand-in. Start the stand-in and the Next app first (commands in the script header) | Nothing |
 | `npm run test:series` | The real project, with disposable users | `.env.local` and `.supabase-test-secret` |
 

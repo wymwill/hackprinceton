@@ -56,6 +56,10 @@ const STATUS: Record<string, number> = {
   friend_self: 409,
   already_in_clan: 409,
   not_in_clan: 409,
+  not_clan_member: 403,
+  not_message_author: 403,
+  message_not_found: 404,
+  slow_down: 429,
 };
 
 type PgError = { message: string; hint?: string | null; code?: string | null; details?: string | null };

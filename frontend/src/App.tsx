@@ -6,6 +6,7 @@ import JoinLink from "./pages/JoinLink.tsx";
 import Profile from "./pages/Profile.tsx";
 import Friends, { AddFriendLink } from "./pages/Friends.tsx";
 import Clans, { JoinClanLink } from "./pages/Clans.tsx";
+import ClanChat from "./pages/ClanChat.tsx";
 import { SeriesBet, SeriesHome, SeriesLeaderboard, SeriesRules } from "./pages/SeriesRoutes.tsx";
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/friends" element={<Friends />} />
           <Route path="/add/:code" element={<AddFriendLink />} />
           <Route path="/clans" element={<Clans />} />
+          <Route path="/clans/chat" element={<ClanChat />} />
           <Route path="/clan/:code" element={<JoinClanLink />} />
           <Route path="/s/:id" element={<SeriesHome />} />
           <Route path="/s/:id/bets/:betId" element={<SeriesBet />} />
