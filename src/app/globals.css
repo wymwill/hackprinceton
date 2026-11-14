@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Alea: copper orange (#E8503C) on dark grey (#1C1B1F).
+/* Alea: Rosy Copper (#CE4C3B) on dark grey (#1C1B1F).
  * Layout language borrowed from Scarlet Market (square framed panels, small
  * tracked uppercase labels, serif display, mono numbers), minus the retro FX. */
 @theme {
@@ -13,7 +13,7 @@
   --color-surface-container-high: #313036;
   --color-surface-container-highest: #3a3940;
   --color-surface-variant: #313036;
-  --color-surface-tint: #e8503c;
+  --color-surface-tint: #ce4c3b;
   --color-on-surface: #faf6f6;
   --color-on-surface-variant: #ddd7e2;
   --color-inverse-surface: #ebe5e8;
@@ -24,13 +24,13 @@
   --color-on-background: #faf6f6;
 
   /* rosy copper: brand, wins & primary actions */
-  --color-primary: #ff7563;
+  --color-primary: #e2685a;
   --color-on-primary: #ffffff;
-  --color-primary-container: #e8503c;
+  --color-primary-container: #ce4c3b;
   --color-on-primary-container: #fff1ee;
   --color-inverse-primary: #9c3427;
   --color-primary-fixed: #f2a092;
-  --color-primary-fixed-dim: #ff7563;
+  --color-primary-fixed-dim: #e2685a;
   --color-on-primary-fixed: #3a0a04;
   --color-on-primary-fixed-variant: #7d2a1f;
 
@@ -153,18 +153,18 @@
     margin: 0;
     padding: 0;
     background:
-      radial-gradient(60% 45% at 90% -10%, rgba(232, 80, 60, 0.14), transparent 70%),
+      radial-gradient(60% 45% at 90% -10%, rgba(206, 76, 59, 0.14), transparent 70%),
       radial-gradient(50% 40% at 0% 110%, rgba(125, 140, 255, 0.06), transparent 70%),
       var(--color-surface);
     background-attachment: fixed;
     color: var(--color-on-surface);
   }
   ::selection {
-    background: #e8503c;
+    background: #ce4c3b;
     color: #fff;
   }
   :focus-visible {
-    outline: 1px solid #e8503c;
+    outline: 1px solid #ce4c3b;
     outline-offset: 2px;
   }
   body {
