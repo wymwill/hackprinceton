@@ -1,5 +1,5 @@
 {
-  "name": "bookie",
+  "name": "betting-with-friends",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:unit": "node --test src/lib/**/*.test.ts",
-    "test:e2e": "node scripts/e2e-lifecycle.mjs",
-    "test:ai": "node scripts/e2e-ai-bookie.mjs"
+    "test:e2e": "node scripts/e2e.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

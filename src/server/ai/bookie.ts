@@ -1,253 +1,266 @@
 import "server-only";
-import type { OddsEstimate, Outcome, Review, ReviewIssue } from "@/lib/bets/types";
-import { BetError, addEstimate, audit, requireInvolved, statsEstimate, statusOf } from "../bets";
+import { baselineEstimate } from "@/lib/markets/baseline";
+import type { AiSource, BookieEstimate, Outcome, Review, ReviewIssue } from "@/lib/markets/types";
+import { AppError } from "../errors";
+import { requireMember } from "../groups";
+import { aiQueue, applyBookieEstimate, positionsOf, requireMarket, settledRecords, statusOf } from "../markets";
 import { newId, read, transact, type Db, type StoredEvidence } from "../store";
-import { AiUnavailable, estimateOdds, reviewEvidence } from "./claude";
+import { AiUnavailable, estimateOdds, reviewEvidence, suggestDare, writeRoast } from "./claude";
 import { aiMode } from "./config";
 
 /**
- * Orchestrates the AI Bookie around the bet lifecycle.
- *
- * Model calls take seconds, so they never run inside the database lock:
- * read a snapshot, call the model, validate the answer, then write it in a
- * short transaction. The AI only ever records estimates and recommendations.
- * Settlement still goes through `settleBet`, triggered by a human.
+ * The Bookie around the market lifecycle. Model calls take seconds, so they
+ * never run inside the database lock: read a snapshot, call the model,
+ * validate, then write in a short transaction. The Bookie only records
+ * estimates, recommendations, roasts and dare ideas. People settle markets.
  */
 
 const MIN_CONFIDENCE = 0.75;
 
-type Who = { id: string; name: string };
-
-function context(db: Db, betId: string) {
-  const bet = db.bets.find((b) => b.id === betId);
-  if (!bet) throw new BetError(404, "bet_not_found", "That bet doesn't exist.");
-  const users: Who[] = db.users.map((u) => ({ id: u.id, name: u.name }));
-  const stakes = new Map<string, string>();
-  for (const e of db.entries.filter((x) => x.betId === betId)) {
-    stakes.set(e.userId, `${e.amount} pts on ${bet.outcomes.find((o) => o.id === e.outcomeId)?.label}`);
-  }
-  const evidence = db.evidence.filter((e) => e.betId === betId);
-  return { bet: structuredClone(bet), users, stakes, evidence: structuredClone(evidence) };
+function log(db: Db, groupId: string, marketId: string | undefined, kind: "odds" | "review" | "roast" | "dare", source: AiSource, summary: string, model?: string, facts?: string[]) {
+  db.aiLog.push({ id: newId("ai"), groupId, marketId, at: new Date().toISOString(), kind, source, model, summary, facts });
 }
 
 // ---------- odds ----------
 
-/** Normalize model percentages onto our outcome ids; fall back to the baseline for anything missing. */
-function normalize(outcomes: Outcome[], raw: { outcome_id: string; percent: number }[], baseline: { outcomeId: string; p: number }[]) {
-  const vals = outcomes.map((o) => {
-    const r = raw.find((x) => x.outcome_id === o.id);
-    const v = r && Number.isFinite(r.percent) ? r.percent / 100 : (baseline.find((b) => b.outcomeId === o.id)?.p ?? 0);
-    return Math.min(0.99, Math.max(0.01, v));
+export async function refreshOdds(marketId: string, trigger: string): Promise<BookieEstimate | null> {
+  const ctx = await read((db) => {
+    const m = db.markets.find((x) => x.id === marketId);
+    if (!m || m.receiptId) return null;
+    const subject = m.subjectId ? db.users.find((u) => u.id === m.subjectId)?.name : undefined;
+    const base = baselineEstimate({ category: m.category, subjectId: m.subjectId, subjectName: subject, history: settledRecords(db, m.groupId) });
+    return { question: m.question, rule: m.rule, category: m.category, subject, base, groupId: m.groupId };
   });
-  const total = vals.reduce((a, b) => a + b, 0);
-  return outcomes.map((o, i) => ({ outcomeId: o.id, p: vals[i] / total }));
-}
+  if (!ctx) return null;
+  const { base } = ctx;
+  const at = new Date().toISOString();
+  const mode = aiMode();
+  let est: BookieEstimate;
 
-/**
- * Refresh a bet's odds. With Claude on, the model reads the stored-history facts,
- * the stats baseline, and any evidence so far. With it off, only `manual`
- * refreshes do anything (history changes are handled at settlement).
- */
-export async function refreshOdds(betId: string, trigger: OddsEstimate["trigger"]): Promise<OddsEstimate | null> {
-  if (aiMode() !== "claude") {
-    if (trigger !== "manual") return null;
-    return transact((db) => {
-      const bet = db.bets.find((b) => b.id === betId);
-      if (!bet) throw new BetError(404, "bet_not_found", "That bet doesn't exist.");
-      if (bet.receiptId) throw new BetError(409, "bet_settled", "This bet is already settled.");
-      const est = statsEstimate(db, bet, "manual", new Date());
-      addEstimate(db, bet, est);
-      return est;
-    });
-  }
-
-  const { ctx, base } = await read((db) => {
-    const ctx = context(db, betId);
-    const live = db.bets.find((b) => b.id === betId)!;
-    if (live.receiptId) throw new BetError(409, "bet_settled", "This bet is already settled.");
-    return { ctx, base: statsEstimate(db, live, trigger, new Date()) };
-  });
-
-  let est: OddsEstimate;
-  try {
-    const { output, model } = await estimateOdds({
-      proposition: ctx.bet.proposition,
-      category: ctx.bet.category,
-      outcomes: ctx.bet.outcomes,
-      subject: ctx.users.find((u) => u.id === ctx.bet.subjectId)?.name,
-      facts: base.facts,
-      baseline: base.probabilities,
-      evidence: ctx.evidence,
-      users: ctx.users,
-      stakes: ctx.stakes,
-    });
-    const factIds = new Set(base.facts.map((f) => f.id));
-    const evIds = new Set(ctx.evidence.map((e) => e.id));
-    est = {
-      ...base,
-      id: newId("o"),
-      source: "claude",
-      model,
-      probabilities: normalize(ctx.bet.outcomes, output.probabilities, base.probabilities),
-      uncertainty: output.uncertainty,
-      explanation: output.explanation.trim().slice(0, 600),
-      // The model may only point at facts we computed and evidence that exists.
-      citedFactIds: output.cited_fact_ids.filter((id) => factIds.has(id)),
-      citedEvidenceIds: output.cited_evidence_ids.filter((id) => evIds.has(id)),
-    };
-  } catch (err) {
-    if (!(err instanceof AiUnavailable)) throw err;
-    console.warn(`[bookie] odds for ${betId} fell back to stats: ${err.message}`);
-    est = { ...base, fallbackReason: err.message };
+  if (mode === "claude") {
+    try {
+      const { output, model } = await estimateOdds({ question: ctx.question, rule: ctx.rule, category: ctx.category, subject: ctx.subject, facts: base.facts, baseline: base.chance });
+      const ids = new Set(base.facts.map((f) => f.id));
+      const cited = output.cited_fact_ids.filter((id) => ids.has(id));
+      const chance = Math.round(Math.min(95, Math.max(5, output.chance)));
+      const lo = Math.round(Math.min(chance, Math.max(1, output.range_low)));
+      const hi = Math.round(Math.max(chance, Math.min(99, output.range_high)));
+      est = {
+        chance,
+        range: [lo, hi],
+        uncertainty: output.uncertainty,
+        explanation: output.explanation.trim().slice(0, 300),
+        facts: cited.length ? base.facts.filter((f) => cited.includes(f.id)) : base.facts,
+        source: "claude",
+        model,
+        at,
+      };
+    } catch (err) {
+      if (!(err instanceof AiUnavailable)) throw err;
+      console.warn(`[bookie] odds for ${marketId} fell back to the baseline: ${err.message}`);
+      est = { ...base, source: "baseline", at, fallbackReason: err.message };
+    }
+  } else if (mode === "stub") {
+    est = { ...base, explanation: `Test stub: ${base.explanation}`, source: "stub", at };
+  } else {
+    est = { ...base, source: "baseline", at };
   }
 
   return transact((db) => {
-    const bet = db.bets.find((b) => b.id === betId);
-    if (!bet || bet.receiptId) return null;
-    // Keep the stats baseline next to the model's number so both stay visible.
-    if (est.source === "claude") addEstimate(db, bet, { ...base, id: newId("o") });
-    addEstimate(db, bet, est);
+    if (!applyBookieEstimate(db, marketId, est)) return null;
+    log(db, ctx.groupId, marketId, "odds", est.source, `${trigger === "created" ? "Opening line" : "Re-check"}: ${est.chance}% Yes. ${est.explanation}`, est.model, est.facts.map((f) => f.text));
     return est;
   });
 }
 
 // ---------- evidence review ----------
 
-/** No model: describe what was submitted and flag it for a human. Never recommends. */
-function rulesReview(outcomes: Outcome[], evidence: StoredEvidence[], entriesByUser: Map<string, string>, why: string) {
+function rulesReview(evidence: StoredEvidence[], why: string) {
   const issues: ReviewIssue[] = [];
-  if (!evidence.length) issues.push({ type: "missing", detail: "Nobody has submitted evidence yet.", evidenceIds: [] });
-  const claimed = new Set(evidence.map((e) => e.claimsOutcomeId).filter(Boolean));
-  if (claimed.size > 1) {
-    issues.push({
-      type: "contradictory",
-      detail: `Evidence points to different outcomes: ${[...claimed].map((id) => outcomes.find((o) => o.id === id)?.label).join(" vs ")}.`,
-      evidenceIds: evidence.filter((e) => e.claimsOutcomeId).map((e) => e.id),
-    });
-  }
-  const self = evidence.filter((e) => e.claimsOutcomeId && entriesByUser.get(e.userId) === e.claimsOutcomeId);
-  if (self.length) {
-    issues.push({ type: "self_interested", detail: "Some evidence backs the outcome its submitter staked on.", evidenceIds: self.map((e) => e.id) });
-  }
-  const unseen = evidence.filter((e) => e.kind !== "text");
-  if (unseen.length) {
-    issues.push({ type: "unverifiable", detail: "Links and images weren't checked by an AI. Open them yourself.", evidenceIds: unseen.map((e) => e.id) });
-  }
-  const counts = outcomes.map((o) => `${o.label}: ${evidence.filter((e) => e.claimsOutcomeId === o.id).length}`).join(", ");
-  return {
-    status: "needs_review" as const,
-    explanation: `${why} ${evidence.length} piece${evidence.length === 1 ? "" : "s"} of evidence submitted (claims by outcome: ${counts}). A human needs to decide.`,
-    evidenceUsed: [],
-    issues,
-  };
+  if (!evidence.length) issues.push({ type: "missing", detail: "Nobody has posted evidence yet.", evidenceIds: [] });
+  const claims = new Set(evidence.map((e) => e.claims).filter(Boolean));
+  if (claims.size > 1) issues.push({ type: "contradictory", detail: "Evidence points both ways.", evidenceIds: evidence.filter((e) => e.claims).map((e) => e.id) });
+  const yes = evidence.filter((e) => e.claims === "yes").length;
+  const no = evidence.filter((e) => e.claims === "no").length;
+  return { explanation: `${why} ${evidence.length} item${evidence.length === 1 ? "" : "s"} posted (${yes} say Yes, ${no} say No). The host decides.`, issues };
 }
 
-/** Deterministic stand-in for tests (BOOKIE_AI=stub): recommends only when 2+ items agree and none disagree. */
 function stubReview(evidence: StoredEvidence[]) {
-  const claims = evidence.filter((e) => e.claimsOutcomeId);
-  const ids = new Set(claims.map((e) => e.claimsOutcomeId));
-  if (claims.length >= 2 && ids.size === 1) {
+  const claims = evidence.filter((e) => e.claims);
+  const sides = new Set(claims.map((e) => e.claims));
+  if (claims.length >= 2 && sides.size === 1) {
     return {
       status: "recommended" as const,
-      outcomeId: claims[0].claimsOutcomeId,
+      outcome: claims[0].claims as Outcome,
       confidence: 0.9,
-      explanation: `Test stub: ${claims.length} pieces of evidence agree and none disagree.`,
-      evidenceUsed: claims.map((e) => ({ evidenceId: e.id, how: "Claims this outcome." })),
+      explanation: `Test stub: ${claims.length} items agree and none disagree.`,
+      evidenceUsed: claims.map((e) => ({ evidenceId: e.id, how: "Says this happened." })),
       issues: [] as ReviewIssue[],
     };
   }
   return {
-    status: "needs_review" as const,
+    status: "needs_human" as const,
     explanation: "Test stub: evidence is missing or disagrees.",
     evidenceUsed: [],
-    issues: [{ type: ids.size > 1 ? "contradictory" : "missing", detail: "Not enough agreeing evidence.", evidenceIds: claims.map((e) => e.id) }] as ReviewIssue[],
+    issues: [{ type: sides.size > 1 ? "contradictory" : "missing", detail: "Not enough agreeing evidence.", evidenceIds: claims.map((e) => e.id) }] as ReviewIssue[],
   };
 }
 
 const running = new Set<string>();
 
-/** Ask the AI Bookie to review a closed bet's evidence. Records a recommendation; never settles. */
-export async function reviewBet(betId: string, userId: string): Promise<Review> {
-  if (running.has(betId)) throw new BetError(409, "review_running", "A review is already running for this bet.");
-  running.add(betId);
+/** Ask the Bookie to review a closed market's evidence. Records a recommendation. Never settles. */
+export async function requestReview(marketId: string, userId: string): Promise<Review> {
+  if (running.has(marketId)) throw new AppError(409, "review_running", "The Bookie is already looking at this one.");
+  running.add(marketId);
   try {
     const ctx = await read((db) => {
-      const bet = requireInvolved(db, userId, betId);
-      const s = statusOf(bet);
-      if (s === "open") throw new BetError(409, "bet_open", "Entries are still open. Close the bet before reviewing evidence.");
-      if (s === "settled") throw new BetError(409, "bet_settled", "This bet is already settled.");
-      const c = context(db, betId);
-      const entriesByUser = new Map(db.entries.filter((e) => e.betId === betId).map((e) => [e.userId, e.outcomeId]));
-      return { ...c, entriesByUser };
+      const { market } = requireMarket(db, userId, marketId);
+      const s = statusOf(market);
+      if (s === "open") throw new AppError(409, "market_open", "Close the market before asking the Bookie.");
+      if (s === "settled") throw new AppError(409, "market_settled", "This market is already settled.");
+      const users = db.users.map((u) => ({ id: u.id, name: u.name }));
+      const stakes = new Map<string, string>();
+      for (const p of positionsOf(db, marketId)) stakes.set(p.userId, `${p.yes} Yes and ${p.no} No contracts`);
+      for (const p of db.picks.filter((x) => x.marketId === marketId)) stakes.set(p.userId, `picked ${p.side.toUpperCase()}`);
+      return { market: structuredClone(market), users, stakes, evidence: structuredClone(db.evidence.filter((e) => e.marketId === marketId && !e.dareProof)) };
     });
-    const { bet, evidence, stakes, users, entriesByUser } = ctx;
+    const { market, evidence } = ctx;
     const mode = aiMode();
+    let result: Omit<Review, "id" | "marketId" | "requestedBy" | "at" | "evidenceSeen">;
 
-    let result: Omit<Review, "id" | "betId" | "requestedBy" | "at" | "evidenceSeen">;
     if (mode === "stub") {
-      result = { source: "test-stub", ...stubReview(evidence) };
+      result = { source: "stub", ...stubReview(evidence) };
     } else if (mode === "off" || evidence.length === 0) {
-      const why = evidence.length === 0 ? "There's nothing to review yet." : "AI review is off (no Anthropic API key), so nothing was judged.";
-      const r = rulesReview(bet.outcomes, evidence, entriesByUser, why);
-      result = { source: "rules", status: r.status, explanation: r.explanation, evidenceUsed: [], issues: r.issues };
+      const r = rulesReview(evidence, evidence.length ? "The Bookie's AI is off, so nothing was judged." : "There's nothing to review yet.");
+      result = { source: "rules", status: "needs_human", evidenceUsed: [], ...r };
     } else {
       try {
-        const { output, model } = await reviewEvidence({ proposition: bet.proposition, outcomes: bet.outcomes, deadline: bet.deadline, evidence, users, stakes });
-        const evIds = new Set(evidence.map((e) => e.id));
-        const used = output.evidence_used.filter((u) => evIds.has(u.evidence_id)).map((u) => ({ evidenceId: u.evidence_id, how: u.how.slice(0, 300) }));
-        const issues: ReviewIssue[] = output.issues.map((i) => ({ type: i.type, detail: i.detail.slice(0, 300), evidenceIds: i.evidence_ids.filter((id) => evIds.has(id)) }));
-        const outcome = bet.outcomes.find((o) => o.id === output.outcome_id);
+        const { output, model } = await reviewEvidence({ question: market.question, rule: market.rule, deadline: market.closedAt ?? market.deadline, evidence, users: ctx.users, stakes: ctx.stakes });
+        const ids = new Set(evidence.map((e) => e.id));
+        const used = output.evidence_used.filter((u) => ids.has(u.evidence_id)).map((u) => ({ evidenceId: u.evidence_id, how: u.how.slice(0, 300) }));
+        const issues: ReviewIssue[] = output.issues.map((i) => ({ type: i.type, detail: i.detail.slice(0, 300), evidenceIds: i.evidence_ids.filter((id) => ids.has(id)) }));
         const confidence = Math.min(1, Math.max(0, Number(output.confidence) || 0));
-
         // The server, not the model, decides whether this counts as a recommendation.
-        const blockers: string[] = [];
-        if (output.verdict !== "recommend") blockers.push("the AI called it inconclusive");
-        if (!outcome) blockers.push("no valid outcome was named");
-        if (confidence < MIN_CONFIDENCE) blockers.push(`confidence ${Math.round(confidence * 100)}% is below ${MIN_CONFIDENCE * 100}%`);
-        if (!used.length) blockers.push("no evidence was cited");
-        if (issues.some((i) => i.type === "contradictory")) blockers.push("evidence contradicts itself");
-        const recommended = blockers.length === 0;
-        if (!recommended && output.verdict === "recommend") {
-          issues.push({ type: "inconclusive", detail: `Flagged for human review: ${blockers.join("; ")}.`, evidenceIds: [] });
-        }
+        const ok = output.verdict === "recommend" && output.outcome && confidence >= MIN_CONFIDENCE && used.length > 0 && !issues.some((i) => i.type === "contradictory");
         result = {
           source: "claude",
           model,
-          status: recommended ? "recommended" : "needs_review",
-          outcomeId: recommended ? outcome!.id : undefined,
+          status: ok ? "recommended" : "needs_human",
+          outcome: ok ? output.outcome! : undefined,
           confidence,
-          explanation: output.explanation.trim().slice(0, 1200),
+          explanation: output.explanation.trim().slice(0, 600),
           evidenceUsed: used,
           issues,
         };
       } catch (err) {
         if (!(err instanceof AiUnavailable)) throw err;
-        const r = rulesReview(bet.outcomes, evidence, entriesByUser, `The AI review failed (${err.message}).`);
-        result = { source: "rules", status: r.status, explanation: r.explanation, evidenceUsed: [], issues: r.issues };
+        const r = rulesReview(evidence, `The Bookie couldn't review this (${err.message}).`);
+        result = { source: "rules", status: "needs_human", evidenceUsed: [], ...r };
       }
     }
 
     return await transact((db) => {
-      const live = db.bets.find((b) => b.id === betId)!;
-      if (live.receiptId) throw new BetError(409, "bet_settled", "This bet was settled while the review ran.");
-      const now = new Date();
-      const review: Review = { id: newId("rv"), betId, requestedBy: userId, at: now.toISOString(), evidenceSeen: evidence.map((e) => e.id), ...result };
+      const live = db.markets.find((m) => m.id === marketId)!;
+      if (live.receiptId) throw new AppError(409, "market_settled", "This market settled while the Bookie was reading.");
+      const review: Review = { id: newId("rv"), marketId, requestedBy: userId, at: new Date().toISOString(), evidenceSeen: evidence.map((e) => e.id), ...result };
       db.reviews.push(review);
-      const label = review.outcomeId ? live.outcomes.find((o) => o.id === review.outcomeId)?.label : undefined;
-      audit(
+      log(
         db,
-        betId,
-        review.source === "claude" ? "ai" : "system",
-        "review_completed",
-        review.status === "recommended"
-          ? `Recommended ${label} (${Math.round((review.confidence ?? 0) * 100)}% confidence) from ${review.evidenceUsed.length} pieces of evidence. Waiting for a human to confirm.`
-          : `Flagged for human review (${review.source}): ${review.issues.map((i) => i.type).join(", ") || "no recommendation"}.`,
-        now,
-        [review.id, ...review.evidenceSeen]
+        live.groupId,
+        marketId,
+        "review",
+        review.source,
+        review.status === "recommended" ? `Recommends ${review.outcome!.toUpperCase()} (${Math.round((review.confidence ?? 0) * 100)}% sure).` : "Needs a human to decide.",
+        review.model
       );
       return review;
     });
   } finally {
-    running.delete(betId);
+    running.delete(marketId);
+  }
+}
+
+// ---------- roast ----------
+
+async function runRoast(receiptId: string) {
+  const ctx = await read((db) => {
+    const r = db.receipts.find((x) => x.id === receiptId);
+    const m = r && db.markets.find((x) => x.id === r.marketId);
+    if (!r || !m) return null;
+    const name = (id: string) => db.users.find((u) => u.id === id)?.name ?? id;
+    return {
+      groupId: m.groupId,
+      marketId: m.id,
+      question: m.question,
+      outcome: r.outcome,
+      winners: r.results.filter((x) => x.result === "won").map((x) => name(x.userId)),
+      losers: r.results.filter((x) => x.result === "lost").map((x) => name(x.userId)),
+      dare: r.dareText,
+    };
+  });
+  if (!ctx) return;
+  try {
+    const { output, model } = await writeRoast(ctx);
+    const line = output.line.trim().slice(0, 160);
+    await transact((db) => {
+      const r = db.receipts.find((x) => x.id === receiptId);
+      if (!r) return;
+      r.roast = line;
+      r.roastSource = "claude";
+      log(db, ctx.groupId, ctx.marketId, "roast", "claude", line, model);
+    });
+  } catch (err) {
+    if (!(err instanceof AiUnavailable)) throw err;
+    console.warn(`[bookie] roast fell back to the stock line: ${err.message}`);
+  }
+}
+
+// ---------- dare suggestion ----------
+
+export async function suggestDareFor(groupId: string, userId: string, question: string, rule?: string) {
+  const presets = await read((db) => requireMember(db, userId, groupId).group.darePresets);
+  const mode = aiMode();
+  const fallback = presets[question.length % Math.max(1, presets.length)] ?? "50 burpees on camera";
+  let text = fallback;
+  let source: AiSource = "baseline";
+  let model: string | undefined;
+  if (mode === "stub") {
+    text = "Test stub dare: 20 pushups on camera";
+    source = "stub";
+  } else if (mode === "claude") {
+    try {
+      const r = await suggestDare({ question, rule, presets });
+      text = r.output.dare.trim().slice(0, 80) || fallback;
+      source = "claude";
+      model = r.model;
+    } catch (err) {
+      if (!(err instanceof AiUnavailable)) throw err;
+    }
+  }
+  await transact((db) => log(db, groupId, undefined, "dare", source, `Suggested "${text}" for "${question.slice(0, 60)}".`, model));
+  return { text, source };
+}
+
+// ---------- queue ----------
+
+let draining = false;
+
+/** Run AI work queued by mutations. Called from `after()` so it never delays a response. */
+export async function runQueued() {
+  if (draining) return;
+  draining = true;
+  try {
+    const queue = aiQueue();
+    while (queue.length) {
+      const task = queue.shift()!;
+      try {
+        if (task.kind === "odds") await refreshOdds(task.marketId, task.trigger);
+        else await runRoast(task.receiptId);
+      } catch (err) {
+        console.error("[bookie] queued task failed", task, err);
+      }
+    }
+  } finally {
+    draining = false;
   }
 }

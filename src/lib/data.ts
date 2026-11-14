@@ -1,13 +1,7 @@
-/** The demo group. Every bet belongs to it (the backend's default group). */
-export const GROUP = { id: "gym-arc", emoji: "🔥", name: "The Boyz Gym Arc" };
-
-export const NAV = [
-  {
-    href: "/",
-    label: "Markets",
-    icon: "candlestick_chart",
-    match: (p: string) => p === "/" || p.startsWith("/bets") || p.startsWith("/receipts"),
-  },
-  { href: "/leaderboard", label: "Leaderboard", icon: "trophy", match: (p: string) => p.startsWith("/leaderboard") },
-  { href: "/profile", label: "Profile", icon: "id_card", match: (p: string) => p.startsWith("/profile") },
+/** Group navigation. Every page lives under /g/[groupId]. */
+export const groupNav = (groupId: string) => [
+  { href: `/g/${groupId}`, label: "Markets", icon: "candlestick_chart", match: (p: string) => p === `/g/${groupId}` || p.startsWith(`/g/${groupId}/m/`) },
+  { href: `/g/${groupId}/leaderboard`, label: "Leaderboard", icon: "trophy", match: (p: string) => p.startsWith(`/g/${groupId}/leaderboard`) },
+  { href: `/g/${groupId}/dares`, label: "Dares", icon: "local_fire_department", match: (p: string) => p.startsWith(`/g/${groupId}/dares`) },
+  { href: `/g/${groupId}/settings`, label: "Settings", icon: "settings", match: (p: string) => p.startsWith(`/g/${groupId}/settings`) },
 ];
