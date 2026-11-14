@@ -54,7 +54,7 @@ export default function Login({ mode, supabase }: { mode: AuthMode; supabase: { 
             <summary className="cursor-pointer text-center">Sign-in is being set up</summary>
             <p className="mt-2">
               Google sign-in turns on once <code className="font-num text-on-surface">SUPABASE_URL</code> and <code className="font-num text-on-surface">SUPABASE_PUBLISHABLE_KEY</code> are in{" "}
-              <code className="font-num">.env.local</code> and the server restarts. See Sign-in in the README. For a local demo without accounts, run with{" "}
+              <code className="font-num">.env.local</code> and the server restarts. Step-by-step setup: <code className="font-num text-on-surface">docs/supabase-setup.md</code>. For a local demo without accounts, run with{" "}
               <code className="font-num text-on-surface">BWF_AUTH=demo</code>.
             </p>
           </details>
