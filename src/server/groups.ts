@@ -65,6 +65,26 @@ export function joinGroup(db: Db, userId: string, code: unknown, now = new Date(
   return group;
 }
 
+/**
+ * What an invite link shows before you join: the group's name, emoji, mode and
+ * members, and whether you're already in. The code itself is the secret, so
+ * this reveals nothing to someone without it.
+ */
+export function invitePreview(db: Db, userId: string, code: unknown) {
+  const c = text(code).toUpperCase();
+  const group = db.groups.find((g) => g.inviteCode === c);
+  if (!group) throw new AppError(404, "bad_code", "That invite link doesn't match any group.");
+  const members = db.memberships.filter((m) => m.groupId === group.id).map((m) => db.users.find((u) => u.id === m.userId)?.name ?? m.userId);
+  return {
+    groupId: group.id,
+    name: group.name,
+    emoji: group.emoji,
+    mode: group.mode,
+    members,
+    alreadyMember: db.memberships.some((m) => m.groupId === group.id && m.userId === userId),
+  };
+}
+
 export function requireMember(db: Db, userId: string, groupId: string) {
   const group = db.groups.find((g) => g.id === groupId);
   const m = group && db.memberships.find((x) => x.groupId === groupId && x.userId === userId);
