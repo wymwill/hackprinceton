@@ -15,7 +15,8 @@ type Preview = { groupId: string; name: string; emoji: string; mode: "tokens" | 
 export default function JoinInvite() {
   const { code } = useParams<{ code: string }>();
   const router = useRouter();
-  const { me, joinGroup, toast } = useApp();
+  const { state, me, joinGroup, toast } = useApp();
+  const demo = state?.auth.mode === "demo";
   const [preview, setPreview] = useState<Preview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -94,7 +95,9 @@ export default function JoinInvite() {
             <Button tone="primary" className="w-full h-12" disabled={busy} onClick={join}>
               {busy ? "Joining…" : `Join as ${me.name}`}
             </Button>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">Not {me.name.split(" ")[0]}? Switch in Playing as at the top first.</p>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Not {me.name.split(" ")[0]}? {demo ? "Switch in Playing as at the top first." : "Sign out at the top, then open the link again."}
+            </p>
           </>
         )}
       </section>
