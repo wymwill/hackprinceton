@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Leaderboard from "@/screens/Leaderboard";
 
-export const metadata = { title: "Leaderboard · Betting with Friends" };
+export const metadata = { title: "Leaderboard · Alea" };
 
 export default function Page() {
   return (

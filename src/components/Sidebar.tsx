@@ -35,7 +35,7 @@ export default function Sidebar() {
               <span className="w-8 h-8 rounded-xl bg-primary-container text-on-primary flex items-center justify-center text-lg" aria-hidden>
                 <span className="material-symbols-outlined text-[20px]">casino</span>
               </span>
-              <span className="font-display italic text-[22px] leading-none text-on-surface">Betting with Friends</span>
+              <span className="font-display italic text-[28px] leading-none text-on-surface">Alea</span>
             </Link>
             <button onClick={() => setNavOpen(false)} className="lg:hidden text-on-surface-variant" aria-label="Close menu">
               <span className="material-symbols-outlined block" aria-hidden>

@@ -1,32 +1,32 @@
 @import "tailwindcss";
 
-/* Betting with Friends: Rosy Copper (#CE4C3B) on Shadow Grey (#27242F).
+/* Alea: Rosy Copper (#CE4C3B) on Shadow Grey (#27242F).
  * Layout language borrowed from Scarlet Market (square framed panels, small
  * tracked uppercase labels, serif display, mono numbers), minus the retro FX. */
 @theme {
-  --color-surface: #27242f;
-  --color-surface-dim: #211e28;
-  --color-surface-bright: #4a4558;
-  --color-surface-container-lowest: #1d1a23;
-  --color-surface-container-low: #2d2a36;
-  --color-surface-container: #33303d;
-  --color-surface-container-high: #3a3645;
-  --color-surface-container-highest: #423d4e;
-  --color-surface-variant: #3a3645;
+  --color-surface: #2d2939;
+  --color-surface-dim: #27242f;
+  --color-surface-bright: #534e62;
+  --color-surface-container-lowest: #24212b;
+  --color-surface-container-low: #342f43;
+  --color-surface-container: #3a354b;
+  --color-surface-container-high: #443e56;
+  --color-surface-container-highest: #4d4660;
+  --color-surface-variant: #433f4f;
   --color-surface-tint: #ce4c3b;
-  --color-on-surface: #f3eeee;
-  --color-on-surface-variant: #d2cbd8;
+  --color-on-surface: #faf6f6;
+  --color-on-surface-variant: #ddd7e2;
   --color-inverse-surface: #ebe5e8;
   --color-inverse-on-surface: #27242f;
   --color-outline: #a39cae;
-  --color-outline-variant: #4b4657;
-  --color-background: #27242f;
-  --color-on-background: #f3eeee;
+  --color-outline-variant: #565162;
+  --color-background: #2d2939;
+  --color-on-background: #faf6f6;
 
   /* rosy copper: brand, wins & primary actions */
-  --color-primary: #e2685a;
+  --color-primary: #ff7563;
   --color-on-primary: #ffffff;
-  --color-primary-container: #ce4c3b;
+  --color-primary-container: #e8503c;
   --color-on-primary-container: #fff1ee;
   --color-inverse-primary: #9c3427;
   --color-primary-fixed: #f2a092;
@@ -35,7 +35,7 @@
   --color-on-primary-fixed-variant: #7d2a1f;
 
   /* sand: losses & dares */
-  --color-secondary: #e9bf86;
+  --color-secondary: #ffc76e;
   --color-on-secondary: #3a2508;
   --color-secondary-container: #6b4a22;
   --color-on-secondary-container: #f8dfbb;
@@ -45,9 +45,9 @@
   --color-on-secondary-fixed-variant: #6b4a22;
 
   /* periwinkle: info & highlights */
-  --color-tertiary: #b9c3ff;
+  --color-tertiary: #aebcff;
   --color-on-tertiary: #1c2564;
-  --color-tertiary-container: #7f8ce8;
+  --color-tertiary-container: #7d8cff;
   --color-on-tertiary-container: #141b4d;
   --color-tertiary-fixed: #dde1ff;
   --color-tertiary-fixed-dim: #b9c3ff;
@@ -146,14 +146,15 @@
   *,
   ::before,
   ::after {
-    border-color: #3a3645;
+    border-color: #433f4f;
   }
   html,
   body {
     margin: 0;
     padding: 0;
     background:
-      radial-gradient(60% 45% at 90% -10%, rgba(206, 76, 59, 0.1), transparent 70%),
+      radial-gradient(60% 45% at 90% -10%, rgba(232, 80, 60, 0.18), transparent 70%),
+      radial-gradient(50% 40% at 0% 110%, rgba(125, 140, 255, 0.1), transparent 70%),
       var(--color-surface);
     background-attachment: fixed;
     color: var(--color-on-surface);

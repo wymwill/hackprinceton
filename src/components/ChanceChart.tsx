@@ -41,7 +41,7 @@ export default function ChanceChart({ market, now, height = 180 }: { market: Mar
     <svg ref={ref} viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height }} role="img" aria-label={`Chance of Yes over time, now ${market.chance}%`}>
       {[25, 50, 75].map((v) => (
         <g key={v}>
-          <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} stroke="#3a3645" strokeDasharray="2 4" />
+          <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} stroke="#4a4460" strokeDasharray="2 4" />
           <text x={W - pad.r + 6} y={y(v) + 4} fill="#d2cbd8" fontSize="12" fontFamily="var(--font-num)">
             {v}%
           </text>
@@ -53,7 +53,7 @@ export default function ChanceChart({ market, now, height = 180 }: { market: Mar
       {pts
         .filter((p) => p.source === "bookie")
         .map((p) => (
-          <circle key={p.at} cx={x(Date.parse(p.at))} cy={y(p.yes)} r="5" fill="#b9c3ff" stroke="#27242f" strokeWidth="2">
+          <circle key={p.at} cx={x(Date.parse(p.at))} cy={y(p.yes)} r="5" fill="#b9c3ff" stroke="#2e2b37" strokeWidth="2">
             <title>The Bookie set {p.yes}%</title>
           </circle>
         ))}

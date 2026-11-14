@@ -1,4 +1,4 @@
-# Betting with Friends
+# Alea
 
 Friend groups bet on real life (gym streaks, wake-up times, side projects) without money. Each group plays for **tokens** or **points**, and losers owe a **dare**. Every market is a Yes/No question priced like a prediction market, and **the Bookie**, an AI character, sets the opening odds from the group's track record, reviews the evidence when a market closes, and writes the roast on the receipt. People stay in control: the host proposes the result and the group can dispute it.
 

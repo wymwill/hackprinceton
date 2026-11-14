@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Dares from "@/screens/Dares";
 
-export const metadata = { title: "Dares · Betting with Friends" };
+export const metadata = { title: "Dares · Alea" };
 
 export default function Page() {
   return (

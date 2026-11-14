@@ -26,7 +26,7 @@ export default function MarketCard({ market: m, group, now }: { market: MarketVi
   const outcome = m.receipt?.outcome;
 
   return (
-    <article className="group relative flex flex-col gap-3 rounded-2xl bg-surface-container ring-1 ring-[#3a3645] hover:ring-outline-variant p-4 transition-colors">
+    <article className="group relative flex flex-col gap-3 rounded-2xl bg-surface-container ring-1 ring-[#4a4460] hover:ring-primary-container/50 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(232,80,60,0.45)] p-4 transition-all">
       <div className="flex items-start gap-3">
         {m.subjectId ? <Avatar name={name(m.subjectId)} size={40} className="rounded-xl!" /> : <span className="w-10 h-10 shrink-0 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface-variant" aria-hidden><span className="material-symbols-outlined text-[20px]">help</span></span>}
         <h3 className="flex-1 min-w-0 font-label-lg text-[15px] leading-snug text-on-surface">
@@ -57,10 +57,10 @@ export default function MarketCard({ market: m, group, now }: { market: MarketVi
         {m.status === "open" ? (
           group.mode === "tokens" ? (
             <div className="grid grid-cols-2 gap-2">
-              <Link href={`${href}?side=yes`} className="flex items-center justify-between px-3 py-2 rounded-xl bg-primary-container/15 text-primary ring-1 ring-primary-container/40 hover:bg-primary-container/25 font-label-lg text-label-lg">
+              <Link href={`${href}?side=yes`} className="flex items-center justify-between px-3 py-2 rounded-xl bg-primary-container/25 text-primary ring-1 ring-primary-container/60 hover:bg-primary-container/35 font-label-lg text-label-lg">
                 Yes <span className="font-num">{yes}</span>
               </Link>
-              <Link href={`${href}?side=no`} className="flex items-center justify-between px-3 py-2 rounded-xl bg-secondary/10 text-secondary ring-1 ring-secondary/40 hover:bg-secondary/20 font-label-lg text-label-lg">
+              <Link href={`${href}?side=no`} className="flex items-center justify-between px-3 py-2 rounded-xl bg-secondary/15 text-secondary ring-1 ring-secondary/50 hover:bg-secondary/25 font-label-lg text-label-lg">
                 No <span className="font-num">{100 - yes}</span>
               </Link>
             </div>
@@ -70,7 +70,7 @@ export default function MarketCard({ market: m, group, now }: { market: MarketVi
                 <Link
                   key={s}
                   href={`${href}?side=${s}`}
-                  className={`px-3 py-2 rounded-xl ring-1 font-label-lg text-label-lg text-center ${s === "yes" ? "bg-primary-container/15 text-primary ring-primary-container/40" : "bg-secondary/10 text-secondary ring-secondary/40"} ${myPick?.side === s ? "ring-2" : ""}`}
+                  className={`px-3 py-2 rounded-xl ring-1 font-label-lg text-label-lg text-center ${s === "yes" ? "bg-primary-container/25 text-primary ring-primary-container/60" : "bg-secondary/15 text-secondary ring-secondary/50"} ${myPick?.side === s ? "ring-2" : ""}`}
                 >
                   {myPick?.side === s ? "✓ " : ""}Pick {s === "yes" ? "Yes" : "No"}
                 </Link>
