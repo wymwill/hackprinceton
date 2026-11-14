@@ -55,7 +55,7 @@ export function useSocial() {
     removeFriend: (id: string) => run("DELETE", `/social/friends/${encodeURIComponent(id)}`, undefined, "Friend removed."),
     createClan: (name: string) => run<Pick<Clan, "id" | "name" | "code">>("POST", "/social/clans", { name }),
     joinClan: (code: string) => run<Pick<Clan, "id" | "name" | "code">>("POST", "/social/clans/join", { code }),
-    leaveClan: () => run("POST", "/social/clans/leave", undefined, "You left the clan."),
+    leaveClan: (clanId: string) => run("POST", "/social/clans/leave", { clanId }, "You left the clan."),
   };
 }
 

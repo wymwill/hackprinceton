@@ -88,7 +88,7 @@ function ClansLink() {
   );
 }
 
-function Sidebar({ current }: { current?: Series }) {
+function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: string; name: string } }) {
   const [joining, setJoining] = useState(false);
   const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
   return (
@@ -112,6 +112,11 @@ function Sidebar({ current }: { current?: Series }) {
         <button type="button" onClick={() => setJoining(true)}>Join with a code</button>
         <NavLink to="/friends">Friends</NavLink>
         <ClansLink />
+        {clanNav && <details className="series-nav clan-nav" open key={clanNav.id}>
+          <summary title={clanNav.name}>{clanNav.name}</summary>
+          <NavLink to={`/clans/${clanNav.id}`} end>Overview</NavLink>
+          <NavLink to={`/clans/${clanNav.id}/chat`}>Chat</NavLink>
+        </details>}
         <NavLink to="/profile">Profile</NavLink>
       </nav>
       {joining && <JoinModal onClose={() => setJoining(false)} />}
@@ -179,14 +184,14 @@ function useVisualViewport(on: boolean) {
 }
 
 /** `fill`: the page is one full-height screen that scrolls inside itself (the chat), instead of the window scrolling. */
-export function Shell({ crumbs = [], children, fill = false }: { crumbs?: Crumb[]; children: ReactNode; fill?: boolean }) {
+export function Shell({ crumbs = [], children, fill = false, clanNav }: { crumbs?: Crumb[]; children: ReactNode; fill?: boolean; clanNav?: { id: string; name: string } }) {
   const { db } = useStore();
   const m = useMatch("/s/:id/*");
   const current = m ? db.series.find((s) => s.id === m.params.id) : undefined;
   useVisualViewport(fill);
   return (
     <div className={`app ${fill ? "fill" : ""}`}>
-      <Sidebar current={current} />
+      <Sidebar current={current} clanNav={clanNav} />
       <div className="main">
         <TopBar crumbs={crumbs} current={current} />
         <main className={`page ${fill ? "fill" : ""}`}>{children}</main>

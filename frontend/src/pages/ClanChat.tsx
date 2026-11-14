@@ -1,27 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Shell } from "../components/Shell.tsx";
 import { ConfirmButton, Empty, Panel, PersonAvatar } from "../components/ui.tsx";
-import { MAX_MESSAGE, charCount, useChatUnread, useClanChat, type Pending } from "../lib/chat.ts";
+import { MAX_MESSAGE, charCount, useClanChat, type Pending } from "../lib/chat.ts";
 import { useSocial } from "../lib/social.tsx";
 import { useStore } from "../lib/store.tsx";
 import type { ChatMessage, Clan } from "../lib/types.ts";
-
-/** Tabs at the top of the clan screens. */
-export function ClanTabs() {
-  const unread = useChatUnread();
-  return (
-    <nav className="tabs" aria-label="Clan">
-      <NavLink to="/clans" end>
-        Clan
-      </NavLink>
-      <NavLink to="/clans/chat">
-        Chat
-        {unread > 0 && <b aria-label={`${unread} unread`}>{unread > 99 ? "99+" : unread}</b>}
-      </NavLink>
-    </nav>
-  );
-}
 
 const EMOJI = ["😀", "😂", "🔥", "👍", "🎉", "😬", "🙏", "💀", "🏆", "🎲", "💰", "👀"];
 /** Within this many pixels of the bottom counts as "at the bottom": new messages scroll into view. */
@@ -40,19 +24,20 @@ function day(iso: string) {
   return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric", ...(d.getFullYear() !== today.getFullYear() ? { year: "numeric" } : {}) });
 }
 
-/** /clans/chat: your clan's chat. */
+/** /clans/:clanId/chat: one selected clan's chat. */
 export default function ClanChat() {
+  const { clanId = "" } = useParams();
   const { data, error } = useSocial();
-  const clan = data?.clan;
+  const clan = data?.clans.find((c) => c.id === clanId);
   return (
-    <Shell crumbs={[{ label: "Clans", to: "/clans" }, { label: "Chat" }]} fill>
+    <Shell crumbs={[{ label: "Clans", to: "/clans" }, { label: clan?.name ?? "Clan", to: `/clans/${clanId}` }, { label: "Chat" }]} clanNav={clan ? { id: clan.id, name: clan.name } : undefined} fill>
       {!data ? (
         <Panel>
           <Empty title={error ? "Couldn't load your clan" : "Loading…"}>{error}</Empty>
         </Panel>
       ) : !clan ? (
         <Panel>
-          <Empty title="You're not in a clan">
+          <Empty title="Clan not found">
             Each clan has its own private chat.{" "}
             <Link to="/clans" className="red-t">
               Start or join a clan
@@ -61,7 +46,6 @@ export default function ClanChat() {
         </Panel>
       ) : (
         <>
-          <ClanTabs />
           <Chat key={clan.id} clan={clan} />
         </>
       )}
