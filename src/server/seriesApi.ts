@@ -53,6 +53,7 @@ const STATUS: Record<string, number> = {
   not_accepted: 409,
   withdraw_closed: 409,
   friend_not_found: 404,
+  quiz_wrong: 422,
   clan_not_found: 404,
   friend_self: 409,
   already_in_clan: 409,

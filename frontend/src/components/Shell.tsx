@@ -4,6 +4,7 @@ import { balances, isParticipant, participantIds, standings } from "../lib/rules
 import { fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { useTheme } from "../lib/theme.ts";
+import { useCredits } from "../lib/credits.ts";
 import { useChatUnread } from "../lib/chat.ts";
 import type { Series } from "../lib/types.ts";
 import { Avatar, Modal, Toasts } from "./ui.tsx";
@@ -54,6 +55,7 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
 function Account() {
   const { me, meUser, signOut } = useStore();
   const { theme, choose } = useTheme();
+  const credits = useCredits().data?.credits ?? 0;
   return (
     <div className="whoami">
       <span className="cap">Signed in as</span>
@@ -62,7 +64,7 @@ function Account() {
         <span style={{ minWidth: 0 }}>
           <b className="bright">{meUser.name}</b>
           <span className="dim" style={{ display: "block", fontSize: 12 }}>
-            Edit profile
+            Edit profile{credits > 0 ? ` · ${credits.toLocaleString("en-US")} credits` : ""}
           </span>
         </span>
       </Link>

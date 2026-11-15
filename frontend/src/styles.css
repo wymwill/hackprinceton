@@ -2797,3 +2797,75 @@ img.avatar {
   border-top: 1px solid var(--border);
   font-size: 14px;
 }
+
+/* Tutorial: the basics, for 200 credits */
+.basics {
+  gap: 22px;
+}
+.basics-steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+.basics-steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  color: var(--dim);
+  font-size: 14px;
+}
+.basics-steps li.done {
+  color: var(--bright);
+  border-color: var(--red);
+}
+.basics-steps .tick {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--line-hi);
+  color: var(--red-hi);
+  font-size: 12px;
+}
+.basics-steps li.done .tick {
+  border-color: var(--red);
+}
+.basics-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.basics-block h3 {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--bright);
+}
+.quiz {
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.quiz legend {
+  margin-bottom: 6px;
+  color: var(--fg);
+  font-weight: 600;
+}
+.quiz label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  background: var(--side);
+  cursor: pointer;
+}
+.quiz label.on {
+  border-color: var(--red);
+  background: var(--red-soft);
+}

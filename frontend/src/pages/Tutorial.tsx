@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { JoinModal, Shell } from "../components/Shell.tsx";
 import { Panel } from "../components/ui.tsx";
 import { fmt, signed } from "../lib/format.ts";
 import { isParticipant } from "../lib/rules.ts";
 import { useStore } from "../lib/store.tsx";
+import { useCredits, type QuizAnswers } from "../lib/credits.ts";
 import type { Id, Series } from "../lib/types.ts";
 
 /* ───────────────────────── 1. Your first bet, for real ───────────────────────── */
@@ -115,7 +116,7 @@ function settle(wagers: PracticeWager[], outcome: Side) {
   return { refunded: false, rows };
 }
 
-function Practice() {
+function Practice({ onSettled }: { onSettled?: () => void }) {
   const [stage, setStage] = useState<"pick" | "placed" | "locked" | "settled">("pick");
   const [side, setSide] = useState<Side>("yes");
   const [amount, setAmount] = useState(100);
@@ -200,8 +201,8 @@ function Practice() {
             <>
               <p className="tut-say">Betting is locked. The host calls the result, even if they bet on it themselves. Did it rain?</p>
               <div className="seg">
-                <button type="button" className="on yes" onClick={() => { setOutcome("yes"); setStage("settled"); }}>It rained: YES</button>
-                <button type="button" className="on no" onClick={() => { setOutcome("no"); setStage("settled"); }}>Dry: NO</button>
+                <button type="button" className="on yes" onClick={() => { setOutcome("yes"); setStage("settled"); onSettled?.(); }}>It rained: YES</button>
+                <button type="button" className="on no" onClick={() => { setOutcome("no"); setStage("settled"); onSettled?.(); }}>Dry: NO</button>
               </div>
             </>
           )}
@@ -370,11 +371,185 @@ function Features() {
   );
 }
 
+
+/* ───────────────────────── 0. The basics, for 200 credits ───────────────────────── */
+
+const QUIZ: { key: keyof QuizAnswers; q: string; options: { value: string; label: string }[] }[] = [
+  {
+    key: "payout",
+    q: "How do winners get paid?",
+    options: [
+      { value: "fixed", label: "Every winner gets 100 coins" },
+      { value: "split", label: "They split the whole pool by how much they put in" },
+      { value: "host", label: "The host decides who gets what" },
+    ],
+  },
+  {
+    key: "rules",
+    q: "When can a series' rules change?",
+    options: [
+      { value: "any", label: "Any time" },
+      { value: "lobby", label: "Only in the lobby, before betting starts" },
+      { value: "never", label: "Never, not even in the lobby" },
+    ],
+  },
+  {
+    key: "bottom",
+    q: "What happens to the bottom players at the end?",
+    options: [
+      { value: "money", label: "They pay real money" },
+      { value: "nothing", label: "Nothing" },
+      { value: "punishment", label: "They owe a punishment" },
+    ],
+  },
+];
+
+type BasicsProgress = { read: boolean; practiced: boolean };
+const progressKey = (me: Id) => `alea:tutorial-basics:v1:${me}`;
+
+function useBasicsProgress(me: Id) {
+  const [p, setP] = useState<BasicsProgress>(() => {
+    try {
+      return { read: false, practiced: false, ...JSON.parse(localStorage.getItem(progressKey(me)) ?? "{}") };
+    } catch {
+      return { read: false, practiced: false };
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(progressKey(me), JSON.stringify(p));
+    } catch {
+      // Private mode: progress lasts until the tab closes.
+    }
+  }, [me, p]);
+  return [p, (patch: Partial<BasicsProgress>) => setP((x) => ({ ...x, ...patch }))] as const;
+}
+
+/** Four solo steps; finishing them gives 200 credits, added to your starting coins in your next series. */
+function Basics({ practiced }: { practiced: boolean }) {
+  const { me, meUser, toast } = useStore();
+  const { data, finish } = useCredits();
+  const [p, update] = useBasicsProgress(me);
+  const [answers, setAnswers] = useState<QuizAnswers>({});
+  const [busy, setBusy] = useState(false);
+  const [wrong, setWrong] = useState(false);
+
+  useEffect(() => {
+    if (practiced && !p.practiced) update({ practiced: true });
+  }, [practiced, p.practiced, update]);
+
+  if (!data) return null;
+  const done = !!data.tutorialDoneAt;
+  const quizDone = QUIZ.every((q) => answers[q.key]);
+  const steps = [
+    { title: "Read the basics", done: done || p.read },
+    { title: "Try the practice bet", done: done || p.practiced },
+    { title: "Answer 3 quick questions", done: done || quizDone },
+    { title: "Pick a picture on your profile", done: done || !!meUser.avatarUrl },
+  ];
+  const count = steps.filter((s) => s.done).length;
+
+  const claim = async () => {
+    setBusy(true);
+    setWrong(false);
+    try {
+      const r = await finish(answers);
+      toast(r.awarded ? `+${fmt(r.awarded)} credits! They're added to your coins when your next series starts.` : "You've already earned your credits.");
+    } catch {
+      setWrong(true);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Panel label="The basics" right={done ? "Done · 200 credits earned" : `${count} of ${steps.length} · earn 200 credits`}>
+      <div className="tut-progress" aria-hidden>
+        <i style={{ width: `${(count / steps.length) * 100}%` }} />
+      </div>
+      {done ? (
+        <p className="tut-say">
+          {data.credits > 0 ? (
+            <>
+              You have <b>{fmt(data.credits)} credits</b>. They're added to your starting coins when your next series starts.
+            </>
+          ) : (
+            <>Your 200 credits have been used as bonus coins. Nice.</>
+          )}
+        </p>
+      ) : (
+        <div className="stack basics">
+          <ol className="basics-steps">
+            {steps.map((s) => (
+              <li key={s.title} className={s.done ? "done" : ""}>
+                <span className="tick" aria-hidden>{s.done ? "✓" : ""}</span>
+                {s.title}
+              </li>
+            ))}
+          </ol>
+
+          <section className="basics-block">
+            <h3>1. The basics</h3>
+            <ul className="facts">
+              <li>A <b>series</b> is a game with friends: a set of bets played with pretend coins.</li>
+              <li>Put coins on what you think will happen. <b>Winners split the whole pool</b> by how much each put in.</li>
+              <li>Rules are set in the <b>lobby</b> and lock when betting starts. Whoever ends at the <b>bottom owes a punishment</b>.</li>
+            </ul>
+            {!p.read && (
+              <button type="button" className="btn sm" onClick={() => update({ read: true })}>
+                Got it
+              </button>
+            )}
+          </section>
+
+          <section className="basics-block">
+            <h3>2. Practice bet</h3>
+            <p className="hint">{p.practiced ? "Done." : "Play the practice bet on this page through to the result."}</p>
+          </section>
+
+          <section className="basics-block">
+            <h3>3. Quick questions</h3>
+            {QUIZ.map((q) => (
+              <fieldset key={q.key} className="quiz">
+                <legend>{q.q}</legend>
+                {q.options.map((o) => (
+                  <label key={o.value} className={answers[q.key] === o.value ? "on" : ""}>
+                    <input type="radio" name={q.key} value={o.value} checked={answers[q.key] === o.value} onChange={() => setAnswers((a) => ({ ...a, [q.key]: o.value }))} />
+                    {o.label}
+                  </label>
+                ))}
+              </fieldset>
+            ))}
+          </section>
+
+          <section className="basics-block">
+            <h3>4. Make it yours</h3>
+            <p className="hint">
+              {meUser.avatarUrl ? "Picture set." : "Pick a picture so friends know it's you."}{" "}
+              {!meUser.avatarUrl && (
+                <Link to="/profile" className="red-t">
+                  Go to your profile
+                </Link>
+              )}
+            </p>
+          </section>
+
+          {wrong && <p className="notice">Not quite. Check your answers and try again.</p>}
+          <button type="button" className="btn primary block" disabled={busy || count < steps.length} onClick={claim}>
+            {count < steps.length ? `Finish the steps to earn 200 credits` : busy ? "Checking…" : "Claim 200 credits"}
+          </button>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
 /* ───────────────────────── The page ───────────────────────── */
 
 export default function Tutorial() {
   const [joining, setJoining] = useState(false);
   const join = useCallback(() => setJoining(true), []);
+  const [practiced, setPracticed] = useState(false);
   return (
     <Shell crumbs={[{ label: "Tutorial" }]}>
       <section className="hero">
@@ -385,9 +560,10 @@ export default function Tutorial() {
           <p>Friends bet on YES/NO questions with virtual coins over a whole series. Whoever ends with the fewest coins owes a punishment. Here's every part of it, a practice bet, and a checklist for your first real one.</p>
         </div>
       </section>
+      <Basics practiced={practiced} />
       <div className="grid2 tut-top">
         <FirstBet onJoin={join} />
-        <Practice />
+        <Practice onSettled={() => setPracticed(true)} />
       </div>
       <Features />
       {joining && <JoinModal onClose={() => setJoining(false)} />}
