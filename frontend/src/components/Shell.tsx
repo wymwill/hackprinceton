@@ -5,10 +5,8 @@ import { fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { useTheme } from "../lib/theme.ts";
 import { useCredits } from "../lib/credits.ts";
-import { useChatUnread } from "../lib/chat.ts";
 import type { Series } from "../lib/types.ts";
 import { Avatar, Modal, Toasts } from "./ui.tsx";
-import { useMoveCount } from "./YourMoves.tsx";
 
 /** "ABC123", or an invite link ending in /join/ABC123. */
 export const codeFrom = (input: string) => (input.trim().match(/\/join\/([A-Za-z0-9]+)\/?$/)?.[1] ?? input).trim().toUpperCase();
@@ -80,19 +78,7 @@ function Account() {
   );
 }
 
-/** "Clans", with a count of unread clan chat messages. */
-function ClansLink() {
-  const unread = useChatUnread();
-  return (
-    <NavLink to="/clans">
-      Clans
-      {unread > 0 && <b aria-label={`${unread} unread messages`}>{unread > 99 ? "99+" : unread}</b>}
-    </NavLink>
-  );
-}
-
 function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: string; name: string } }) {
-  const moves = useMoveCount();
   const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
   return (
     <aside className="sidebar">
@@ -101,9 +87,7 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
         <span className="brand-name">Alea</span>
       </Link>
       <nav className="nav" aria-label="Main">
-        <NavLink to="/" end title={moves ? `${moves} thing${moves === 1 ? "" : "s"} you can do now` : undefined}>
-          Home{moves > 0 && <b aria-label={`${moves} moves waiting`}>{moves}</b>}
-        </NavLink>
+        <NavLink to="/" end>Home</NavLink>
         <NavLink to="/series">All series</NavLink>
         {current && (
           <div className="series-nav">
@@ -116,7 +100,7 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
         )}
         <NavLink to="/new">New series</NavLink>
         <NavLink to="/friends">Friends</NavLink>
-        <ClansLink />
+        <NavLink to="/clans">Clans</NavLink>
         {clanNav && <details className="series-nav clan-nav" open key={clanNav.id}>
           <summary title={clanNav.name}>{clanNav.name}</summary>
           <NavLink to={`/clans/${clanNav.id}`} end>Overview</NavLink>

@@ -306,7 +306,7 @@ const FEATURES: Feature[] = [
     body: (
       <>
         <p><b>Home</b> lists your series. Open one to see its bets under <b>Bet now</b>, <b>In play</b>, and <b>Settled</b>.</p>
-        <p>The number next to <b>Home</b> in the sidebar counts moves waiting for you. <b>All series</b> also lists every series you're in.</p>
+        <p><b>All series</b> lists every series you're in. Open a clan to find its chat and start a series with that group.</p>
       </>
     ),
   },
