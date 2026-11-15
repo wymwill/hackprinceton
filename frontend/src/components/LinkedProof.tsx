@@ -1,31 +1,20 @@
 import { useMemo, useState } from "react";
 import { DisclosurePanel } from "./ui.tsx";
 import { ago } from "../lib/format.ts";
-import { KINDS, kindLabel, measure, useProof, type ProviderId } from "../lib/links.tsx";
+import { KINDS, kindLabel, measure, useProof } from "../lib/links.tsx";
 import { participantIds } from "../lib/rules.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Bet, Series } from "../lib/types.ts";
 
-const APPS: { id: "" | ProviderId; label: string }[] = [
-  { id: "", label: "Any app" },
-  { id: "strava", label: "Strava" },
-  { id: "fitbit", label: "Fitbit" },
-  { id: "oura", label: "Oura" },
-  { id: "whoop", label: "Whoop" },
-  { id: "spotify", label: "Spotify" },
-  { id: "github", label: "GitHub" },
-];
-const appLabel = (id: string) => APPS.find((a) => a.id === id)?.label ?? id;
-
 /**
- * Bet page: a player's proof from their linked apps since the bet opened, so the
+ * Bet page: a player's public GitHub activity since the bet opened, so the
  * host can call bets from real data. Only as fresh as that player's last sync.
  */
 export function LinkedProof({ s, bet }: { s: Series; bet: Bet }) {
   const { me, name } = useStore();
   const players = participantIds(s);
   const [who, setWho] = useState<string>(players.includes(me) ? me : (players[0] ?? ""));
-  const [app, setApp] = useState("");
+  const app = "github";
   const [kind, setKind] = useState("");
   const since = bet.openedAt ?? s.startedAt ?? null;
   const { proof, error } = useProof(s.id, who || null, since, app, kind);
@@ -43,7 +32,7 @@ export function LinkedProof({ s, bet }: { s: Series; bet: Bet }) {
   const freshness = linked.filter((l) => !app || l.provider === app);
 
   return (
-    <DisclosurePanel label="Linked app proof" className="proof-panel">
+    <DisclosurePanel label="GitHub activity" className="proof-panel">
       <div className="stack">
         <label className="field">
           <span>Player</span>
@@ -56,17 +45,7 @@ export function LinkedProof({ s, bet }: { s: Series; bet: Bet }) {
             ))}
           </select>
         </label>
-        <div className="two-col">
-          <label className="field">
-            <span>App</span>
-            <select className="input" value={app} onChange={(e) => setApp(e.target.value)}>
-              {APPS.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.label}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div>
           <label className="field">
             <span>What</span>
             <select className="input" value={kind} onChange={(e) => setKind(e.target.value)}>
@@ -85,10 +64,10 @@ export function LinkedProof({ s, bet }: { s: Series; bet: Bet }) {
         ) : !proof ? (
           <p className="hint">Loading…</p>
         ) : linked.length === 0 ? (
-          <p className="hint">{who === me ? "Link apps on your profile to show proof here." : `${name(who)} hasn't linked any apps.`}</p>
+          <p className="hint">{who === me ? "Connect GitHub on your profile to show activity here." : `${name(who)} hasn't connected GitHub.`}</p>
         ) : app && !linked.some((l) => l.provider === app) ? (
           <p className="hint">
-            {who === me ? "You haven't" : `${name(who)} hasn't`} linked {appLabel(app)}.
+            {who === me ? "You haven't" : `${name(who)} hasn't`} linked {"GitHub"}.
           </p>
         ) : (
           <>
@@ -112,7 +91,7 @@ export function LinkedProof({ s, bet }: { s: Series; bet: Bet }) {
                       <span className="bright">{i.title || kindLabel(i.kind)}</span>
                       <span className="dim">
                         {" "}
-                        · {appLabel(i.provider)}, {kindLabel(i.kind).toLowerCase()}
+                        · {"GitHub"}, {kindLabel(i.kind).toLowerCase()}
                       </span>
                     </span>
                     <span className="num dim">{measure(Number(i.value), i.unit)}</span>
@@ -123,7 +102,7 @@ export function LinkedProof({ s, bet }: { s: Series; bet: Bet }) {
             )}
             <p className="hint">
               {since ? `Since this bet opened ${ago(since)} ago.` : "Everything synced."}{" "}
-              {freshness.map((l) => `${appLabel(l.provider)} ${l.lastSyncedAt ? `synced ${ago(l.lastSyncedAt)} ago` : "not synced yet"}`).join(" · ")}
+              {freshness.map((l) => `${"GitHub"} ${l.lastSyncedAt ? `synced ${ago(l.lastSyncedAt)} ago` : "not synced yet"}`).join(" · ")}
             </p>
           </>
         )}

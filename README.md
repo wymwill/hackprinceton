@@ -17,9 +17,11 @@ Bookie supports game nights, roommate challenges, weekend plans, and custom pred
 - **Three ways to start:** ready-made templates, full manual setup, or a Gemini-powered game planner built with LangChain's Deep Agents SDK.
 - **Friends and groups:** invite codes, shared series, and private group chat.
 - **Clear betting controls:** payout estimates, optional withdrawal windows, scheduled closing times, and host settlement controls.
+- **iMessage with Photon 2.0:** opt in to result alerts, request standings, and send screenshot or text proof without opening Bookie. [Setup](docs/photon.md).
+- **Solana devnet receipts:** connect a wallet after placing a virtual bet and publish a signed fingerprint, with an Explorer link and downloadable proof. [Demo setup](docs/solana.md).
 - **Guided onboarding:** a dismissible navigation tour, replayable from the top-right `?`. Completing it earns 200 credits once per account, applied when your next series starts.
 - **Results worth sharing:** standings, series recaps, rematches, and Bookie Wrapped.
-- **Optional extras:** linked-account proof, in-app reminders, and The House commentary.
+- **Optional extras:** public GitHub activity as proof, in-app reminders, and The House commentary.
 
 ## Local setup
 
@@ -90,10 +92,13 @@ See the [planner implementation and test guide](docs/game-planner.md) for API de
 
 ## Optional integrations
 
+For the database setup and a feature-by-feature demo checklist, see [Enable extra features](docs/extra-features.md).
+
 | Feature | Configuration | Details |
 | --- | --- | --- |
 | The House commentary | `OPENAI_API_KEY`, `OPENAI_HOUSE_MODEL`, `HOUSE_MODE`, optional `HOUSE_CACHE_DIR` | [Commentary guide](docs/the-house.md). Deterministic commentary works without a key. This is separate from the Gemini planner. |
-| Linked-account proof | Provider credentials as needed | [Linked accounts](docs/linked-accounts.md): Strava, Fitbit, Oura, Whoop, Spotify, and GitHub. |
+| iMessage results and proof | Photon 2.0 project, iMessage line, webhook secret, server service-role key | [Photon setup](docs/photon.md) |
+| GitHub activity proof | Public username; optional `GITHUB_TOKEN` | [GitHub connection guide](docs/linked-accounts.md). No OAuth app required. |
 | Reminders | Opt in from Profile | In-app only; no email service is required. |
 | Scheduled bet closing | Database migrations; optional `pg_cron` | Wagers check the database deadline. With the optional cron job, closings are also recorded while nobody is visiting. |
 
@@ -153,6 +158,8 @@ These checks do not require live AI provider calls:
 npm run typecheck        # API and frontend TypeScript
 npm run lint
 npm run test:planner     # Real Deep Agents graph with a scripted model
+npm run test:photon      # Signed events, pairing, proof access and result queue
+npm run test:solana      # Receipt commitments and local Solana transaction signing
 npm run test:series-sql  # Database rules, permissions, rewards, and reminders
 npm run test:house
 npm run test:wrapped
@@ -165,6 +172,9 @@ HTTP and browser checks need test servers or credentials. Follow each script's h
 
 ## Further reading
 
+- [Photon 2.0 iMessage](docs/photon.md)
+
+- [Solana devnet receipts](docs/solana.md)
 - [Game planner setup and API](docs/game-planner.md)
 - [Supabase setup and series rules](docs/supabase-series.md)
 - [Google sign-in setup](docs/supabase-setup.md)

@@ -7,7 +7,6 @@ import Home from "./pages/Home.tsx";
 import JoinLink from "./pages/JoinLink.tsx";
 import Profile from "./pages/Profile.tsx";
 import { NavigationTourProvider } from "./components/NavigationTour.tsx";
-import ConnectCallback from "./pages/ConnectCallback.tsx";
 import Friends, { AddFriendLink } from "./pages/Friends.tsx";
 import Clans, { ClanDetail, JoinClanLink } from "./pages/Clans.tsx";
 import ClanChat from "./pages/ClanChat.tsx";
@@ -48,7 +47,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/tutorial" element={<Navigate to="/?tour=1" replace />} />
           <Route path="/wrapped" element={<Suspense fallback={<WrappedFallback />}><Wrapped /></Suspense>} />
-          <Route path="/connect/:provider/callback" element={<ConnectCallback />} />
+          <Route path="/connect/:provider/callback" element={<Navigate to="/profile" replace />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/add/:code" element={<AddFriendLink />} />
           <Route path="/groups" element={<Clans />} />

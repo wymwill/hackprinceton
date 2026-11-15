@@ -8,6 +8,7 @@ import { AppError } from "./errors";
  * migration to apply, instead of blaming Bet Series for everything.
  */
 const FEATURES: { path: RegExp; feature: string; migration: string }[] = [
+  { path: /^\/api\/photon(\/|$)/, feature: "iMessage", migration: "supabase/migrations/202611150001_photon_messaging.sql" },
   { path: /^\/api\/social\/(chat$|clans\/[^/]+\/(messages|read)(\/|$))/, feature: "Clan chat", migration: "supabase/migrations/202611140013_clan_chat.sql" },
   { path: /^\/api\/social\//, feature: "Friends and clans", migration: "supabase/migrations/202611140012_friends_and_clans.sql" },
   { path: /^\/api\/links(\/|$)/, feature: "Linked accounts", migration: "supabase/migrations/202611140020_linked_accounts.sql" },

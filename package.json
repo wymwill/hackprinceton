@@ -10,7 +10,7 @@
     "postinstall": "npm --prefix frontend install --no-audit --no-fund",
     "lint": "eslint",
     "typecheck": "tsc --noEmit && npm --prefix frontend run typecheck",
-    "test:series-sql": "node --test tests/sql/series.test.mjs tests/sql/outcomes.test.mjs tests/sql/ranges.test.mjs tests/sql/upgrade.test.mjs tests/sql/social.test.mjs tests/sql/chat.test.mjs tests/sql/clan-series.test.mjs tests/sql/idempotency.test.mjs tests/sql/deadlines.test.mjs tests/sql/reminders.test.mjs tests/sql/links.test.mjs tests/sql/tutorial.test.mjs",
+    "test:series-sql": "node --test tests/sql/series.test.mjs tests/sql/outcomes.test.mjs tests/sql/ranges.test.mjs tests/sql/upgrade.test.mjs tests/sql/social.test.mjs tests/sql/chat.test.mjs tests/sql/clan-series.test.mjs tests/sql/idempotency.test.mjs tests/sql/deadlines.test.mjs tests/sql/reminders.test.mjs tests/sql/links.test.mjs tests/sql/tutorial.test.mjs tests/sql/photon.test.mjs",
     "test:series": "node tests/e2e/series.mjs",
     "create:demo-users": "node scripts/create-demo-users.mjs",
     "test:outcomes-local": "node tests/e2e/outcomes-local.mjs",
@@ -29,7 +29,9 @@
     "test:house-local": "node tests/e2e/house-local.mjs",
     "test:house-ui": "playwright test --config=playwright.house.config.mjs",
     "test:planner": "node --conditions=react-server --experimental-strip-types --test tests/unit/game-planner.test.mjs",
-    "test:tour": "node --experimental-strip-types --test tests/unit/navigation-tour.test.mjs"
+    "test:tour": "node --experimental-strip-types --test tests/unit/navigation-tour.test.mjs",
+    "test:solana": "node --experimental-strip-types --test tests/unit/solana-receipt.test.mjs",
+    "test:photon": "node --conditions=react-server --experimental-strip-types --test tests/unit/photon.test.mjs tests/unit/photon-send.test.mjs && node --test tests/sql/photon.test.mjs"
   },
   "dependencies": {
     "@langchain/core": "^1.4.1",
@@ -41,6 +43,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
+    "standardwebhooks": "^1.1.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

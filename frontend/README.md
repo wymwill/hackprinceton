@@ -21,14 +21,14 @@ Only public Supabase connection settings are included in the browser bundle. Gem
 | `/new` | Quick game, Detailed setup, and AI game planner |
 | `/join/:code` | Join a series from an invite |
 | `/s/:id` | Lobby, live dashboard, or results depending on series status |
-| `/s/:id/bets/:betId` | Bet details, wager controls, host tools, and linked-app proof |
+| `/s/:id/bets/:betId` | Bet details, wager controls, host tools, and GitHub activity proof |
 | `/s/:id/leaderboard` | Full standings |
 | `/s/:id/rules` | Rules and players |
 | `/s/:id/recap` | Shareable recap view |
 | `/friends` | Friends and invites |
 | `/groups` | Groups and shared series |
 | `/groups/:clanId/chat` | Private group chat |
-| `/profile` | Avatar, linked accounts, and reminder preferences |
+| `/profile` | Avatar, GitHub connection, and reminder preferences |
 | `/wrapped` | Personal Wrapped |
 | `/wrapped-demo` | Public Wrapped preview with fictional data |
 

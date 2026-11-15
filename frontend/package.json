@@ -10,6 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@solana-program/memo": "^0.16.0",
+    "@solana/kit": "^8.6.0",
+    "@solana/kit-plugin-rpc": "^0.23.0",
+    "@solana/kit-plugin-wallet": "^0.23.0",
+    "@solana/react": "^8.6.0",
     "@supabase/supabase-js": "^2.119.0",
     "@types/qrcode": "^1.5.6",
     "qrcode": "^1.5.4",

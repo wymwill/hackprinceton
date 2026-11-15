@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { ConfirmButton, Panel } from "./ui.tsx";
 import { ago } from "../lib/format.ts";
-import { BLURB, useLinks, type ProviderInfo } from "../lib/links.tsx";
+import { BLURB, useLinks } from "../lib/links.tsx";
 
-/** Profile: connect Strava, Fitbit, Oura, Whoop, Spotify and GitHub as proof for bets. */
+/** Profile: connect public GitHub activity as proof for bets. */
 export function LinkedAccounts() {
-  const { providers, linked, busy, error, setupNeeded, connect, linkGithub, sync, unlink } = useLinks();
+  const { providers, linked, busy, error, setupNeeded, linkGithub, sync, unlink } = useLinks();
   const [username, setUsername] = useState("");
 
   return (
-    <Panel label="Integrations">
+    <Panel label="GitHub">
       {!providers ? (
         <p className="hint">{error ?? "Loading…"}</p>
       ) : (
         <div className="stack">
-          <p className="hint">Friends in your series can use these as proof on bets. Bookie only reads, and disconnecting deletes everything it copied.</p>
-          {setupNeeded && <p className="notice">Integrations aren't switched on for this database yet, so connecting is turned off for now.</p>}
+          <p className="hint">Connect a public GitHub username to show pushes and merged pull requests as proof. No GitHub sign-in is required; account ownership is not verified.</p>
+          {setupNeeded && <p className="notice">GitHub connections are not enabled for this database yet.</p>}
           <ul className="links">
             {providers.map((p) => {
               const l = linked.find((x) => x.provider === p.id);
@@ -40,13 +40,10 @@ export function LinkedAccounts() {
                       )}
                       <ConfirmButton className="btn ghost sm" label="Disconnect" confirm="Disconnect?" onConfirm={() => unlink(p.id)} disabled={!!busy} />
                     </div>
-                  ) : p.method === "username" ? (
-                    <GithubForm value={username} onChange={setUsername} busy={busy === p.id} disabled={!!setupNeeded} onLink={() => linkGithub(username)} />
                   ) : (
-                    <button type="button" className="btn sm" onClick={() => connect(p as ProviderInfo)} disabled={!p.configured || !!busy || !!setupNeeded}>
-                      Connect
-                    </button>
+                    <GithubForm value={username} onChange={setUsername} busy={busy === p.id} disabled={!!setupNeeded || !!busy} onLink={() => linkGithub(username)} />
                   )}
+
                 </li>
               );
             })}

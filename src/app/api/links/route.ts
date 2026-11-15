@@ -11,7 +11,9 @@ export async function GET(req: NextRequest) {
   return seriesAction(req, async ({ rpc }) => {
     const providers = providersForClient();
     try {
-      return { providers, linked: await rpc("link_status"), setupNeeded: null };
+      const status = await rpc("link_status");
+      const linked = Array.isArray(status) ? status.filter((l) => l.provider === "github") : [];
+      return { providers, linked, setupNeeded: null };
     } catch (err) {
       if (err instanceof AppError && err.code === "migrations_missing") return { providers, linked: [], setupNeeded: err.message };
       throw err;

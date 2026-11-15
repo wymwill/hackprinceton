@@ -1,6 +1,8 @@
+import { PhotonProof } from "../components/PhotonMessaging.tsx";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ConfirmButton, DisclosurePanel, OutcomeTag, Panel, Pill, PoolBar, Who } from "../components/ui.tsx";
+import { OptionalSolanaReceipt } from "../components/OptionalSolanaReceipt.tsx";
 import { HouseCommentary } from "../components/HouseCommentary.tsx";
 import { balances, findOutcome, isParticipant, labelOf, leader, payoutIfWins, resultText, shares, TIE_RULE_TEXT, withdrawUntil } from "../lib/rules.ts";
 import { ago, countdown, fmt, signed, useNow } from "../lib/format.ts";
@@ -255,6 +257,7 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
         )}
       </button>
       {sub.receipt && <WagerReceiptNote r={sub.receipt} onClose={sub.clearReceipt} />}
+      <OptionalSolanaReceipt receipt={sub.receipt} account={me} betId={bet.id} />
       {canWithdraw && (
         <ConfirmButton
           className="btn block"
@@ -493,8 +496,9 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
           )}
           {bet.status === "open" && !playing && <p className="notice">You're hosting without playing, so you can't wager.</p>}
           {bet.status === "closed" && <p className="notice">Betting is locked. Waiting for {name(s.hostId)} to call it.</p>}
+          {!(bet.status === "open" && playing && dl !== "closed") && <OptionalSolanaReceipt receipt={null} account={me} betId={bet.id} />}
           {s.hostId === me && <HostPanel s={s} bet={bet} />}
-          {bet.status !== "draft" && <LinkedProof s={s} bet={bet} />}
+          {bet.status !== "draft" && <><LinkedProof s={s} bet={bet} /><PhotonProof betId={bet.id} /></>}
           <Link to={`/s/${s.id}`} className="btn ghost">
             ← Back to all bets
           </Link>

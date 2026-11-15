@@ -2,13 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { request, useStore } from "./store.tsx";
 import type { Id } from "./types.ts";
 
-/**
- * Linked accounts: Strava, Fitbit, Oura, Whoop and Spotify (OAuth) and GitHub
- * (a public username). Your app links, syncs and unlinks with your own sign-in;
- * the server side is src/server/links.ts.
- */
-
-export type ProviderId = "strava" | "fitbit" | "oura" | "whoop" | "spotify" | "github";
+/** Public GitHub account connections and proof. */
+export type ProviderId = "github";
 
 export type ProviderInfo = {
   id: ProviderId;
@@ -35,27 +30,11 @@ export type Proof = { linked: { provider: ProviderId; displayName: string | null
 
 /** What each app is for, in a few words. */
 export const BLURB: Record<ProviderId, string> = {
-  strava: "Runs, rides and workouts",
-  fitbit: "Daily steps and sleep",
-  oura: "Sleep, readiness and workouts",
-  whoop: "Recovery, sleep and workouts",
-  spotify: "What you've been listening to",
   github: "Public pushes and merged pull requests",
 };
 
 /** Proof kinds, in the order the bet page offers them. */
 export const KINDS: { id: string; label: string }[] = [
-  { id: "run", label: "Runs" },
-  { id: "ride", label: "Rides" },
-  { id: "walk", label: "Walks" },
-  { id: "hike", label: "Hikes" },
-  { id: "swim", label: "Swims" },
-  { id: "workout", label: "Workouts" },
-  { id: "steps_day", label: "Daily steps" },
-  { id: "sleep_night", label: "Sleep" },
-  { id: "readiness_day", label: "Readiness" },
-  { id: "recovery_day", label: "Recovery" },
-  { id: "listen", label: "Songs played" },
   { id: "push", label: "Pushes" },
   { id: "pull_request", label: "Merged pull requests" },
 ];
@@ -79,50 +58,9 @@ export function measure(value: number, unit: string) {
   return `${v} ${unit}`.trim();
 }
 
-const STATE_KEY = (p: string) => `alea-link-${p}`;
-const AUTO_SYNC_KEY = "alea-links-autosync";
+const AUTO_SYNC_KEY = "bookie-github-autosync";
 const STALE_MS = 30 * 60_000;
 
-const base64url = (bytes: ArrayBuffer | Uint8Array) =>
-  btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-
-export const callbackUrl = (p: ProviderId) => `${window.location.origin}/connect/${p}/callback`;
-
-/** Send the browser to an app to approve access. It comes back to /connect/:provider/callback. */
-export async function startConnect(p: ProviderInfo) {
-  if (!p.authorize) return;
-  const state = base64url(crypto.getRandomValues(new Uint8Array(16)));
-  const params = new URLSearchParams({
-    client_id: p.authorize.clientId,
-    response_type: "code",
-    redirect_uri: callbackUrl(p.id),
-    scope: p.authorize.scope,
-    state,
-    ...p.authorize.params,
-  });
-  let verifier = "";
-  if (p.authorize.pkce) {
-    verifier = base64url(crypto.getRandomValues(new Uint8Array(48)));
-    const challenge = base64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
-    params.set("code_challenge", challenge);
-    params.set("code_challenge_method", "S256");
-  }
-  sessionStorage.setItem(STATE_KEY(p.id), JSON.stringify({ state, verifier }));
-  window.location.assign(`${p.authorize.url}?${params}`);
-}
-
-/** What startConnect saved for this app, so the callback can check the answer is for this browser. Read once. */
-export function takeConnectState(p: string): { state: string; verifier: string } | null {
-  const raw = sessionStorage.getItem(STATE_KEY(p));
-  sessionStorage.removeItem(STATE_KEY(p));
-  try {
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Every app you can link and the ones you have, with link, sync and unlink. Syncs stale links once a session. */
 export function useLinks() {
   const { toast } = useStore();
   const [providers, setProviders] = useState<ProviderInfo[] | null>(null);
@@ -135,8 +73,8 @@ export function useLinks() {
   const load = useCallback(async () => {
     try {
       const r = await request<{ providers: ProviderInfo[]; linked: LinkedAccount[]; setupNeeded: string | null }>("GET", "/links");
-      setProviders(r.providers);
-      setLinked(r.linked);
+      setProviders(r.providers.filter((p) => p.id === "github"));
+      setLinked(r.linked.filter((l) => l.provider === "github"));
       setSetupNeeded(r.setupNeeded ?? null);
       setError(null);
     } catch (e) {
@@ -190,7 +128,6 @@ export function useLinks() {
     busy,
     error,
     setupNeeded,
-    connect: (p: ProviderInfo) => startConnect(p),
     linkGithub: (username: string) => run("github", "exchange", { username }, (r) => `GitHub connected. Copied ${r.synced ?? 0} public ${r.synced === 1 ? "event" : "events"}.`),
     sync: (p: ProviderId) => sync(p),
     unlink: (p: ProviderId) => run(p, "disconnect", undefined, () => `${label(p)} disconnected.`),

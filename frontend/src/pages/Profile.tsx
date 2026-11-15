@@ -1,3 +1,4 @@
+import { PhotonMessaging } from "../components/PhotonMessaging.tsx";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Shell } from "../components/Shell.tsx";
@@ -179,6 +180,7 @@ export default function Profile() {
             </Panel>
 
             <LinkedAccounts />
+            <PhotonMessaging />
 
             <Panel label="Appearance">
               <div className="seg">
