@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { defaultRange, generateCuts, MAX_RANGES, parseNum, rangeLabel, rangeProblem, rangeRule, rangesOf, UNIT_SUGGESTIONS } from "../lib/ranges.ts";
 import type { BetDraft, BetKind, RangeDraft } from "../lib/types.ts";
+import { deadlineProblem, localZone } from "../lib/deadlines.ts";
 
 export const MAX_OUTCOMES = 10;
 export const MIN_OUTCOMES = 2;
@@ -12,6 +13,7 @@ export const newDraft = (question = ""): BetDraft => ({
   outcomes: [{ label: "" }, { label: "" }],
   tieRule: "refund",
   range: defaultRange(),
+  closesAt: "",
 });
 
 /**
@@ -19,6 +21,8 @@ export const newDraft = (question = ""): BetDraft => ({
  * (_bs_clean_outcomes in 0009, _bs_clean_ranges in 0010) so the button can explain itself.
  */
 export function outcomeProblem(d: BetDraft): string | null {
+  const late = deadlineProblem(d.closesAt);
+  if (late) return late;
   if (d.kind === "range") return rangeProblem(d.range);
   if (d.kind !== "multi") return null;
   const labels = d.outcomes.map((o) => o.label.trim().replace(/\s+/g, " "));
@@ -268,6 +272,23 @@ export default function OutcomeEditor({ value, onChange, idPrefix }: { value: Be
           </p>
         </>
       )}
+
+      <label className="field">
+        <span>Closes (optional)</span>
+        <input
+          className="input"
+          type="datetime-local"
+          aria-label="Closing time"
+          value={value.closesAt}
+          onChange={(e) => set({ closesAt: e.target.value })}
+        />
+      </label>
+      <p className={`hint ${deadlineProblem(value.closesAt) ? "warn" : ""}`}>
+        {deadlineProblem(value.closesAt) ??
+          (value.closesAt
+            ? `Betting closes on its own at this time (${localZone()}). The host can still close it earlier.`
+            : "No closing time: the host closes betting.")}
+      </p>
     </div>
   );
 }

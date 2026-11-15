@@ -61,6 +61,8 @@ npm start
 
 Every path that isn't an API route or an icon serves `public/app/index.html`, and the React app takes it from there. On Vercel, set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in the project's environment variables. The frontend build reads them too, so set them before deploying. Then add the deployed address to Supabase's redirect URLs (see below).
 
+Scheduling and reminders need no extra service. Bets close at their closing time on their own: the database checks the time on every wager, so nothing has to run on a timer. If you enable the `pg_cron` extension in Supabase (Database → Extensions) before applying migration `202611140018_scheduled_bet_closing.sql`, it also adds a once-a-minute job that records closings and refunds one-sided pools even when nobody has the app open; without it that happens on the next visit. Reminders are in the app only (Your moves); sending them by email would need a mail provider, which this project doesn't have yet.
+
 ## Sign-in setup
 
 Supabase project → **Authentication**:
