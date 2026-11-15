@@ -10,7 +10,7 @@ From the repo root: `npm install`, then `npm run dev`, then open http://localhos
 
 `npm run build` at the root builds this app into `public/app/` for the Next server to serve. Here, `npm run build` just type-checks and builds.
 
-**No Supabase project yet?** `node supabase/tests/local-supabase.mjs` starts an in-memory stand-in (email sign-in only, test use only). Start the app with `SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local` in front of `npm run dev`.
+**No Supabase project yet?** `node tests/sql/local-supabase.mjs` starts an in-memory stand-in (email sign-in only, test use only). Start the app with `SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local` in front of `npm run dev`.
 
 ## Screens
 

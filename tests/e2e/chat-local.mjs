@@ -1,7 +1,7 @@
 // End to end: clan chat through the Next API, with live delivery over Supabase
 // Realtime, against the local Supabase stand-in (no real project, no secrets).
 //
-//   node supabase/tests/local-supabase.mjs                                         # :54399
+//   node tests/sql/local-supabase.mjs                                              # :54399
 //   SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local npx next dev -p 3210
 //   API_URL=http://localhost:3210 npm run test:chat-local
 import assert from "node:assert/strict";

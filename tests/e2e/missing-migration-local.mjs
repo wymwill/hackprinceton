@@ -2,9 +2,9 @@
 // the clan chat migration, and check that chat reports itself (not Bet Series) as
 // missing, while friends, clans and bets keep working.
 //
-//   MIGRATIONS_UP_TO=202611140013 node supabase/tests/local-supabase.mjs
+//   MIGRATIONS_UP_TO=202611140013 node tests/sql/local-supabase.mjs
 //   SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local npx next dev -p 3210
-//   API_URL=http://localhost:3210 node scripts/e2e-missing-migration-local.mjs
+//   API_URL=http://localhost:3210 node tests/e2e/missing-migration-local.mjs
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 

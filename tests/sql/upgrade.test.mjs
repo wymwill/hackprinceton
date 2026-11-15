@@ -188,7 +188,7 @@ test("catch-up SQL for the live project: 0012 already applied, then 0009, 0010, 
   const val = async (p) => Object.values((await p)[0])[0];
   // The live project's state: 0001–0008, then 0012 (friends and clans) applied before 0009–0011 existed.
   const t = await createDb({ upTo: "202611140009" });
-  await t.db.exec(await readFile(new URL("../migrations/202611140012_friends_and_clans.sql", import.meta.url), "utf8"));
+  await t.db.exec(await readFile(new URL("../../supabase/migrations/202611140012_friends_and_clans.sql", import.meta.url), "utf8"));
   const [ana, ben, cat] = await Promise.all(["Ana", "Ben", "Cat"].map((n) => t.user(n)));
 
   // Data made with the old functions: a live YES/NO series with wagers, a pledge lobby, a clan and a friendship.
@@ -282,7 +282,7 @@ async function liveProjectWithData() {
   const { readFile } = await import("node:fs/promises");
   const val = async (p) => Object.values((await p)[0])[0];
   const t = await createDb({ upTo: "202611140009" });
-  await t.db.exec(await readFile(new URL("../migrations/202611140012_friends_and_clans.sql", import.meta.url), "utf8"));
+  await t.db.exec(await readFile(new URL("../../supabase/migrations/202611140012_friends_and_clans.sql", import.meta.url), "utf8"));
   const [ana, ben, cat] = await Promise.all(["Ana", "Ben", "Cat"].map((n) => t.user(n)));
   const make = async (host, mode, questions, settings = {}) =>
     (await host.rpc("create_bet_series", { p_title: `${mode} series`, p_description: "", p_planned_bet_count: questions.length,
@@ -402,7 +402,7 @@ test("catch-up refuses partial schema and unavailable Realtime without changing 
 test("read-only recovery audit works before and after catch-up and does not change data", async () => {
   const { readFile } = await import("node:fs/promises");
   const { catchupSql } = await import("../../scripts/catchup-sql.mjs");
-  const audit = await readFile(new URL("../diagnostics/clan-chat.sql", import.meta.url), "utf8");
+  const audit = await readFile(new URL("../../supabase/diagnostics/clan-chat.sql", import.meta.url), "utf8");
   const { t } = await liveProjectWithData();
   try {
     for (const upgraded of [false, true]) {

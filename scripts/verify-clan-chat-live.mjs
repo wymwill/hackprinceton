@@ -2,7 +2,7 @@
 // two members exchange messages live over Supabase Realtime, an outsider gets
 // nothing, history persists, deleting and leaving behave.
 //
-// It creates three temporary Auth users (like scripts/e2e-series.mjs, with the
+// It creates three temporary Auth users (like tests/e2e/series.mjs, with the
 // secret key in .supabase-test-secret), a temporary clan, and a few messages,
 // and removes all of them at the end. It never touches anyone else's data.
 //

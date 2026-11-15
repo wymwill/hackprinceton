@@ -11,7 +11,7 @@ import { randomUUID } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 
-const MIGRATIONS = path.join(import.meta.dirname, "..", "migrations");
+const MIGRATIONS = path.join(import.meta.dirname, "..", "..", "supabase", "migrations");
 
 const SHIM = `
 create schema if not exists auth;

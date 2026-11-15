@@ -9,7 +9,7 @@
 //
 //   node scripts/catchup-sql.mjs > catchup.sql     # then paste into the SQL editor
 //
-// supabase/tests/upgrade.test.mjs runs this same SQL on a copy of that state.
+// tests/sql/upgrade.test.mjs runs this same SQL on a copy of that state.
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

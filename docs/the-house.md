@@ -50,7 +50,7 @@ Use Node 22.6+ (verified with Node 24). Install dependencies normally and instal
 Terminal 1:
 
 ```sh
-PORT=54419 node supabase/tests/local-supabase.mjs
+PORT=54419 node tests/sql/local-supabase.mjs
 ```
 
 Build a local-only frontend and API, then start it in terminal 2:

@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { houseEvent, houseComment, houseChoices, houseFumbleQuip } from "../shared/house.ts";
-import { createHouseService, commentOnEvent } from "../src/server/house/service.ts";
-import { openAIChoice } from "../src/server/house/openai.ts";
-import { createHouseClient } from "../frontend/src/lib/house-client.ts";
+import { houseEvent, houseComment, houseChoices, houseFumbleQuip } from "../../shared/house.ts";
+import { createHouseService, commentOnEvent } from "../../src/server/house/service.ts";
+import { openAIChoice } from "../../src/server/house/openai.ts";
+import { createHouseClient } from "../../frontend/src/lib/house-client.ts";
 
 const NOW = Date.parse("2026-11-14T22:00:00Z");
 function fixture() {
