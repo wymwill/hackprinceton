@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState, type ReactNode } from "react";
-import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { balances, isParticipant, participantIds, standings } from "../lib/rules.ts";
 import { fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
@@ -55,7 +55,13 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
 function Account() {
   const { me, meUser, signOut } = useStore();
   const { theme, choose } = useTheme();
+  const nav = useNavigate();
   const credits = useCredits().data?.credits ?? 0;
+  // Whoever signs in next starts at Home, not on the page this account was viewing.
+  const leave = () => {
+    nav("/", { replace: true });
+    signOut();
+  };
   return (
     <div className="whoami">
       <span className="cap">Signed in as</span>
@@ -72,7 +78,7 @@ function Account() {
         <button type="button" className="btn ghost sm" onClick={() => choose(theme === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
           {theme === "light" ? "Dark mode" : "Light mode"}
         </button>
-        <button type="button" className="btn ghost sm" onClick={signOut}>
+        <button type="button" className="btn ghost sm" onClick={leave}>
           Sign out
         </button>
       </div>
@@ -82,12 +88,21 @@ function Account() {
 
 function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: string; name: string } }) {
   const [joining, setJoining] = useState(false);
+  // On phones the menu folds into a bar with a Menu button, and it closes on any new page.
+  const { pathname } = useLocation();
+  const [menu, setMenu] = useState({ open: false, path: pathname });
+  const open = menu.open && menu.path === pathname;
+  const close = () => setMenu({ open: false, path: pathname });
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${open ? "open" : ""}`}>
       <Link to="/" className="brand" aria-label="Bookie home">
         <span className="brand-mark">B</span>
         <span className="brand-name brand-letters" aria-hidden="true">{Array.from("ookie").map((letter, i) => <span key={i}>{letter}</span>)}</span>
       </Link>
+      <button type="button" className="btn sm menu-toggle" aria-expanded={open} aria-controls="side-menu" onClick={() => setMenu({ open: !open, path: pathname })}>
+        {open ? "Close" : "Menu"}
+      </button>
+      <div className="side-menu" id="side-menu" onClick={(e) => (e.target as Element).closest("a") && close()}>
       <nav className="nav" aria-label="Main">
         <NavLink to="/" end data-tour="home">Home</NavLink>
         <NavLink to="/series">All series</NavLink>
@@ -111,9 +126,10 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
         </details>}
         <NavLink to="/profile" data-tour="profile">Profile</NavLink>
       </nav>
-      {joining && <JoinModal onClose={() => setJoining(false)} />}
       <div className="grow" />
       <Account />
+      </div>
+      {joining && <JoinModal onClose={() => { setJoining(false); close(); }} />}
     </aside>
   );
 }

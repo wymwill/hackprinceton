@@ -67,7 +67,9 @@ test("wager: double click / double tap and repeated keys place one wager, with a
 
   // Two presses as fast as the device allows.
   if (info.project.name === "mobile") {
-    await Promise.all([submit.tap(), submit.tap()]);
+    // tap() waits until the button is enabled again, which would make the second tap a
+    // deliberate new bet; `force` sends it at once, like a finger landing twice.
+    await Promise.all([submit.tap(), submit.tap({ force: true })]);
   } else {
     await submit.dblclick();
   }

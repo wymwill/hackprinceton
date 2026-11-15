@@ -5,7 +5,7 @@ test("public demo tells the complete story and exports a portrait share card", a
   await page.route("**/*", (route) => ["localhost", "127.0.0.1", "[::1]"].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort());
   await page.goto("/wrapped-demo");
   await expect(page.getByText("DEMO MODE", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /YOUR ALEA WRAPPED/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /YOUR BOOKIE WRAPPED/ })).toBeVisible();
   await page.waitForTimeout(650);
   const box = await page.locator(".wrapped-scene").boundingBox();
   expect(box.x).toBeGreaterThanOrEqual(0);
@@ -110,10 +110,10 @@ test("signed-in story shows only your own records, an empty year, and a load err
   expect([mine.totalBets, mine.totalWagered, mine.net]).toEqual([3, 300, 20]);
   expect(bens.totalWagered).toBe(180);
 
-  // Profile → Your Alea Wrapped, signed in as Ana.
+  // Profile → Your Bookie Wrapped, signed in as Ana.
   await signIn(page, ana);
   await page.goto("/profile");
-  await page.getByRole("link", { name: /Your Alea Wrapped/ }).click();
+  await page.getByRole("link", { name: /Your Bookie Wrapped/ }).click();
   await expect(page).toHaveURL(/\/wrapped$/);
   await expect(page.locator(".opening-byline")).toContainText(`${ana.name}, every bet left a story.`);
   await expect(page.getByText("DEMO MODE", { exact: true })).toHaveCount(0);

@@ -35,7 +35,7 @@ export function BetCard({ s, bet, showSeries = false }: { s: Series; bet: Bet; s
           </h3>
         </div>
         <div className="chance" title="Share of the coins in the pool, not a probability">
-          <div className="v">
+          <div className={`v ${p.total ? "" : "empty"}`}>
             {!p.total ? "–" : binary ? yes.pct : top!.pct}
             {p.total > 0 && <small>%</small>}
           </div>

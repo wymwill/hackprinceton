@@ -66,7 +66,7 @@ export default function SignIn() {
             {mode === "up" && (
               <label className="field">
                 <span>Your name</span>
-                <input className="input text" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder="Placeholder placeholder" autoComplete="name" />
+                <input className="input text" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder="What friends call you" autoComplete="name" />
               </label>
             )}
             <label className="field">

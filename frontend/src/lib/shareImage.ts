@@ -1,6 +1,6 @@
 /**
  * Share cards as images, made on the device (no image service, nothing uploaded).
- * Used by Alea Wrapped and the series recap.
+ * Used by Bookie Wrapped and the series recap.
  */
 
 /** Text that's safe inside SVG markup. */

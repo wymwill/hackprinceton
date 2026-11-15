@@ -58,7 +58,7 @@ function Favors({ s }: { s: Series }) {
               if (await api.submitFavor(s.id, text, pledge ? "Punishment pledged." : "Added to the pool.")) setText("");
             }}
           >
-            <input className="input text" value={text} onChange={(e) => setText(e.target.value)} maxLength={120} placeholder="Placeholder placeholder" />
+            <input className="input text" value={text} onChange={(e) => setText(e.target.value)} maxLength={120} placeholder="Describe a punishment" aria-label="New punishment" />
             <button className="btn primary" disabled={text.trim().length < 3}>
               {pledge && mine.length ? "Replace" : pledge ? "Pledge" : "Add"}
             </button>

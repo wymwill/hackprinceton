@@ -1,5 +1,5 @@
-import { lazy, Suspense, type ReactNode } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
+import { lazy, Suspense, useLayoutEffect, type ReactNode } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigationType, useParams } from "react-router-dom";
 import { StoreProvider } from "./lib/store.tsx";
 import CreateSeries from "./pages/CreateSeries.tsx";
 import AllSeries from "./pages/AllSeries.tsx";
@@ -21,6 +21,15 @@ function WrappedDemoOrStore({ children }: { children: ReactNode }) {
   if (useLocation().pathname === "/wrapped-demo") return <Suspense fallback={<WrappedFallback />}><Wrapped forceDemo /></Suspense>;
   return <StoreProvider><NavigationTourProvider>{children}</NavigationTourProvider></StoreProvider>;
 }
+/** A new page opens at the top. Back and forward (POP) keep the browser's own scroll restore. */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  const type = useNavigationType();
+  useLayoutEffect(() => {
+    if (type !== "POP") window.scrollTo(0, 0);
+  }, [pathname, type]);
+  return null;
+}
 function LegacyClanRoute({ chat = false }: { chat?: boolean }) {
   const { clanId = "" } = useParams();
   return <Navigate to={`/groups/${encodeURIComponent(clanId)}${chat ? "/chat" : ""}`} replace />;
@@ -29,6 +38,7 @@ function LegacyClanRoute({ chat = false }: { chat?: boolean }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <WrappedDemoOrStore>
         <Routes>
           <Route path="/" element={<Home />} />

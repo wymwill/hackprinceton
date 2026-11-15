@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { RecapPanel } from "./Recap.tsx";
 import { StandingsTable } from "../components/Standings.tsx";
 import { SeriesBets } from "../components/SeriesBets.tsx";
-import { Panel, Pill, Who } from "../components/ui.tsx";
+import { ConfirmButton, Panel, Pill, Who } from "../components/ui.tsx";
 import { agreesTo, standings } from "../lib/rules.ts";
 import { MODE_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
@@ -98,16 +98,16 @@ function PoolPicks({ s }: { s: Series }) {
                 myTurn ? (
                   options.length ? (
                     <div className="favor-chips">
+                      {/* A pick is owed at once and can't be taken back, so it asks once more. */}
                       {options.map((f) => (
-                        <button
+                        <ConfirmButton
                           key={f.id}
-                          type="button"
                           className="favor-chip"
                           disabled={(s.settings.exclusivePool && held.has(f.id)) || (a.status === "declined" && f.id === a.favorId)}
-                          onClick={() => api.chooseFavor(s.id, a.loserId, f.id, `Punishment assigned to ${name(a.loserId)}.`)}
-                        >
-                          {f.text}
-                        </button>
+                          label={f.text}
+                          confirm={<>Tap again to give {name(a.loserId)}: <b>{f.text}</b></>}
+                          onConfirm={() => api.chooseFavor(s.id, a.loserId, f.id, `Punishment assigned to ${name(a.loserId)}.`)}
+                        />
                       ))}
                     </div>
                   ) : (

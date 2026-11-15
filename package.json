@@ -28,7 +28,8 @@
     "test:wrapped-ui": "playwright test --config=playwright.house.config.mjs wrapped.spec.mjs",
     "test:house-local": "node tests/e2e/house-local.mjs",
     "test:house-ui": "playwright test --config=playwright.house.config.mjs",
-    "test:planner": "node --conditions=react-server --experimental-strip-types --test tests/unit/game-planner.test.mjs"
+    "test:planner": "node --conditions=react-server --experimental-strip-types --test tests/unit/game-planner.test.mjs",
+    "test:tour": "node --experimental-strip-types --test tests/unit/navigation-tour.test.mjs"
   },
   "dependencies": {
     "@langchain/core": "^1.4.1",

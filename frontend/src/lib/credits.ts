@@ -10,12 +10,16 @@ const EVENT = "alea-credits";
 /** Your tutorial credits. They become extra starting coins in the next series you play that starts. */
 export function useCredits() {
   const [data, setData] = useState<Credits | null>(null);
+  // True once loading has failed, so callers can tell "not loaded yet" from "not available".
+  const [failed, setFailed] = useState(false);
   const load = useCallback(async () => {
     try {
       setData(await request<Credits>("GET", "/rewards"));
+      setFailed(false);
     } catch {
       // Older databases don't have credits yet; the app just doesn't show them.
       setData(null);
+      setFailed(true);
     }
   }, []);
   useEffect(() => {
@@ -30,5 +34,5 @@ export function useCredits() {
     window.dispatchEvent(new Event(EVENT));
     return r;
   };
-  return { data, finishTour, reload: load };
+  return { data, failed, finishTour, reload: load };
 }

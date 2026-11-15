@@ -157,10 +157,11 @@ npm run test:series-sql  # Database rules, permissions, rewards, and reminders
 npm run test:house
 npm run test:wrapped
 npm run test:recap
+npm run test:tour
 npm run build
 ```
 
-HTTP and browser checks need test servers or credentials. Follow each script's header before running `test:outcomes-local`, `test:ranges-local`, `test:chat-local`, or the Playwright commands. `npm run test:series` targets a configured Supabase project and requires test credentials; use a dedicated test project.
+HTTP and browser checks need test servers or credentials. Follow each script's header before running `test:outcomes-local`, `test:ranges-local`, `test:chat-local`, or the Playwright commands. `npm run test:series` targets a configured Supabase project and requires test credentials; use a dedicated test project. On a new machine, run `npx playwright install chromium` once before the Playwright commands.
 
 ## Further reading
 

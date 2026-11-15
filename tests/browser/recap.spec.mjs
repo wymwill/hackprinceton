@@ -94,7 +94,7 @@ test("results: an accurate recap, a share card, and a members-only recap link", 
   const downloading = page.waitForEvent("download");
   await panel.getByRole("button", { name: "Download card" }).click();
   const file = await downloading;
-  expect(file.suggestedFilename()).toMatch(/^alea-upset-night-[a-z0-9]+-recap\.png$/);
+  expect(file.suggestedFilename()).toMatch(/^bookie-upset-night-[a-z0-9]+-recap\.png$/);
   const saved = info.outputPath("recap-card.png");
   await file.saveAs(saved);
   const buf = await readFile(saved);
@@ -130,7 +130,7 @@ test("rematch: settings carry over, nobody is enrolled, nothing old carries over
   const nameBox = page.locator('input[placeholder="Gym month"]');
   await expect(nameBox).toHaveValue(`${title} · Rematch`);
   await expect(page.locator(".notice.ok")).toContainText(`Rematch of ${title}.`);
-  await expect(page.locator(".notice.ok")).toContainText("invite Ben, Cat with the invite link or QR code. Nobody joins until they accept.");
+  await expect(page.locator(".notice.ok")).toContainText("invite Ben and Cat with the invite link or QR code. Nobody joins until they accept.");
   await page.screenshot({ path: info.outputPath("rematch-form.png"), fullPage: true });
 
   // Editable: rename it, then double-click Create.

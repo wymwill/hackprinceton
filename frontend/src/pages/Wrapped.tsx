@@ -61,7 +61,7 @@ export default function Wrapped({ forceDemo = false }: { forceDemo?: boolean }) 
     try {
       const svg = shareSvg(summary, payload?.verdict?.comment ?? `${summary.archetype.title}. ${fallbackLines[summary.totalBets % fallbackLines.length]}`);
       const blob = await svgToPng(svg, 1080, 1920);
-      await sharePng(blob, `alea-wrapped-${summary.year}.png`, { share, title: `Bookie Wrapped ${summary.year}`, text: `${summary.name}: ${summary.archetype.title}` });
+      await sharePng(blob, `bookie-wrapped-${summary.year}.png`, { share, title: `Bookie Wrapped ${summary.year}`, text: `${summary.name}: ${summary.archetype.title}` });
     } catch {
       setError("Image export couldn't finish on this device. Try Download again.");
     } finally { setBusy(false); }
@@ -69,7 +69,7 @@ export default function Wrapped({ forceDemo = false }: { forceDemo?: boolean }) 
 
   if (!demo && !summary) return <main className="wrapped wrapped-loading">
     <Link className="wrapped-exit" to="/profile" aria-label="Back to profile">×</Link>
-    {error ? <div className="wrapped-load-message"><span>THE ARCHIVE IS STILL OPEN</span><h1>Your recap is taking a minute.</h1><p>{error}</p><button className="wrapped-button" onClick={() => window.location.reload()}>Try again</button></div> : <div className="wrapped-load-message"><span>ALEA WRAPPED · {year}</span><h1>Gathering the receipts…</h1><p>Only your own recorded bets. No invented odds, no balance guesses.</p><span className="wrapped-loader" aria-hidden="true">✳</span></div>}
+    {error ? <div className="wrapped-load-message"><span>THE ARCHIVE IS STILL OPEN</span><h1>Your recap is taking a minute.</h1><p>{error}</p><button className="wrapped-button" onClick={() => window.location.reload()}>Try again</button></div> : <div className="wrapped-load-message"><span>BOOKIE WRAPPED · {year}</span><h1>Gathering the receipts…</h1><p>Only your own recorded bets. No invented odds, no balance guesses.</p><span className="wrapped-loader" aria-hidden="true">✳</span></div>}
   </main>;
 
   const item = SLIDES[slide];
@@ -83,7 +83,7 @@ export default function Wrapped({ forceDemo = false }: { forceDemo?: boolean }) 
   }}>
     <a className="wrapped-skip" href="#wrapped-story">Skip story</a>
     <header className="wrapped-chrome">
-      <Link className="wrapped-brand" to="/profile" aria-label="Return to profile">ALEA<span>✳</span></Link>
+      <Link className="wrapped-brand" to="/profile" aria-label="Return to profile">BOOKIE<span>✳</span></Link>
       <span className="wrapped-year">{summary!.year} WRAPPED{summary!.demo && <b>DEMO MODE</b>}</span>
       <Link className="wrapped-exit" to="/profile" aria-label="Close Wrapped">×</Link>
     </header>
@@ -98,7 +98,7 @@ export default function Wrapped({ forceDemo = false }: { forceDemo?: boolean }) 
           <span className="eyebrow">THE YEAR IN YOUR BETTING LORE</span>
           <p className="opening-kicker">THE NUMBERS<br />ARE IN.</p>
           <div className="opening-mark">✳</div>
-          <h1>YOUR ALEA<br /><em>WRAPPED.</em></h1>
+          <h1>YOUR BOOKIE<br /><em>WRAPPED.</em></h1>
           <p className="opening-byline">{summary!.name}, every bet left a story.<br />Here are the receipts.</p>
           <div className="scene-foot"><span>01 / 09</span><span>SWIPE OR TAP TO BEGIN ↓</span></div>
         </>}
@@ -159,13 +159,13 @@ export default function Wrapped({ forceDemo = false }: { forceDemo?: boolean }) 
           <Foot slide={8} />
         </>}
         {item === "legacy" && <>
-          <span className="eyebrow">ALEA WRAPPED · {summary!.year}{summary!.demo ? " · DEMO MODE" : ""}</span>
+          <span className="eyebrow">BOOKIE WRAPPED · {summary!.year}{summary!.demo ? " · DEMO MODE" : ""}</span>
           <div className="legacy-poster" id="wrapped-poster">
             <div className="poster-glow" />
-            <div className="poster-brand">ALEA <span>✳</span> WRAPPED</div>
+            <div className="poster-brand">BOOKIE <span>✳</span> WRAPPED</div>
             <p className="poster-name">{summary!.name}</p>
             <h2 className="poster-archetype">{summary!.archetype.title}</h2>
-            <div className="poster-stats"><Stat value={summary!.totalBets} label="BETS" /><Stat value={summary!.winRate === null ? "—" : `${Math.round(summary!.winRate * 100)}%`} label="WIN RATE" /><Stat value={fmt(summary!.totalWagered)} label="COINS IN PLAY" /><Stat value={currency(summary!.net)} label="NET" /></div>
+            <div className="poster-stats"><Stat value={summary!.totalBets} label="BETS" /><Stat value={summary!.winRate === null ? "—" : `${Math.round(summary!.winRate * 100)}%`} label="WIN RATE" /><Stat value={fmt(summary!.totalWagered)} label="COINS WAGERED" /><Stat value={currency(summary!.net)} label="NET" /></div>
             <div className="poster-moments"><span>BEST {summary!.best ? currency(summary!.best.net) : "—"}</span><span>FUMBLE {summary!.worst ? currency(summary!.worst.net) : "—"}</span></div>
             <p className="poster-quote">“{summary!.archetype.subtitle}”</p>
             <span className="poster-foot">EVERY BET LEFT A STORY.</span>
@@ -186,7 +186,7 @@ export default function Wrapped({ forceDemo = false }: { forceDemo?: boolean }) 
     <footer className="wrapped-controls">
       <button className="wrapped-control secondary" onClick={() => go(slide - 1)} disabled={slide === 0} aria-label="Previous slide">← <span>BACK</span></button>
       <span>{String(slide + 1).padStart(2, "0")} <i>/</i> {String(SLIDES.length).padStart(2, "0")}</span>
-      {slide < SLIDES.length - 1 ? <button className="wrapped-control next" onClick={() => go(slide + 1)} aria-label="Next slide"><span>KEEP GOING</span> →</button> : <Link to="/profile" className="wrapped-control next"><span>BACK TO ALEA</span> ↗</Link>}
+      {slide < SLIDES.length - 1 ? <button className="wrapped-control next" onClick={() => go(slide + 1)} aria-label="Next slide"><span>KEEP GOING</span> →</button> : <Link to="/profile" className="wrapped-control next"><span>BACK TO BOOKIE</span> ↗</Link>}
     </footer>
   </main>;
 }
@@ -242,5 +242,5 @@ function shareSvg(s: WrappedSummary, quote: string) {
   const lines = posterLines(quote);
   // The quote marks go inside the first and last lines: a tspan's x would otherwise draw the first line over the opening mark.
   const q = lines.map((line, i) => `<tspan x="112" dy="${i ? 48 : 0}">${escapeSvg(line)}</tspan>`).join("");
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#131326"/><stop offset=".52" stop-color="#432a69"/><stop offset="1" stop-color="#ee6b55"/></linearGradient><radialGradient id="glow"><stop stop-color="#ffd66b" stop-opacity=".8"/><stop offset="1" stop-color="#ffd66b" stop-opacity="0"/></radialGradient></defs><rect width="1080" height="1920" fill="url(#bg)"/><circle cx="900" cy="360" r="520" fill="url(#glow)"/><circle cx="90" cy="1250" r="480" fill="#6d50aa" opacity=".24"/><text x="96" y="140" fill="#fff" font-family="Arial,sans-serif" font-size="34" font-weight="700" letter-spacing="8">ALEA ✳ WRAPPED · ${s.year}${s.demo ? " · DEMO" : ""}</text><text x="92" y="390" fill="#fff" font-family="Arial,sans-serif" font-size="78" font-weight="800">${name}</text><text x="92" y="530" fill="#ffd66b" font-family="Arial,sans-serif" font-size="60" font-weight="900">${title}</text><text x="96" y="600" fill="#fff" opacity=".8" font-family="Arial,sans-serif" font-size="34">${sub}</text><rect x="72" y="720" width="936" height="680" rx="40" fill="#fff" opacity=".11" stroke="#fff" stroke-opacity=".2"/><text x="116" y="830" fill="#fff" opacity=".7" font-family="Arial,sans-serif" font-size="26" letter-spacing="5">THE RECEIPTS</text><text x="116" y="970" fill="#fff" font-family="Arial,sans-serif" font-size="100" font-weight="800">${s.totalBets}</text><text x="116" y="1015" fill="#fff" opacity=".7" font-family="Arial,sans-serif" font-size="24">BETS</text><text x="565" y="970" fill="#fff" font-family="Arial,sans-serif" font-size="100" font-weight="800">${s.winRate === null ? "—" : Math.round(s.winRate * 100) + "%"}</text><text x="565" y="1015" fill="#fff" opacity=".7" font-family="Arial,sans-serif" font-size="24">WIN RATE</text><text x="116" y="1170" fill="#fff" font-family="Arial,sans-serif" font-size="64" font-weight="800">${fmt(s.totalWagered)}</text><text x="116" y="1215" fill="#fff" opacity=".7" font-family="Arial,sans-serif" font-size="24">COINS WAGERED</text><text x="565" y="1170" fill="#fff" font-family="Arial,sans-serif" font-size="64" font-weight="800">${currency(s.net)}</text><text x="565" y="1215" fill="#fff" opacity=".7" font-family="Arial,sans-serif" font-size="24">NET VIRTUAL COINS</text><text x="112" y="1535" fill="#fff" font-family="Arial,sans-serif" font-size="34" font-style="italic">${q}</text><text x="96" y="1790" fill="#fff" opacity=".8" font-family="Arial,sans-serif" font-size="28" letter-spacing="4">EVERY BET LEFT A STORY.</text></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#131326"/><stop offset=".52" stop-color="#432a69"/><stop offset="1" stop-color="#ee6b55"/></linearGradient><radialGradient id="glow"><stop stop-color="#ffd66b" stop-opacity=".8"/><stop offset="1" stop-color="#ffd66b" stop-opacity="0"/></radialGradient></defs><rect width="1080" height="1920" fill="url(#bg)"/><circle cx="900" cy="360" r="520" fill="url(#glow)"/><circle cx="90" cy="1250" r="480" fill="#6d50aa" opacity=".24"/><text x="96" y="140" fill="#fff" font-family="Arial,sans-serif" font-size="34" font-weight="700" letter-spacing="8">BOOKIE ✳ WRAPPED · ${s.year}${s.demo ? " · DEMO" : ""}</text><text x="92" y="390" fill="#fff" font-family="Arial,sans-serif" font-size="78" font-weight="800">${name}</text><text x="92" y="530" fill="#ffd66b" font-family="Arial,sans-serif" font-size="60" font-weight="900">${title}</text><text x="96" y="600" fill="#fff" opacity=".8" font-family="Arial,sans-serif" font-size="34">${sub}</text><rect x="72" y="720" width="936" height="680" rx="40" fill="#fff" opacity=".11" stroke="#fff" stroke-opacity=".2"/><text x="116" y="830" fill="#fff" opacity=".7" font-family="Arial,sans-serif" font-size="26" letter-spacing="5">THE RECEIPTS</text><text x="116" y="970" fill="#fff" font-family="Arial,sans-serif" font-size="100" font-weight="800">${s.totalBets}</text><text x="116" y="1015" fill="#fff" opacity=".7" font-family="Arial,sans-serif" font-size="24">BETS</text><text x="565" y="970" fill="#fff" font-family="Arial,sans-serif" font-size="100" font-weight="800">${s.winRate === null ? "—" : Math.round(s.winRate * 100) + "%"}</text><text x="565" y="1015" fill="#fff" opacity=".7" font-family="Arial,sans-serif" font-size="24">WIN RATE</text><text x="116" y="1170" fill="#fff" font-family="Arial,sans-serif" font-size="64" font-weight="800">${fmt(s.totalWagered)}</text><text x="116" y="1215" fill="#fff" opacity=".7" font-family="Arial,sans-serif" font-size="24">COINS WAGERED</text><text x="565" y="1170" fill="#fff" font-family="Arial,sans-serif" font-size="64" font-weight="800">${currency(s.net)}</text><text x="565" y="1215" fill="#fff" opacity=".7" font-family="Arial,sans-serif" font-size="24">NET VIRTUAL COINS</text><text x="112" y="1535" fill="#fff" font-family="Arial,sans-serif" font-size="34" font-style="italic">${q}</text><text x="96" y="1790" fill="#fff" opacity=".8" font-family="Arial,sans-serif" font-size="28" letter-spacing="4">EVERY BET LEFT A STORY.</text></svg>`;
 }

@@ -6,7 +6,7 @@ import { Shell } from "../components/Shell.tsx";
 import OutcomeEditor, { newDraft, outcomeProblem } from "../components/OutcomeEditor.tsx";
 import { Panel } from "../components/ui.tsx";
 import { DEFAULT_SETTINGS } from "../lib/rules.ts";
-import { MODE_LABEL, fmt } from "../lib/format.ts";
+import { MODE_LABEL, fmt, nameList, plural } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { QUICK_TEMPLATES, quickSettings, templateDrafts, type QuickTemplate } from "../lib/quickGame.ts";
 import { newRequestId } from "../lib/submit.ts";
@@ -74,7 +74,8 @@ export default function CreateSeries() {
   const { api, me, toast, db } = useStore();
   const nav = useNavigate();
   const [params] = useSearchParams();
-  const clanId = params.get("clan");
+  // Groups link here with ?group=ID; ?clan=ID is the older name for the same thing.
+  const clanId = params.get("group") ?? params.get("clan");
   // A rematch keeps its own saved draft, so it never picks up (or overwrites) another setup in progress.
   const rematchId = params.get("rematch");
   const key = draftKey(me, rematchId ? `rematch-${rematchId}` : clanId);
@@ -223,7 +224,7 @@ export default function CreateSeries() {
             <>
               <b>Rematch of {rematchFrom.name}.</b> The settings carry over; change anything you like. Bets, coins and
               punishments start fresh. After you create it, invite{" "}
-              {invitees.length ? invitees.map((m) => m.name).join(", ") : "your friends"} with the invite link or QR code.
+              {invitees.length ? nameList(invitees.map((m) => m.name)) : "your friends"} with the invite link or QR code.
               Nobody joins until they accept.
             </>
           ) : (
@@ -238,7 +239,7 @@ export default function CreateSeries() {
         <p className={`notice ${clan ? "ok" : ""}`} style={{ marginBottom: 20 }}>
           {clan ? (
             <>
-              <b>With {clan.name}:</b> {clan.members.map((m) => m.name).join(", ")} will be in the lobby as soon as you
+              <b>With {clan.name}:</b> {nameList(clan.members.map((m) => m.name))} will be in the lobby as soon as you
               create it. The basics are filled in for you; change anything you like, write the bets, then create.
             </>
           ) : social.data ? (
@@ -288,7 +289,10 @@ export default function CreateSeries() {
               <div className="stack">
                 <label className="field"><span>Series name</span><input className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} /></label>
                 <label className="field"><span>Description</span><input className="input" value={description} maxLength={280} onChange={(e) => setDescription(e.target.value)} /></label>
-                <p className="hint">Edit these questions, then create the lobby and share its invite link with your friends or group. For Keep It Clean, each bet has Person 1–5 as possible answers; agree on who each placeholder means before betting starts.</p>
+                <p className="hint">
+                  Edit these questions, then create the lobby and share its invite link with your friends or group.
+                  {template.id === "keep-it-clean" && " Each bet has Person 1–5 as possible answers; agree on who each placeholder means before betting starts."}
+                </p>
                 {drafts.map((d, i) => <div className="row quick-question" key={i}>
                   <span className="num dim">{String(i + 1).padStart(2, "0")}</span>
                   <input className="input text" value={d.question} maxLength={300} onChange={(e) => setDraft(i, { ...d, question: e.target.value })} aria-label={`Question ${i + 1}`} placeholder="Write a prediction" />
@@ -309,7 +313,7 @@ export default function CreateSeries() {
           <Panel label="Ready to invite">
             {template && template.category === category ? <div className="stack">
               <h2>{name || "Your series"}</h2>
-              <p className="hint">{written.length} bets · {fmt(st.startingCoins)} starting coins · bottom {st.losers} loses{st.mode === "pool" && st.hostPlays ? ` · ${punishments.length} punishments selected` : ""}</p>
+              <p className="hint">{plural(written.length, "bet")} · {fmt(st.startingCoins)} starting coins · bottom {st.losers} {st.losers === 1 ? "loses" : "lose"}{st.mode === "pool" && st.hostPlays ? ` · ${plural(punishments.length, "punishment")} selected` : ""}</p>
               <p className="hint">Create the lobby, then share its invite link. Friends can review the rules and get ready before play starts.</p>
               {draftProblem && <p className="hint warn">{draftProblem}</p>}
               {phase === "unknown" && <p className="notice" role="alert">We couldn't confirm creation. Retry with the same details to avoid a duplicate series.</p>}

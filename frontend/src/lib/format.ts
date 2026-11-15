@@ -3,6 +3,11 @@ import type { Mode, SeriesStatus } from "./types.ts";
 
 export const fmt = (n: number) => n.toLocaleString("en-US");
 export const signed = (n: number) => (n > 0 ? `+${fmt(n)}` : n < 0 ? `−${fmt(-n)}` : "0");
+/** "1 bet", "3 bets". */
+export const plural = (n: number, word: string, many = `${word}s`) => `${fmt(n)} ${n === 1 ? word : many}`;
+/** "Ana", "Ana and Ben", "Ana, Ben and Cat". */
+export const nameList = (names: string[]) =>
+  names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 
 /** Older database activity and errors still use the former UI term. */
 export const punishmentCopy = (value: string) => value

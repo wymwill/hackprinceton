@@ -470,7 +470,7 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
         </div>
         {(bet.status === "open" || bet.status === "closed") && (
         <div className="readout" title="Share of the coins in the pool, not a probability">
-          <div className="v">
+          <div className={`v ${total ? "" : "empty"}`}>
             {!total ? "–" : binary ? list[0].pct : top!.pct}
             {total > 0 && <small>%</small>}
           </div>

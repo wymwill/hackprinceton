@@ -14,6 +14,8 @@ const NEAR_BOTTOM = 120;
 const GROUP_MS = 5 * 60_000;
 
 const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+/** The database writes system lines with the former name ("joined the clan."); show today's. */
+const groupCopy = (body: string) => body.replace(/\bthe clan\b/g, "the group");
 function day(iso: string) {
   const d = new Date(iso);
   const today = new Date();
@@ -174,7 +176,7 @@ function Chat({ clan }: { clan: Clan }) {
                   {m.id === firstUnread && <div className="chat-unread">New messages</div>}
                   {m.kind === "system" ? (
                     <div className="chat-system">
-                      {m.body} <span className="dim">· {time(m.createdAt)}</span>
+                      {groupCopy(m.body)} <span className="dim">· {time(m.createdAt)}</span>
                     </div>
                   ) : (
                     <Bubble m={m} mine={m.userId === me} grouped={!!grouped} name={nameOf(m)} avatar={avatarOf(m)} onDelete={() => chat.remove(m.id)} />

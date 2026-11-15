@@ -21,7 +21,7 @@ type Box = { top: number; left: number; width: number; height: number };
 /** No backdrop, focus trap, automatic navigation, or clicks on the player's behalf. */
 export function NavigationTourProvider({ children }: { children: ReactNode }) {
   const { me, toast } = useStore();
-  const { data, finishTour } = useCredits();
+  const { data, failed, finishTour } = useCredits();
   const location = useLocation();
   const navigate = useNavigate();
   const [step, setStep] = useState<number | null>(null);
@@ -37,11 +37,13 @@ export function NavigationTourProvider({ children }: { children: ReactNode }) {
     setStep(0);
   }, [seenKey]);
 
+  // Opens once for a new player. An account that finished the tour never sees it again; if
+  // credits can't load (a database without them), this device's memory decides instead.
   useEffect(() => {
-    if (!data || data.tutorialDoneAt) return;
+    if (data?.tutorialDoneAt || (!data && !failed)) return;
     try { if (localStorage.getItem(seenKey)) return; } catch { return; }
     start();
-  }, [data, seenKey, start]);
+  }, [data, failed, seenKey, start]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -61,7 +63,9 @@ export function NavigationTourProvider({ children }: { children: ReactNode }) {
       frame = 0;
       const modalOpen = !!document.querySelector('.modal, [role="dialog"][aria-modal="true"]');
       setPaused(modalOpen);
-      const found = document.querySelector(`[data-tour="${TOUR_STEPS[step]}"]`);
+      let found = document.querySelector(`[data-tour="${TOUR_STEPS[step]}"]`);
+      // On phones the menu may be folded away: point at its button until it's opened.
+      if (found && !found.getClientRects().length) found = document.querySelector(".menu-toggle") ?? found;
       if (found !== target) {
         observer.disconnect();
         target = found;
@@ -78,7 +82,8 @@ export function NavigationTourProvider({ children }: { children: ReactNode }) {
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
     update();
     const mutations = new MutationObserver(schedule);
-    mutations.observe(document.getElementById("root")!, { childList: true, subtree: true });
+    // Class changes too, so opening the phone menu moves the highlight onto the item.
+    mutations.observe(document.getElementById("root")!, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
     window.addEventListener("resize", schedule);
     window.addEventListener("scroll", schedule, true);
     const escape = (e: KeyboardEvent) => { if (e.key === "Escape" && !document.querySelector(".modal")) setStep(null); };
