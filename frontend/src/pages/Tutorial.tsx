@@ -89,7 +89,7 @@ function FirstBet({ onJoin }: { onJoin: () => void }) {
           </li>
         ))}
       </ol>
-      {current === -1 && <p className="notice ok"><b>You've done it all.</b> Keep betting, or start a series with your clan.</p>}
+      {current === -1 && <p className="notice ok tut-complete"><b>You've done it all.</b> Keep betting, or start a series with your clan.</p>}
     </Panel>
   );
 }
@@ -302,11 +302,11 @@ const FEATURES: Feature[] = [
     body: <p>In a shared pool, 1st place picks a punishment for last place, 2nd for second-to-last, and so on, from punishments that player agreed to. In pledge mode, losers do their own pledge. Losers mark theirs <b>done</b> when it's done.</p>,
   },
   {
-    id: "moves", tag: "Getting around", title: "Home: your bets and your moves", to: "/", cta: "Go home",
+    id: "moves", tag: "Getting around", title: "Home and your series", to: "/", cta: "Go home",
     body: (
       <>
-        <p><b>Home</b> is your dashboard across every series. <b>Your bets</b> sorts them into <b>Bet now</b> (open bets you haven't joined), <b>In play</b> (where you have coins riding) and <b>Settled</b> (recent results).</p>
-        <p>Beside it, <b>Your moves</b> lists everything you can do right now: bets to place, punishments to review, results to call, picks to make. The number next to <b>Home</b> in the sidebar counts them. <b>All series</b> lists every series you're in.</p>
+        <p><b>Home</b> lists your series. Open one to see its bets under <b>Bet now</b>, <b>In play</b>, and <b>Settled</b>.</p>
+        <p>The number next to <b>Home</b> in the sidebar counts moves waiting for you. <b>All series</b> also lists every series you're in.</p>
       </>
     ),
   },

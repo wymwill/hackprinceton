@@ -2507,6 +2507,9 @@ img.avatar {
   border-color: var(--yes);
   color: #1c1b1f;
 }
+.tut-complete {
+  margin-top: 20px;
+}
 .tut-practice {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

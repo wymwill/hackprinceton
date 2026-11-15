@@ -1,143 +1,24 @@
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { NewBetModal, StandingsTable } from "../components/Standings.tsx";
-import { ConfirmButton, Empty, OutcomeTag, Panel, Pill, PoolBar } from "../components/ui.tsx";
-import { balances, isParticipant, leader, resultText, shares, standings } from "../lib/rules.ts";
-import { ago, fmt, ordinal, punishmentCopy, signed } from "../lib/format.ts";
+import { SeriesBets } from "../components/SeriesBets.tsx";
+import { ConfirmButton, Panel, Pill } from "../components/ui.tsx";
+import { balances, isParticipant, standings } from "../lib/rules.ts";
+import { ago, fmt, ordinal, punishmentCopy } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
-import type { Bet, Series } from "../lib/types.ts";
-
-const STATUS: Record<Bet["status"], string> = {
-  draft: "Draft",
-  open: "Open",
-  closed: "Betting closed",
-  resolved: "Resolved",
-  canceled: "Canceled",
-};
-
-/** `showSeries`: name the series above the question (for lists that mix series, like Home). */
-export function BetCard({ s, bet, showSeries = false }: { s: Series; bet: Bet; showSeries?: boolean }) {
-  const { me } = useStore();
-  const p = shares(bet);
-  const top = leader(bet);
-  const binary = bet.kind === "binary";
-  const yes = p.list[0];
-  const mine = bet.wagers.find((w) => w.userId === me);
-  const result = bet.results?.find((r) => r.userId === me);
-  const href = `/s/${s.id}/bets/${bet.id}`;
-  return (
-    <article className="panel bcard">
-      <Link className="bcard-link" to={href} aria-label={`Open bet: ${bet.question}`} />
-      <div className="head">
-        <div className="stack" style={{ gap: 8 }}>
-          {showSeries && <span className="cap bcard-series truncate">{s.name}</span>}
-          <Pill kind={bet.status}>{STATUS[bet.status]}</Pill>
-          <h3>
-            <Link to={href}>{bet.question}</Link>
-          </h3>
-        </div>
-        <div className="chance" title="Share of the coins in the pool, not a probability">
-          <div className="v">
-            {!p.total ? "–" : binary ? yes.pct : top!.pct}
-            {p.total > 0 && <small>%</small>}
-          </div>
-          <div className="cap">{!p.total ? (binary ? "no coins yet" : `${bet.outcomes.length} ${bet.kind === "range" ? "ranges" : "options"}`) : binary ? "of pool on yes" : `of pool on ${top!.label}`}</div>
-        </div>
-      </div>
-      <PoolBar bet={bet} />
-      {!binary && (
-        <ul className="ochips" aria-label="Outcomes and their share of the pool">
-          {p.list.map((o) => (
-            <li key={o.id} style={{ "--oc": o.color } as CSSProperties}>
-              <span className="lbl">{o.label}</span>
-              <span className="num">{p.total ? `${o.pct}%` : "–"}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="meta">
-        <span>
-          Pool <b>{fmt(p.total)}</b>
-        </span>
-        <span>
-          Players <b>{bet.wagers.length}</b>
-        </span>
-        <span>
-          {mine ? (
-            <>
-              You <b className="num">{fmt(mine.amount)}</b> <OutcomeTag bet={bet} id={mine.outcomeId} />
-            </>
-          ) : (
-            <>
-              Opened <b>{bet.openedAt ? ago(bet.openedAt) : "–"}</b>
-            </>
-          )}
-        </span>
-      </div>
-      {bet.status === "open" && isParticipant(s, me) && binary ? (
-        <div className="yn">
-          <Link className="y" to={`${href}?outcome=${p.list[0].id}`}>
-            Yes <span className="num">{fmt(p.list[0].pool)}</span>
-          </Link>
-          <Link className="n" to={`${href}?outcome=${p.list[1].id}`}>
-            No <span className="num">{fmt(p.list[1].pool)}</span>
-          </Link>
-        </div>
-      ) : bet.status === "open" && isParticipant(s, me) ? (
-        <Link to={href} className="settled pick">
-          <span>{mine ? "Add to your pick" : bet.kind === "range" ? `Pick one of ${bet.outcomes.length} ranges` : `Pick one of ${bet.outcomes.length}`}</span>
-          <span>Bet →</span>
-        </Link>
-      ) : bet.status === "resolved" ? (
-        <div className="settled">
-          <span>
-            {bet.kind === "range" && bet.resultValue != null ? (
-              <>
-                Result <b>{resultText(bet)}</b>
-                {bet.refunded && <span className="dim"> · refunded</span>}
-              </>
-            ) : bet.outcomeId ? (
-              <>
-                Result <OutcomeTag bet={bet} id={bet.outcomeId} />
-                {bet.refunded && <span className="dim"> · refunded</span>}
-              </>
-            ) : bet.tiedOutcomeIds?.length ? (
-              `${resultText(bet)} · refunded`
-            ) : (
-              "One-sided · refunded"
-            )}
-          </span>
-          {result && <b className={`num ${result.net > 0 ? "up" : result.net < 0 ? "down" : "dim"}`}>{signed(result.net)}</b>}
-        </div>
-      ) : (
-        <Link to={href} className="settled">
-          <span>{bet.status === "canceled" ? "Canceled · coins returned" : "Waiting for the host's call"}</span>
-          <span>View →</span>
-        </Link>
-      )}
-    </article>
-  );
-}
-
-type Filter = "open" | "closed" | "done";
+import type { Series } from "../lib/types.ts";
 
 export default function Dashboard({ s }: { s: Series }) {
   const { me } = useStore();
-  const [filter, setFilter] = useState<Filter>("open");
   const [writing, setWriting] = useState(false);
   const { api } = useStore();
   const isHost = s.hostId === me;
   const playing = isParticipant(s, me);
   const bal = playing ? balances(s).get(me)! : undefined;
   const st = playing ? standings(s).find((r) => r.userId === me)! : undefined;
-  const groups: Record<Filter, Bet[]> = {
-    open: s.bets.filter((b) => b.status === "open"),
-    closed: s.bets.filter((b) => b.status === "closed"),
-    done: s.bets.filter((b) => b.status === "resolved" || b.status === "canceled"),
-  };
-  const shown = groups[filter];
+  const settled = s.bets.filter((b) => b.status === "resolved" || b.status === "canceled").length;
   const canWrite = isHost && s.settings.betCreation === "during" && s.bets.length < s.settings.betCount;
-  const unsettled = groups.open.length + groups.closed.length;
+  const unsettled = s.bets.filter((b) => b.status === "open" || b.status === "closed").length;
 
   return (
     <>
@@ -149,7 +30,7 @@ export default function Dashboard({ s }: { s: Series }) {
           </span>
           <h1 style={{ marginTop: 14 }}>{s.name}</h1>
           <p>
-            {groups.done.length} of {s.settings.betCount} bets settled. The bottom {s.settings.losers} when it ends lose.
+            {settled} of {s.settings.betCount} bets settled. The bottom {s.settings.losers} when it ends lose.
           </p>
         </div>
         {bal && st && (
@@ -170,33 +51,7 @@ export default function Dashboard({ s }: { s: Series }) {
 
       <div className="grid2">
         <div className="col">
-          <div className="tabs" role="tablist">
-            {(
-              [
-                ["open", "Open"],
-                ["closed", "Awaiting result"],
-                ["done", "Settled"],
-              ] as [Filter, string][]
-            ).map(([k, label]) => (
-              <button key={k} type="button" className={filter === k ? "on" : ""} onClick={() => setFilter(k)}>
-                {label}
-                <b>{groups[k].length}</b>
-              </button>
-            ))}
-          </div>
-          {shown.length ? (
-            <div className="bgrid">
-              {shown.map((b) => (
-                <BetCard key={b.id} s={s} bet={b} />
-              ))}
-            </div>
-          ) : (
-            <Panel>
-              <Empty title={filter === "open" ? "No open bets" : filter === "closed" ? "Nothing waiting" : "Nothing settled yet"}>
-                {filter === "open" && canWrite ? "Write the next bet to keep the series moving." : null}
-              </Empty>
-            </Panel>
-          )}
+          <SeriesBets s={s} />
         </div>
 
         <div className="col">

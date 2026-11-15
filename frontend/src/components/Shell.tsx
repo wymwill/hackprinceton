@@ -92,7 +92,6 @@ function ClansLink() {
 }
 
 function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: string; name: string } }) {
-  const [joining, setJoining] = useState(false);
   const moves = useMoveCount();
   const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
   return (
@@ -116,7 +115,6 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
           </div>
         )}
         <NavLink to="/new">New series</NavLink>
-        <button type="button" onClick={() => setJoining(true)}>Join with a code</button>
         <NavLink to="/friends">Friends</NavLink>
         <ClansLink />
         {clanNav && <details className="series-nav clan-nav" open key={clanNav.id}>
@@ -127,7 +125,6 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
         <NavLink to="/tutorial">Tutorial</NavLink>
         <NavLink to="/profile">Profile</NavLink>
       </nav>
-      {joining && <JoinModal onClose={() => setJoining(false)} />}
       <div className="grow" />
       <Account />
     </aside>
