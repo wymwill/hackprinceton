@@ -61,7 +61,6 @@ Every route needs `Authorization: Bearer <Supabase access token>`. Responses are
 | `GET /api/series/:id/leaderboard` | rank, display_name, balance (settled), available, at_stake, is_loser |
 | `GET /api/series/:id/assignments` | What each loser owes and its status |
 | `POST /api/series/:id/favors/assign` | Winner picks a favor for their paired loser `{ loserId, favorId }` |
-| `POST /api/series/assignments/:assignmentId/respond` | Loser accepts or declines `{ accept }` |
 | `POST /api/series/:id/favor-done` | Loser marks an accepted favor done |
 | `GET /api/social/clans/:clanId/messages` | Your clan's chat, oldest first: the newest 50, `?before=<id>` for older, `?after=<id>` for newer (catching up); `?limit=` up to 100. `{ messages, hasMore, lastReadId, unread }` |
 | `POST /api/social/clans/:clanId/messages` | Send as yourself `{ body, clientId? }` (1–2,000 characters; resending a `clientId` returns the first message) |

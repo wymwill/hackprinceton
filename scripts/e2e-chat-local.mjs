@@ -188,7 +188,7 @@ assert.equal(st.unread, 0);
 ok("history pages (5 + 5 older), sending too fast is 429, and unread counts clear when read");
 
 // 8. Leaving revokes access at once, including live delivery; ownership changes are announced.
-okRes(await api(ana, "POST", "/social/clans/leave"), "ana leaves");
+okRes(await api(ana, "POST", "/social/clans/leave", { clanId: rats.id }), "ana leaves");
 await deny(ana, "GET", `/social/clans/${rats.id}/messages`, undefined, 403, "not_clan_member");
 await deny(ana, "POST", `/social/clans/${rats.id}/messages`, { body: "wait" }, 403, "not_clan_member");
 // Dan joins now and sees the history, then says goodbye (Ben just hit the rate limit).

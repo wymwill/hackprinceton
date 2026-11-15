@@ -10,6 +10,22 @@ const key = __SUPABASE_KEY__;
 
 export const supabase: SupabaseClient | null = url && key ? createClient(url, key) : null;
 
+/**
+ * A readable version of a Supabase error. When the browser can't reach Supabase at all,
+ * supabase-js only says "Failed to fetch"; say which server and what to try instead.
+ */
+export function authErrorText(error: { message: string; name?: string; status?: number }) {
+  const unreachable = /failed to fetch|networkerror|load failed|fetch failed/i.test(error.message) || error.name === "AuthRetryableFetchError";
+  if (!unreachable) return error.message;
+  let host = "the sign-in server";
+  try {
+    host = new URL(url).host;
+  } catch {
+    /* keep the generic name */
+  }
+  return `Couldn't reach ${host}. Reload this page and try again; if it keeps happening, check your internet connection.`;
+}
+
 /** Whether a sign-in provider (e.g. "google") is turned on in the Supabase project. Null if unknown. */
 export async function providerEnabled(name: string): Promise<boolean | null> {
   if (!url || !key) return false;

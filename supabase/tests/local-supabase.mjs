@@ -226,6 +226,10 @@ const server = http.createServer(async (req, res) => {
       if (!a || a.password !== body.password) return authError(res, 400, "Invalid login credentials");
       return send(res, 200, session(body.email));
     }
+    if (url.pathname === "/auth/v1/settings" && req.method === "GET") {
+      // Only email sign-in exists here, so the sign-in screen turns the Google button off.
+      return send(res, 200, { external: { email: true, google: false }, disable_signup: false, mailer_autoconfirm: true });
+    }
     if (url.pathname === "/auth/v1/user" && req.method === "GET") {
       if (!claims) return authError(res, 401, "invalid JWT");
       return send(res, 200, userJson(accounts.get(claims.email), claims.email));

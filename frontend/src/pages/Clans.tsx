@@ -115,6 +115,13 @@ export function ClanDetail() {
           </Panel>
           <div className="col">
             <ShareCard label="Invite to your clan" code={clan.code} link={clanLink(clan.code)} shareTitle={`Join ${clan.name} on Alea`} shareText={`Join my clan ${clan.name} on Alea: code ${clan.code}.`} hint="Friends scan this or open the link to join." />
+            <Panel label="Bet together">
+              <p className="hint">
+                Start a Bet Series with everyone in {clan.name}. The name, description and rules are filled in, and all{" "}
+                {clan.members.length} member{clan.members.length === 1 ? "" : "s"} start in the lobby.
+              </p>
+              <Link className="btn primary" to={`/new?clan=${encodeURIComponent(clan.id)}`}>Start a series with this clan →</Link>
+            </Panel>
             <Panel label="Clan chat"><p className="hint">Talk with the members of this clan.</p><Link className="btn primary" to={`/clans/${clan.id}/chat`}>Open chat →</Link></Panel>
           </div>
         </div>

@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSocial } from "../lib/social.tsx";
 import { Shell } from "../components/Shell.tsx";
 import OutcomeEditor, { newDraft, outcomeProblem } from "../components/OutcomeEditor.tsx";
 import { Panel } from "../components/ui.tsx";
@@ -48,9 +49,31 @@ export default function CreateSeries() {
   // Bets with a question must be valid; empty rows are skipped.
   const draftProblem = written.map((d, i) => (d.question.trim().length < 3 ? `Bet ${i + 1}: write at least 3 characters.` : outcomeProblem(d) && `Bet ${i + 1}: ${outcomeProblem(d)}`)).find(Boolean) || null;
 
+  // /new?clan=ID: start a series with a whole clan. The basics fill in from the clan once it loads,
+  // and every member joins the lobby when the series is created.
+  const [params] = useSearchParams();
+  const clanId = params.get("clan");
+  const social = useSocial();
+  const clan = clanId ? social.data?.clans.find((c) => c.id === clanId) : undefined;
+  const filled = useRef(false);
+  useEffect(() => {
+    if (!clan || filled.current) return;
+    filled.current = true;
+    const n = clan.members.length;
+    setName(`${clan.name} series`.slice(0, 60));
+    setDescription(`Bets for ${clan.name}. All ${n} members start in the lobby.`);
+    // A shared pool needs twice as many players as losers, so bigger clans can have 2 losers.
+    setSt((s) => ({ ...s, losers: n >= 6 ? 2 : 1, mode: "pool", hostPlays: true }));
+  }, [clan]);
+
   const submit = async () => {
-    const s = await api.createSeries({ name, description, settings: st, bets: written }, "Series created. Share the invite link to fill the lobby.");
-    if (s) nav(`/s/${s.id}`);
+    const s = await api.createSeries(
+      { name, description, settings: st, bets: written },
+      clan ? undefined : "Series created. Share the invite link to fill the lobby."
+    );
+    if (!s) return;
+    if (clan) await api.addClan(s.id, clan.id, `Series created. Everyone in ${clan.name} is in the lobby.`);
+    nav(`/s/${s.id}`);
   };
 
   return (
@@ -64,6 +87,23 @@ export default function CreateSeries() {
           <p>Rules lock when betting starts.</p>
         </div>
       </section>
+
+      {clanId && (
+        <p className={`notice ${clan ? "ok" : ""}`} style={{ marginBottom: 20 }}>
+          {clan ? (
+            <>
+              <b>With {clan.name}:</b> {clan.members.map((m) => m.name).join(", ")} will be in the lobby as soon as you
+              create it. The basics are filled in for you; change anything you like, write the bets, then create.
+            </>
+          ) : social.data ? (
+            <>
+              <b>That clan wasn't found.</b> You may have left it. You can still create a series and share its invite link.
+            </>
+          ) : (
+            "Loading your clan…"
+          )}
+        </p>
+      )}
 
       <div className="grid2">
         <div className="col">

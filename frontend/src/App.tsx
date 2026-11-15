@@ -1,9 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { StoreProvider } from "./lib/store.tsx";
 import CreateSeries from "./pages/CreateSeries.tsx";
+import AllSeries from "./pages/AllSeries.tsx";
 import Home from "./pages/Home.tsx";
 import JoinLink from "./pages/JoinLink.tsx";
 import Profile from "./pages/Profile.tsx";
+import Tutorial from "./pages/Tutorial.tsx";
 import Friends, { AddFriendLink } from "./pages/Friends.tsx";
 import Clans, { ClanDetail, JoinClanLink } from "./pages/Clans.tsx";
 import ClanChat from "./pages/ClanChat.tsx";
@@ -15,9 +17,11 @@ export default function App() {
       <StoreProvider>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/series" element={<AllSeries />} />
           <Route path="/new" element={<CreateSeries />} />
           <Route path="/join/:code" element={<JoinLink />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/tutorial" element={<Tutorial />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/add/:code" element={<AddFriendLink />} />
           <Route path="/clans" element={<Clans />} />

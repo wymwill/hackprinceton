@@ -2377,3 +2377,294 @@ img.avatar {
     max-width: 84%;
   }
 }
+
+/* ── your moves (Home) ─────────────────────────────────────────────────── */
+
+.moves-grid {
+  margin-bottom: 28px;
+}
+.person.move {
+  padding: 10px 8px;
+  margin: 0 -8px;
+  width: calc(100% + 16px);
+  border-radius: 6px;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.person.move:hover {
+  background: var(--row-hover);
+}
+.person.move b {
+  display: block;
+  font-weight: 600;
+}
+.move-detail {
+  display: block;
+  font-size: 13px;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 52ch;
+}
+.move-series {
+  max-width: 16ch;
+}
+.move-go {
+  color: var(--red);
+  font-size: 16px;
+}
+.person.move.waiting {
+  opacity: 0.78;
+}
+
+/* ── tutorial ──────────────────────────────────────────────────────────── */
+
+.grid2.tut-top {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-bottom: 24px;
+  align-items: start;
+}
+.tut-top > .panel {
+  min-width: 0;
+}
+.tut-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.tut-progress i {
+  display: block;
+  height: 100%;
+  background: var(--red);
+  transition: width 0.3s ease;
+}
+.tut-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.tut-steps li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 12px;
+  align-items: start;
+  opacity: 0.7;
+}
+.tut-steps li.current,
+.tut-steps li.done {
+  opacity: 1;
+}
+.tut-steps li.done b {
+  text-decoration: line-through;
+  text-decoration-color: var(--dim);
+}
+.tut-steps .hint {
+  margin: 4px 0 0;
+}
+.tut-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  color: var(--dim);
+}
+.tut-steps li.current .tut-dot {
+  border-color: var(--red);
+  color: var(--red);
+  box-shadow: 0 0 0 4px var(--red-soft);
+}
+.tut-steps li.done .tut-dot {
+  background: var(--yes);
+  border-color: var(--yes);
+  color: #1c1b1f;
+}
+.tut-practice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+.tut-q {
+  margin: 6px 0 12px;
+  font-size: 20px;
+}
+.tut-say {
+  margin: 0;
+  line-height: 1.5;
+}
+/* Seven topic tabs: let them wrap instead of forcing one row (phones). */
+.seg.tut-tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.seg.tut-tags button {
+  flex: 1 1 auto;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+.tut-acc section {
+  border-bottom: 1px solid var(--border);
+}
+.tut-acc section:last-child {
+  border-bottom: 0;
+}
+.tut-acc > section > button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto 20px;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 4px;
+  background: none;
+  border: 0;
+  color: var(--bright);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.tut-acc > section > button:hover {
+  color: var(--red);
+}
+.tut-chev {
+  font-size: 18px;
+  color: var(--red);
+  text-align: center;
+}
+.tut-body {
+  padding: 0 4px 16px;
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  line-height: 1.55;
+}
+.tut-body p {
+  margin: 0;
+}
+@media (max-width: 1100px) {
+  .grid2.tut-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── home ──────────────────────────────────────────────────────────────── */
+
+.home-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+.home-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+.home-action:hover {
+  border-color: var(--red);
+  transform: translateY(-1px);
+}
+.home-action b {
+  font-size: 18px;
+  color: var(--bright);
+}
+.home-action .dim {
+  font-size: 14px;
+  line-height: 1.45;
+}
+.home-action .tut-progress {
+  width: 100%;
+  margin: 6px 0 0;
+}
+.home-action-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--red);
+  background: var(--red-soft);
+}
+.home-action.primary {
+  border-color: var(--red);
+}
+.home-action.primary .home-action-icon {
+  color: #fff;
+  background: var(--red);
+}
+.grid2.home-main {
+  grid-template-columns: minmax(0, 1fr) 360px;
+  margin-bottom: 32px;
+}
+.home-bets .bgrid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.home-series h2 {
+  margin: 0 0 14px;
+  font-size: 22px;
+}
+.bcard-series {
+  max-width: 100%;
+}
+@media (max-width: 1100px) {
+  .grid2.home-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 820px) {
+  /* Phones: three compact tiles in a row, so your bets show sooner. */
+  .home-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .home-action {
+    padding: 12px 8px;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+  }
+  .home-action b {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  .home-action .dim,
+  .home-action .tut-progress {
+    display: none;
+  }
+  .home-bets .tabs button {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+/* Keep the status pill its natural width inside bet cards. */
+.bcard .head .stack {
+  align-items: flex-start;
+  min-width: 0;
+}

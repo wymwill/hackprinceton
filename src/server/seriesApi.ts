@@ -71,6 +71,8 @@ function toAppError(error: PgError, path = ""): AppError {
   if (code) return new AppError(STATUS[code] ?? 400, code, error.message);
   // An id in the URL that isn't a UUID.
   if (error.code === "22P02") return new AppError(404, "not_found", "That doesn't exist.");
+  // A database function the API isn't allowed to call (for example one a later migration retired).
+  if (error.code === "42501") return new AppError(403, "not_allowed", "That action isn't available.");
   if (error.code === "PGRST301" || error.code === "PGRST303" || /jwt/i.test(error.message)) {
     return new AppError(401, "unauthorized", "Your session expired. Sign in again.");
   }

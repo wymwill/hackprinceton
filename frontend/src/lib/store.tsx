@@ -96,6 +96,8 @@ function makeApi(act: Act) {
     joinByCode: (code: string, ok?: string) => act<{ id: Id }>("POST", "/series/join", { code }, ok),
     joinSeries: (id: Id, ok?: string) => act("POST", `${s(id)}/join`, undefined, ok),
     leaveSeries: (id: Id, ok?: string) => act("POST", `${s(id)}/leave`, undefined, ok),
+    /** Host adds every member of one of their clans to the lobby. Resolves to how many were added. */
+    addClan: (id: Id, clanId: Id, ok?: string) => act<number>("POST", `${s(id)}/clan`, { clanId }, ok),
     kick: (id: Id, userId: Id, ok?: string) => act("DELETE", `${s(id)}/participants/${encodeURIComponent(userId)}`, undefined, ok),
     submitFavor: (id: Id, text: string, ok?: string) => act("POST", `${s(id)}/favors`, { description: text }, ok),
     removeFavor: (id: Id, favorId: Id, ok?: string) => act("DELETE", `${s(id)}/favors/${encodeURIComponent(favorId)}`, undefined, ok),
