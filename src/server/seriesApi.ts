@@ -61,6 +61,7 @@ const STATUS: Record<string, number> = {
   not_message_author: 403,
   message_not_found: 404,
   slow_down: 429,
+  request_id_reused: 409,
 };
 
 type PgError = { message: string; hint?: string | null; code?: string | null; details?: string | null };
@@ -144,6 +145,29 @@ export const outcomeRef = (body: Record<string, unknown>) => {
   return typeof v === "string" ? v : null;
 };
 export const text = (v: unknown) => (typeof v === "string" ? v : "");
+/**
+ * A bet's closing time from a request: undefined when not given, null to clear it, or an
+ * ISO date-time with an explicit offset (Z or ±hh:mm), so it can't depend on any server's
+ * timezone. Anything else is refused. The database checks it's in the future.
+ */
+export function closesAtOf(body: Record<string, unknown>): string | null | undefined {
+  if (!("closesAt" in body)) return undefined;
+  const v = body.closesAt;
+  if (v === null || v === "") return null;
+  if (typeof v === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d(:\d\d(\.\d+)?)?(Z|[+-]\d\d:?\d\d)$/.test(v) && !Number.isNaN(Date.parse(v))) return v;
+  throw new AppError(400, "invalid_deadline", "Closing times need a date, a time and a timezone.");
+}
+/**
+ * The client's submission id (a UUID), which makes a wager or a new series happen at
+ * most once however often the request is repeated. Null when the request has none
+ * (older callers); a value that isn't a UUID is refused rather than ignored.
+ */
+export function requestIdOf(body: Record<string, unknown>): string | null {
+  const v = body.requestId;
+  if (v === undefined || v === null) return null;
+  if (typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)) return v.toLowerCase();
+  throw new AppError(400, "invalid_request", "That submission id isn't valid.");
+}
 /** A list of strings, or undefined when the field is missing (so the SQL default applies). */
 export const texts = (v: unknown) => (Array.isArray(v) ? v.map(text) : undefined);
 /** A JSON number as-is; anything else (including numeric strings) as null, so the SQL decides. */

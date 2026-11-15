@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from "../lib/rules.ts";
 import { MODE_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { QUICK_TEMPLATES, quickSettings, templateDrafts, type QuickTemplate } from "../lib/quickGame.ts";
+import { newRequestId } from "../lib/submit.ts";
 import type { BetDraft, Mode, Settings } from "../lib/types.ts";
 
 type SavedDraft = { name: string; description: string; drafts: BetDraft[]; settings: Settings; quick: boolean; templateId: string | null; punishments: string[] };
@@ -47,8 +48,28 @@ function Seg<T extends string | number | boolean>({
   );
 }
 
+/** The series submission waiting for an answer: its id and the exact details sent (kept across a reload). */
+type PendingSeries = { requestId: string; key: string };
+const PENDING_SERIES = "alea:pending-series";
+function loadPendingSeries(): PendingSeries | null {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(PENDING_SERIES) ?? "null");
+    return v && typeof v.requestId === "string" && typeof v.key === "string" ? v : null;
+  } catch {
+    return null;
+  }
+}
+function savePendingSeries(p: PendingSeries | null) {
+  try {
+    if (p) sessionStorage.setItem(PENDING_SERIES, JSON.stringify(p));
+    else sessionStorage.removeItem(PENDING_SERIES);
+  } catch {
+    // Storage unavailable: the double-click guard still holds for this visit.
+  }
+}
+
 export default function CreateSeries() {
-  const { api, me } = useStore();
+  const { api, me, toast } = useStore();
   const nav = useNavigate();
   const [params] = useSearchParams();
   const clanId = params.get("clan");
@@ -63,8 +84,6 @@ export default function CreateSeries() {
   const [category, setCategory] = useState<QuickTemplate["category"]>(QUICK_TEMPLATES.find((t) => t.id === saved?.templateId)?.category ?? "game");
   const [punishments, setPunishments] = useState<string[]>(saved?.punishments ?? []);
   const [gameQuery, setGameQuery] = useState("");
-  const [busy, setBusy] = useState(false);
-  const submitting = useRef(false);
   const set = <K extends keyof Settings>(k: K, v: Settings[K]) => setSt((s) => ({ ...s, [k]: v }));
 
   useEffect(() => {
@@ -111,26 +130,53 @@ export default function CreateSeries() {
     setSt((s) => ({ ...s, losers: n >= 6 ? 2 : 1, mode: "pool", hostPlays: true }));
   }, [clan, saved]);
 
+  // Creating happens at most once per submission id. Submitting the same details again (a double
+  // click, or a retry after no answer, even after a reload) reuses the id, so the server returns the
+  // series it already made instead of making another. Different details are a different series.
+  const inFlight = useRef(false);
+  const [phase, setPhase] = useState<"idle" | "creating" | "unknown">("idle");
   const submit = async () => {
-    if (submitting.current) return;
-    submitting.current = true;
-    setBusy(true);
-    try {
-      const s = await api.createSeries(
-        { name, description, settings: st, bets: written },
-        clan ? undefined : "Series created. Share the invite link to fill the lobby."
-      );
-      if (!s) return;
-      if (clan) await api.addClan(s.id, clan.id, `Series created. Everyone in ${clan.name} is in the lobby.`);
-      if (st.mode === "pool" && st.hostPlays) {
-        for (const p of punishments.slice(0, st.favorsPerPlayer)) await api.submitFavor(s.id, p);
-      }
-      try { localStorage.removeItem(key); } catch { /* Storage may be unavailable. */ }
-      nav(`/s/${s.id}`);
-    } finally {
-      submitting.current = false;
-      setBusy(false);
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setPhase("creating");
+    const input = { name, description, settings: st, bets: written };
+    const requestKey = JSON.stringify(input);
+    const prior = loadPendingSeries();
+    const requestId = prior?.key === requestKey ? prior.requestId : newRequestId();
+    savePendingSeries({ requestId, key: requestKey });
+    const r = await api.createSeries(input, requestId);
+    inFlight.current = false;
+    if (r.kind === "unknown") {
+      setPhase("unknown");
+      return;
     }
+    savePendingSeries(null);
+    if (r.kind === "refused") {
+      setPhase("idle");
+      toast(r.message, "err");
+      return;
+    }
+    const s = r.result;
+    if (clan) await api.addClan(s.id, clan.id, `Series created. Everyone in ${clan.name} is in the lobby.`);
+    else toast(s.replayed ? "That series was already created. Here it is." : "Series created. Share the invite link to fill the lobby.");
+    if (st.mode === "pool" && st.hostPlays) {
+      const addedKey = `alea:quick-punishments:${s.id}`;
+      let added: string[] = [];
+      try {
+        const priorAdded: unknown = JSON.parse(localStorage.getItem(addedKey) ?? "[]");
+        if (Array.isArray(priorAdded)) added = priorAdded.filter((p): p is string => typeof p === "string");
+      } catch { /* Storage may be unavailable. */ }
+      for (const p of punishments.slice(0, st.favorsPerPlayer)) {
+        if (added.includes(p)) continue;
+        if (await api.submitFavor(s.id, p)) {
+          added = [...added, p];
+          try { localStorage.setItem(addedKey, JSON.stringify(added)); } catch { /* Storage may be unavailable. */ }
+        }
+      }
+    }
+    try { localStorage.removeItem(key); } catch { /* Storage may be unavailable. */ }
+    setPhase("idle");
+    nav(`/s/${s.id}`);
   };
 
   return (
@@ -213,7 +259,10 @@ export default function CreateSeries() {
               <p className="hint">{written.length} bets · {fmt(st.startingCoins)} starting coins · bottom {st.losers} loses{st.mode === "pool" && st.hostPlays ? ` · ${punishments.length} punishments selected` : ""}</p>
               <p className="hint">Create the lobby, then share its invite link. Friends can review the rules and get ready before play starts.</p>
               {draftProblem && <p className="hint warn">{draftProblem}</p>}
-              <button type="button" className="btn primary block" onClick={submit} disabled={busy || !name.trim() || drafts.some((d) => d.question.trim().length < 3) || tooMany || !!draftProblem}>{busy ? "Creating…" : "Create series & invite"}</button>
+              {phase === "unknown" && <p className="notice" role="alert">We couldn't confirm creation. Retry with the same details to avoid a duplicate series.</p>}
+              <button type="button" className="btn primary block" onClick={submit} aria-busy={phase === "creating"} disabled={phase === "creating" || !name.trim() || drafts.some((d) => d.question.trim().length < 3) || tooMany || !!draftProblem}>
+                {phase === "creating" ? "Creating…" : phase === "unknown" ? "Retry safely" : "Create series & invite"}
+              </button>
               <button type="button" className="btn ghost block" onClick={() => setQuick(false)}>Customize rules →</button>
             </div> : <p className="hint">Choose a template to get an editable series ready in seconds.</p>}
           </Panel>
@@ -424,8 +473,29 @@ export default function CreateSeries() {
               {st.hostPlays ? ", counting you" : ""}.
             </p>
             <div style={{ height: 14 }} />
-            <button type="button" className="btn primary block" onClick={submit} disabled={busy || !name.trim() || tooMany || !!draftProblem} title={draftProblem ?? undefined}>
-              {busy ? "Creating…" : "Create series"}
+            {phase === "unknown" && (
+              <p className="notice" role="alert" style={{ marginBottom: 10 }}>
+                <b>We couldn't confirm the series was created.</b> Retrying with the same details is safe: it can't create
+                a second one. If you change the details first, that's a new series.
+              </p>
+            )}
+            <button
+              type="button"
+              className="btn primary block"
+              onClick={submit}
+              aria-busy={phase === "creating"}
+              disabled={phase === "creating" || !name.trim() || tooMany || !!draftProblem}
+              title={draftProblem ?? undefined}
+            >
+              {phase === "creating" ? (
+                <>
+                  <span className="spinner" aria-hidden="true" /> Creating…
+                </>
+              ) : phase === "unknown" ? (
+                "Retry safely"
+              ) : (
+                "Create series"
+              )}
             </button>
           </Panel>
         </div>

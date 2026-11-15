@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { seriesAction, check, text } from "@/server/seriesApi";
+import { seriesAction, check, requestIdOf, text } from "@/server/seriesApi";
 
 /** Series you're in, newest first (all statuses). */
 export async function GET(req: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * Create a lobby; the caller hosts it.
+ * Create a lobby; the caller hosts it. Send requestId (a UUID) to make it happen at most once.
  * Body: { title, description?, plannedBetCount, initialBankroll, loserCount,
  *   stakeMode: "SHARED_FAVOR_POOL" | "PLEDGE" | "MONEY",
  *   questions?: string[] (YES/NO bets) or bets?: [{ question, outcomes?: string[] (2..10), tieRule?: "refund" | "first_listed" }]
@@ -26,8 +26,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return seriesAction(
     req,
-    ({ body, rpc }) =>
-      rpc("create_bet_series", {
+    ({ body, rpc }) => {
+      const requestId = requestIdOf(body);
+      const args = {
         p_title: text(body.title),
         p_description: text(body.description),
         p_planned_bet_count: body.plannedBetCount,
@@ -37,7 +38,10 @@ export async function POST(req: NextRequest) {
         p_questions: Array.isArray(body.questions) ? body.questions.map(text) : [],
         p_settings: body.settings && typeof body.settings === "object" ? body.settings : {},
         ...(Array.isArray(body.bets) ? { p_bets: body.bets } : {}),
-      }),
+      };
+      // With requestId, repeating the request returns the series it already created (replayed: true).
+      return requestId ? rpc("create_bet_series_once", { p_request_id: requestId, ...args }) : rpc("create_bet_series", args);
+    },
     201
   );
 }

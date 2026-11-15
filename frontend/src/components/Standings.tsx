@@ -6,6 +6,7 @@ import type { Bet, BetDraft, Series } from "../lib/types.ts";
 import OutcomeEditor, { newDraft, outcomeProblem } from "./OutcomeEditor.tsx";
 import { defaultRange, draftFromBet } from "../lib/ranges.ts";
 import { Modal, Who } from "./ui.tsx";
+import { toLocalInput } from "../lib/deadlines.ts";
 
 /** Ranked by settled coins; the dashed line marks where the bottom X start. */
 export function StandingsTable({ s, compact = false }: { s: Series; compact?: boolean }) {
@@ -55,6 +56,7 @@ export function NewBetModal({ s, bet, onClose }: { s: Series; bet?: Bet; onClose
           outcomes: bet.kind === "multi" ? bet.outcomes.map((o) => ({ id: o.id, label: o.label })) : [{ label: "" }, { label: "" }],
           tieRule: bet.tieRule,
           range: bet.kind === "range" ? draftFromBet(bet) : defaultRange(),
+          closesAt: toLocalInput(bet.closesAt),
         }
       : newDraft()
   );

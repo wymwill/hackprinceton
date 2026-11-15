@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ConfirmButton, OutcomeTag, Panel, Pill, PoolBar, Who } from "../components/ui.tsx";
 import { HouseCommentary } from "../components/HouseCommentary.tsx";
@@ -6,7 +6,9 @@ import { balances, findOutcome, isParticipant, labelOf, leader, payoutIfWins, re
 import { ago, countdown, fmt, signed, useNow } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { fmtValue, parseNum, rangeFor, rangeRule } from "../lib/ranges.ts";
-import type { Bet, Id, Series } from "../lib/types.ts";
+import { newRequestId } from "../lib/submit.ts";
+import { deadlineState, deadlineText, timeLeft } from "../lib/deadlines.ts";
+import type { Bet, Id, Series, WagerReceipt } from "../lib/types.ts";
 
 /** YES/NO keep their yes/no styling; other outcomes use their own color (--oc). */
 const tone = (bet: Bet, i: number) => (bet.kind === "binary" ? (i === 0 ? "yes" : "no") : "oc");
@@ -36,6 +38,89 @@ function OutcomeColumn({ bet, id }: { bet: Bet; id: Id }) {
   );
 }
 
+/** One wager the player meant to place: the same id goes with every retry of it. */
+type PendingWager = { requestId: string; outcomeId: Id; amount: number };
+const pendingKey = (betId: Id) => `alea:pending-wager:${betId}`;
+function loadPending(betId: Id): PendingWager | null {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(pendingKey(betId)) ?? "null");
+    return v && typeof v.requestId === "string" && typeof v.outcomeId === "string" && typeof v.amount === "number" ? v : null;
+  } catch {
+    return null;
+  }
+}
+function savePending(betId: Id, p: PendingWager | null) {
+  try {
+    if (p) sessionStorage.setItem(pendingKey(betId), JSON.stringify(p));
+    else sessionStorage.removeItem(pendingKey(betId));
+  } catch {
+    // Storage can be unavailable (private mode); the id still lives in memory for this visit.
+  }
+}
+
+/**
+ * Submitting a wager so it happens at most once. A double click, tap or Enter while
+ * one is in flight does nothing; a submission whose answer was lost is retried with
+ * the same id (the server returns the original receipt instead of betting again).
+ */
+function useWagerSubmission(s: Series, bet: Bet) {
+  const { api, toast } = useStore();
+  const inFlight = useRef(false);
+  // The ref is what submit() trusts (it's current even before React re-renders); the state is what's shown.
+  const [restored] = useState(() => loadPending(bet.id));
+  const pending = useRef<PendingWager | null>(restored);
+  const [shown, setShown] = useState<PendingWager | null>(restored);
+  const [phase, setPhase] = useState<"idle" | "sending" | "unknown">(restored ? "unknown" : "idle");
+  const remember = (p: PendingWager | null) => {
+    pending.current = p;
+    setShown(p);
+    savePending(bet.id, p);
+  };
+  const [receipt, setReceipt] = useState<WagerReceipt | null>(null);
+
+  const submit = async (outcomeId: Id, amount: number) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setPhase("sending");
+    setReceipt(null);
+    // Retrying an uncertain submission keeps its id and details; anything else is a new submission.
+    const sub = pending.current ?? { requestId: newRequestId(), outcomeId, amount };
+    remember(sub);
+    const r = await api.wager(s.id, bet.id, sub.outcomeId, sub.amount, sub.requestId);
+    if (r.kind === "unknown") {
+      setPhase("unknown");
+    } else {
+      remember(null);
+      setPhase("idle");
+      if (r.kind === "done") setReceipt(r.result);
+      else toast(r.message, "err");
+    }
+    inFlight.current = false;
+  };
+  const discard = () => {
+    remember(null);
+    setPhase("idle");
+  };
+  return { phase, pending: shown, receipt, clearReceipt: () => setReceipt(null), submit, discard };
+}
+
+/** What the server says this submission did to your coins. */
+function WagerReceiptNote({ r, onClose }: { r: WagerReceipt; onClose: () => void }) {
+  return (
+    <div className="notice ok wager-receipt" role="status">
+      <b>{r.addedToExisting ? `Added ${fmt(r.amount)} to your ${r.outcome} stake.` : `New wager: ${fmt(r.amount)} on ${r.outcome}.`}</b>
+      {r.replayed && <span> This was already placed, so it wasn't charged again.</span>}
+      <span className="receipt-lines">
+        Your stake on {r.outcome}: <b>{fmt(r.totalStake)}</b>
+        {r.addedToExisting && <> (was {fmt(r.previousStake)})</>} · Free coins now: <b>{fmt(r.available)}</b>
+      </span>
+      <button type="button" className="linkish" onClick={onClose}>
+        OK
+      </button>
+    </div>
+  );
+}
+
 function Ticket({ s, bet }: { s: Series; bet: Bet }) {
   const { me, api, skew } = useStore();
   const [params] = useSearchParams();
@@ -45,10 +130,16 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
   const [pick, setPick] = useState<Id>(() => mine?.outcomeId ?? findOutcome(bet, params.get("outcome") ?? params.get("side"))?.id ?? list[0].id);
   const [amount, setAmount] = useState(50);
   const now = useNow(1000) + skew;
-  const chosen = list.find((o) => o.id === (mine?.outcomeId ?? pick)) ?? list[0];
+  const sub = useWagerSubmission(s, bet);
+  // While a submission is in flight or unconfirmed, the ticket shows exactly what was sent.
+  const locked = sub.phase !== "idle";
+  const chosen = list.find((o) => o.id === (locked && sub.pending ? sub.pending.outcomeId : mine?.outcomeId ?? pick)) ?? list[0];
   const free = balances(s).get(me)?.available ?? 0;
   const until = withdrawUntil(bet, s.settings);
   const canWithdraw = !!mine && until !== null && now < until;
+  useEffect(() => {
+    if (locked && sub.pending) setAmount(sub.pending.amount);
+  }, [locked, sub.pending]);
   const payout = payoutIfWins(bet, me, chosen.id, amount > 0 ? amount : 0);
   const stake = (mine?.amount ?? 0) + (amount > 0 ? amount : 0);
   const binary = bet.kind === "binary";
@@ -64,7 +155,7 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
               role="radio"
               aria-checked={chosen.id === o.id}
               className={chosen.id === o.id ? `on ${i === 0 ? "yes" : "no"}` : ""}
-              disabled={!!mine && mine.outcomeId !== o.id}
+              disabled={locked || (!!mine && mine.outcomeId !== o.id)}
               onClick={() => setPick(o.id)}
             >
               {i === 0 ? "Yes" : "No"}
@@ -81,7 +172,7 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
               aria-checked={chosen.id === o.id}
               className={chosen.id === o.id ? "on" : ""}
               style={ocStyle(o.color)}
-              disabled={!!mine && mine.outcomeId !== o.id}
+              disabled={locked || (!!mine && mine.outcomeId !== o.id)}
               onClick={() => setPick(o.id)}
             >
               <span className="lbl">
@@ -101,19 +192,20 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
       )}
       <label className="field">
         <span>Coins</span>
-        <input className="input" type="number" min={1} value={amount} onChange={(e) => setAmount(Math.floor(Number(e.target.value)))} />
+        <input className="input" type="number" min={1} value={amount} disabled={locked} onChange={(e) => { setAmount(Math.floor(Number(e.target.value))); sub.clearReceipt(); }} />
       </label>
       <div className="quick">
         {[10, 50, 100, 250].map((n) => (
-          <button key={n} type="button" onClick={() => setAmount(n)}>
+          <button key={n} type="button" disabled={locked} onClick={() => { setAmount(n); sub.clearReceipt(); }}>
             {n}
           </button>
         ))}
-        <button type="button" onClick={() => setAmount(free)}>
+        <button type="button" disabled={locked} onClick={() => { setAmount(free); sub.clearReceipt(); }}>
           All
         </button>
       </div>
-      <div className="summary">
+      {/* While a wager is unconfirmed, any "after" figure could be wrong, so the estimate waits. */}
+      {sub.phase !== "unknown" && <div className="summary">
         <div className="kv">
           Your stake <b>{fmt(stake)}</b>
         </div>
@@ -126,16 +218,37 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
         <p className="hint" style={{ marginTop: 6 }}>
           Estimate from the pool right now. It moves as others bet.
         </p>
-      </div>
+      </div>}
+      {sub.phase === "unknown" && (
+        <div className="notice" role="alert">
+          <b>We couldn't confirm your wager of {fmt(sub.pending?.amount ?? amount)} on {chosen.label}.</b> It may have gone
+          through. Retrying is safe: it can't place it twice.{" "}
+          <button type="button" className="linkish" onClick={sub.discard}>
+            Don't retry
+          </button>
+        </div>
+      )}
       <button
         type="button"
         className={`submit ${binary ? (chosen.index === 0 ? "yes" : "no") : "oc"}`}
         style={binary ? undefined : ocStyle(chosen.color)}
-        disabled={!(amount >= 1) || amount > free}
-        onClick={() => api.wager(s.id, bet.id, chosen.id, amount, `${fmt(amount)} on ${chosen.label}.`)}
+        aria-busy={sub.phase === "sending"}
+        disabled={sub.phase === "sending" || (sub.phase === "idle" && (!(amount >= 1) || amount > free))}
+        onClick={() => sub.submit(chosen.id, amount)}
       >
-        {mine ? "Add" : "Bet"} {fmt(amount > 0 ? amount : 0)} on {chosen.label}
+        {sub.phase === "sending" ? (
+          <>
+            <span className="spinner" aria-hidden="true" /> Placing {fmt(amount)} on {chosen.label}…
+          </>
+        ) : sub.phase === "unknown" ? (
+          <>Retry safely: {fmt(amount)} on {chosen.label}</>
+        ) : (
+          <>
+            {mine ? "Add" : "Bet"} {fmt(amount > 0 ? amount : 0)} on {chosen.label}
+          </>
+        )}
       </button>
+      {sub.receipt && <WagerReceiptNote r={sub.receipt} onClose={sub.clearReceipt} />}
       {canWithdraw && (
         <ConfirmButton
           className="btn block"
@@ -287,13 +400,20 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
   const binary = bet.kind === "binary";
   const winner = list.find((o) => o.id === bet.outcomeId);
   const tied = bet.tiedOutcomeIds ?? [];
+  const dl = deadlineState(bet, now);
 
   return (
     <>
       <section className="bhead">
         <div>
           <span className="row">
-            <Pill kind={bet.status}>{bet.status === "closed" ? "Betting locked" : bet.status}</Pill>
+            {dl === "soon" ? (
+              <Pill kind="soon">Closing soon</Pill>
+            ) : dl === "closed" && bet.status === "open" ? (
+              <Pill kind="closed">Betting locked</Pill>
+            ) : (
+              <Pill kind={bet.status}>{bet.status === "closed" ? "Betting locked" : bet.status}</Pill>
+            )}
             <span className="cap">
               Bet {index} of {s.settings.betCount}
               {bet.kind === "multi" && ` · ${bet.outcomes.length} options`}
@@ -319,6 +439,17 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
             {bet.openedAt && (
               <span>
                 Opened <b>{ago(bet.openedAt, now)} ago</b>
+              </span>
+            )}
+            {bet.closesAt && (
+              <span className={`deadline ${dl}`}>
+                {dl === "closed" ? "Closed" : "Closes"} <b>{deadlineText(bet.closesAt)}</b>
+                {(dl === "soon" || dl === "open") && (
+                  <>
+                    {" "}
+                    · <b className="num">{timeLeft(Date.parse(bet.closesAt) - now)}</b> left
+                  </>
+                )}
               </span>
             )}
           </div>
@@ -417,7 +548,14 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
           )}
         </div>
         <div className="col">
-          {bet.status === "open" && playing && <Ticket s={s} bet={bet} />}
+          {bet.status === "open" && playing && dl !== "closed" && <Ticket s={s} bet={bet} />}
+          {bet.status === "open" && playing && dl === "closed" && (
+            <Panel label="Place a wager" className="ticket">
+              <p className="notice" role="status">
+                <b>Betting closed at {deadlineText(bet.closesAt!)}.</b> Wagers after the closing time aren't accepted.
+              </p>
+            </Panel>
+          )}
           {bet.status === "open" && !playing && <p className="notice">You're hosting without playing, so you can't wager.</p>}
           {bet.status === "closed" && <p className="notice">Betting is locked. Waiting for {name(s.hostId)} to call it.</p>}
           {s.hostId === me && <HostPanel s={s} bet={bet} />}
