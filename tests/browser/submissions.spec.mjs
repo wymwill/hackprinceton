@@ -174,6 +174,7 @@ test("series: a double click and a retry after a lost answer create one series",
   const count = async (name) => (await api(ana, "GET", "/series/state")).series.filter((x) => x.name === name).length;
 
   await page.goto("/new");
+  await page.getByRole("button", { name: "Detailed setup" }).click();
   await page.locator('input[placeholder="Gym month"]').fill("Double click week");
   await page.getByRole("button", { name: "Create series" }).dblclick();
   await expect(page).toHaveURL(/\/s\/[0-9a-f-]{36}$/);
@@ -182,6 +183,7 @@ test("series: a double click and a retry after a lost answer create one series",
 
   // The answer to the first try is lost; Retry safely gets the same series.
   await page.goto("/new");
+  await page.getByRole("button", { name: "Detailed setup" }).click();
   await page.locator('input[placeholder="Gym month"]').fill("Lost answer week");
   let tries = 0;
   await page.route("**/api/series", async (route) => {
@@ -202,6 +204,7 @@ test("series: a double click and a retry after a lost answer create one series",
 
   // Creating another series on purpose still works.
   await page.goto("/new");
+  await page.getByRole("button", { name: "Detailed setup" }).click();
   await page.locator('input[placeholder="Gym month"]').fill("Lost answer week");
   await page.getByRole("button", { name: "Create series" }).click();
   await expect(page).toHaveURL(/\/s\/[0-9a-f-]{36}$/);

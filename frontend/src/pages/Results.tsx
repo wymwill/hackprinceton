@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { RecapPanel } from "./Recap.tsx";
 import { StandingsTable } from "../components/Standings.tsx";
 import { OutcomeTag, Panel, Pill, Who } from "../components/ui.tsx";
 import { agreesTo, resultText, standings } from "../lib/rules.ts";
@@ -190,6 +191,14 @@ export default function Results({ s }: { s: Series }) {
             {resolved} bet{resolved === 1 ? "" : "s"} resolved. The bottom {s.settings.losers} lost the series.
           </p>
         </div>
+        <div className="row" style={{ flexWrap: "wrap" }}>
+          <Link to={`/s/${s.id}/recap`} className="btn">
+            Full recap
+          </Link>
+          <Link to={`/new?rematch=${s.id}`} className="btn primary">
+            Play again with this group
+          </Link>
+        </div>
       </section>
 
       <Podium s={s} />
@@ -199,6 +208,7 @@ export default function Results({ s }: { s: Series }) {
           <Panel label="Final standings">
             <StandingsTable s={s} />
           </Panel>
+          <RecapPanel s={s} />
           <Panel label="Bets">
             <div className="people">
               {s.bets.map((b, i) => (

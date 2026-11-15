@@ -5,6 +5,7 @@ import { houseFumbleQuip } from "../../../shared/house.ts";
 import { fmt } from "../lib/format.ts";
 import { request } from "../lib/store.tsx";
 import { posterLines } from "../lib/poster.ts";
+import { sharePng, svgToPng } from "../lib/shareImage.ts";
 import "./Wrapped.css";
 
 type Payload = { summary: WrappedSummary; verdict: { comment: string; source: "openai" | "fallback" | "mock" } };
@@ -59,20 +60,8 @@ export default function Wrapped({ forceDemo = false }: { forceDemo?: boolean }) 
     setBusy(true);
     try {
       const svg = shareSvg(summary, payload?.verdict?.comment ?? `${summary.archetype.title}. ${fallbackLines[summary.totalBets % fallbackLines.length]}`);
-      const image = new Image();
-      const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
-      try {
-        await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error("Image export failed")); image.src = url; });
-        const canvas = document.createElement("canvas"); canvas.width = 1080; canvas.height = 1920;
-        const context = canvas.getContext("2d"); if (!context) throw new Error("Canvas unavailable");
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((file) => file ? resolve(file) : reject(new Error("Image export failed")), "image/png"));
-        const file = new File([blob], `alea-wrapped-${summary.year}.png`, { type: "image/png" });
-        if (share && navigator.share && navigator.canShare?.({ files: [file] })) await navigator.share({ title: `Alea Wrapped ${summary.year}`, text: `${summary.name}: ${summary.archetype.title}`, files: [file] });
-        else {
-          const downloadUrl = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = downloadUrl; a.download = file.name; a.click(); URL.revokeObjectURL(downloadUrl);
-        }
-      } finally { URL.revokeObjectURL(url); }
+      const blob = await svgToPng(svg, 1080, 1920);
+      await sharePng(blob, `alea-wrapped-${summary.year}.png`, { share, title: `Alea Wrapped ${summary.year}`, text: `${summary.name}: ${summary.archetype.title}` });
     } catch {
       setError("Image export couldn't finish on this device. Try Download again.");
     } finally { setBusy(false); }
