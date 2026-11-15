@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { seriesAction } from "@/server/seriesApi";
 import { commentOnEvent } from "@/server/house/service";
+import { supabaseConfig } from "@/lib/authConfig";
 import type { AppState } from "../../../../frontend/src/lib/types";
 import { getWrappedSummary } from "../../../../shared/wrapped";
 
@@ -22,10 +23,12 @@ export async function GET(req: Request) {
       ? `${safeName}'s ${year} recap: ${summary.totalBets} bets, ${summary.wins} eligible wins, ${summary.net > 0 ? "+" : ""}${summary.net} net virtual coins.`
       : `${safeName}'s ${year} recap has no recorded wagers yet.`;
     const verdict = await commentOnEvent({
-      id: `wrapped/${year}/${fingerprint}`, seriesId: "wrapped", betId: `wrapped-${year}-${fingerprint}`,
+      // Cached per player, but budgeted with every other House call: the shared namespace
+      // keeps the global per-minute and per-day caps on paid model calls.
+      id: `wrapped/${userId}/${year}/${fingerprint}`, seriesId: "wrapped", betId: `wrapped-${userId}-${year}-${fingerprint}`,
       kind: "bet_resolved", flavor: "wrapped", at: new Date().toISOString(), fact,
       signals: { bets: summary.totalBets, wins: summary.wins, winRate: summary.winRate ?? 0, net: summary.net },
-    }, userId);
+    }, supabaseConfig()!.url);
     return { summary, verdict };
   });
   response.headers.set("Cache-Control", "private, no-store");

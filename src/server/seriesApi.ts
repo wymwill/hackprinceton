@@ -59,6 +59,7 @@ const STATUS: Record<string, number> = {
   already_in_clan: 409,
   not_in_clan: 409,
   link_not_connected: 409,
+  link_taken: 409,
   unknown_provider: 404,
   not_clan_member: 403,
   not_message_author: 403,

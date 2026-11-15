@@ -104,11 +104,12 @@ describe("proof", () => {
     await assert.rejects(ana.rpc("link_proof_for", { p_series_id: seriesId, p_user_id: cat.id, p_since: null, p_provider: null, p_kind: null }), (e) => e.hint === "not_member");
   });
 
-  test("an app account moves to whoever links it last, taking its proof with it out", async () => {
-    await link(cat, "strava", "200");
-    assert.equal((await status(ben)).some((s) => s.provider === "strava"), false);
-    assert.deepEqual((await proof(ana, ben, { provider: "strava" })).items, []);
-    await cat.rpc("link_disconnect", { p_provider: "strava" });
+  test("an app account someone else has linked is refused, and their link and proof stay", async () => {
+    const before = (await proof(ana, ben, { provider: "strava" })).items;
+    await assert.rejects(link(cat, "strava", "200"), (e) => e.hint === "link_taken");
+    assert.equal((await status(ben)).some((s) => s.provider === "strava"), true);
+    assert.deepEqual((await proof(ana, ben, { provider: "strava" })).items, before);
+    assert.equal((await status(cat)).some((s) => s.provider === "strava"), false);
   });
 
   test("linking a different account on the same app starts its proof fresh", async () => {

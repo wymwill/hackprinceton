@@ -16,7 +16,9 @@ const nextConfig: NextConfig = {
       beforeFiles: [],
       afterFiles: [],
       // Only for paths no API route, icon or file already answers.
-      fallback: [{ source: "/:path*", destination: dev ? "http://127.0.0.1:5173/:path*" : "/app/index.html" }],
+      // Never /api/*: an unknown API path should be a 404, not the app's HTML (or, in
+      // development, a loop through Vite's /api proxy back to this server).
+      fallback: [{ source: "/:path((?!api(?:/|$)).*)", destination: dev ? "http://127.0.0.1:5173/:path" : "/app/index.html" }],
     };
   },
 };
