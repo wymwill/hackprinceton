@@ -125,7 +125,7 @@ export type Bet = {
   results?: BetResult[] | null;
 };
 
-/** picking: the winner hasn't chosen. pending: waiting for the loser to accept. */
+/** Picking means the winner has not chosen. Accepted means the punishment is assigned. */
 export type AssignmentStatus = "picking" | "pending" | "accepted" | "declined";
 
 export type Assignment = {
@@ -225,6 +225,8 @@ export type ClanRow = { rank: number; id: Id; name: string; members: number; wag
 export type SocialState = {
   me: Person & { friendCode: string; wagered: number };
   friends: (Person & { since: string })[];
+  clans: Clan[];
+  /** Kept by the API for older clients; new screens use clans. */
   clan: Clan | null;
   clanBoard: ClanRow[];
 };

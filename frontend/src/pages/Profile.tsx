@@ -195,7 +195,7 @@ export default function Profile() {
                 <Stat label="Bottom" value={record.bottom} />
                 <Stat label="Bets won" value={`${record.betsWon}/${record.betsPlayed}`} />
                 <Stat label="Coins" value={`${record.net > 0 ? "+" : ""}${fmt(record.net)}`} tone={record.net > 0 ? "up" : record.net < 0 ? "down" : undefined} />
-                <Stat label="Favors done" value={`${record.favorsDone}${record.favorsOwed ? ` · ${record.favorsOwed} owed` : ""}`} />
+                <Stat label="Punishments done" value={`${record.favorsDone}${record.favorsOwed ? ` · ${record.favorsOwed} owed` : ""}`} />
               </div>
             </Panel>
             <button type="button" className="btn primary block" onClick={save} disabled={!trimmed || !changed || saving}>

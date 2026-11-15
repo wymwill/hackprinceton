@@ -231,4 +231,28 @@ describe("clan chat", () => {
     const [{ n }] = (await t.db.query("select count(*)::int as n from public.clan_messages where clan_id = $1", [id])).rows;
     assert.equal(n, 0);
   });
+
+  test("read receipts and leaving are scoped to the selected clan", async () => {
+    const second = await val(ana.rpc("create_clan", { p_name: "Second chat" }));
+    await eve.rpc("join_clan", { p_code: second.code });
+    await cool(cat);
+    await cool(eve);
+    const owlMessage = await send(cat, owls, "Owl update");
+    const secondMessage = await send(eve, second.id, "Second update");
+    const readId = async (clanId) => (await t.db.query(
+      "select last_read_id from public.clan_members where user_id = $1 and clan_id = $2", [ana.id, clanId]
+    )).rows[0].last_read_id;
+    const owlReadBefore = await readId(owls);
+    assert.ok(owlMessage.id > owlReadBefore);
+    await ana.rpc("mark_clan_chat_read", { p_clan_id: second.id, p_message_id: secondMessage.id });
+    assert.equal(await readId(owls), owlReadBefore);
+    assert.ok((await readId(second.id)) >= secondMessage.id);
+    await send(ana, second.id, "Only the second chat is read");
+    assert.equal(await readId(owls), owlReadBefore);
+    assert.ok((await status(ana)).unread >= 1);
+    await ana.rpc("leave_clan", { p_clan_id: second.id });
+    assert.deepEqual((await val(ana.rpc("my_social_state"))).clans.map((c) => c.name), ["Night Owls"]);
+    assert.ok((await page(ana, owls)).messages.some((m) => m.id === owlMessage.id));
+    await rejects(page(ana, second.id), "not_clan_member");
+  });
 });
