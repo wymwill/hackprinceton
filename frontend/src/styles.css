@@ -2730,3 +2730,70 @@ img.avatar {
 .pill.reminder.unread {
   background: var(--red-soft);
 }
+
+/* Series recap (Results and /s/:id/recap). */
+.recap .recap-line {
+  margin: 6px 0 0;
+  line-height: 1.55;
+}
+.recap .recap-line .who {
+  display: inline-flex;
+  vertical-align: middle;
+}
+.recap details p {
+  margin: 8px 0 0;
+}
+
+/* Linked accounts (profile) and proof (bet page) */
+.links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.link-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.link-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.link-row .grow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 160px;
+}
+.link-row .input.sm {
+  width: 140px;
+  padding: 6px 10px;
+}
+.proof-totals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+.proof-totals b {
+  display: block;
+  font-family: var(--mono);
+  font-size: 20px;
+  color: var(--bright);
+}
+.proof-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.proof-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
