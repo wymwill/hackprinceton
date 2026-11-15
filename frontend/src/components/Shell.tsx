@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState, type ReactNode } from "react";
-import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { balances, isParticipant, participantIds, standings } from "../lib/rules.ts";
 import { fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
@@ -82,12 +82,30 @@ function Account() {
 
 function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: string; name: string } }) {
   const [joining, setJoining] = useState(false);
+  // On phones the menu folds away behind a button and the bottom tabs cover the usual moves.
+  // It stays open during the tour, which points at items in it.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { active: touring } = useTour();
+  const { pathname } = useLocation();
+  useEffect(() => setMenuOpen(false), [pathname]);
+  const open = menuOpen || touring;
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${open ? "open" : ""}`}>
       <Link to="/" className="brand" aria-label="Bookie home">
         <span className="brand-mark">B</span>
         <span className="brand-name brand-letters" aria-hidden="true">{Array.from("ookie").map((letter, i) => <span key={i}>{letter}</span>)}</span>
       </Link>
+      <button
+        type="button"
+        className="menu-btn"
+        aria-expanded={open}
+        aria-controls="side-more"
+        aria-label={open ? "Close menu" : "Open menu"}
+        onClick={() => setMenuOpen((o) => !o)}
+      >
+        <Icon name={open ? "close" : "menu"} />
+      </button>
+      <div className="side-more" id="side-more">
       <nav className="nav" aria-label="Main">
         <NavLink to="/" end data-tour="home">Home</NavLink>
         <NavLink to="/series">All series</NavLink>
@@ -114,7 +132,60 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
       {joining && <JoinModal onClose={() => setJoining(false)} />}
       <div className="grow" />
       <Account />
+      </div>
     </aside>
+  );
+}
+
+const ICONS = {
+  home: "M3 11l9-7 9 7M6 9.5V20h12V9.5",
+  series: "M4 5h16v4H4zM4 11h16v4H4zM4 17h10v2H4z",
+  plus: "M12 5v14M5 12h14",
+  groups: "M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 3-5 6-5s6 2 6 5M12 15.5c1-.4 2.4-.5 4-.5 3 0 6 2 6 5",
+  me: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6",
+  board: "M5 20V10h3v10zM10.5 20V4h3v16zM16 20v-7h3v7z",
+  rules: "M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7",
+  menu: "M4 7h16M4 12h16M4 17h16",
+  close: "M6 6l12 12M18 6L6 18",
+};
+
+function Icon({ name }: { name: keyof typeof ICONS }) {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={ICONS[name]} />
+    </svg>
+  );
+}
+
+function Tab({ to, icon, label, end }: { to: string; icon: keyof typeof ICONS; label: string; end?: boolean }) {
+  return (
+    <NavLink to={to} end={end}>
+      <Icon name={icon} />
+      <span>{label}</span>
+    </NavLink>
+  );
+}
+
+/** Phones only: the main places, one thumb away. Inside a series, its own pages. */
+function BottomTabs({ current }: { current?: Series }) {
+  return (
+    <nav className="bottom-tabs" aria-label="Quick">
+      <Tab to="/" end icon="home" label="Home" />
+      {current ? (
+        <>
+          <Tab to={`/s/${current.id}`} end icon="series" label={current.status === "lobby" ? "Lobby" : current.status === "active" ? "Bets" : "Results"} />
+          {current.status !== "lobby" && <Tab to={`/s/${current.id}/leaderboard`} icon="board" label="Board" />}
+          {current.status !== "lobby" && <Tab to={`/s/${current.id}/rules`} icon="rules" label="Rules" />}
+        </>
+      ) : (
+        <>
+          <Tab to="/series" icon="series" label="Series" />
+          <Tab to="/new" icon="plus" label="New" />
+          <Tab to="/groups" icon="groups" label="Groups" />
+        </>
+      )}
+      <Tab to="/profile" icon="me" label="Me" />
+    </nav>
   );
 }
 
@@ -191,6 +262,7 @@ export function Shell({ crumbs = [], children, fill = false, clanNav }: { crumbs
         <TopBar crumbs={crumbs} current={current} />
         <main className={`page ${fill ? "fill" : ""}`}>{children}</main>
       </div>
+      {!fill && <BottomTabs current={current} />}
       <Toasts />
     </div>
   );
