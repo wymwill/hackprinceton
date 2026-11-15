@@ -5,6 +5,7 @@ import { punishmentCopy } from "./format.ts";
 import { rangesOf } from "./ranges.ts";
 import { supabase } from "./supabase.ts";
 import { submitOnce, type Submitted } from "./submit.ts";
+import { fromLocalInput } from "./deadlines.ts";
 import type { AppState, BetDraft, Db, Id, Me, Series, Settings, WagerReceipt } from "./types.ts";
 
 /**
@@ -58,8 +59,9 @@ export type CreateSeriesInput = { name: string; description: string; settings: S
 /** The range part of a draft as the API wants it. */
 const rangeBody = (d: BetDraft) => ({ kind: "range", ranges: rangesOf(d.range), unit: d.range.unit.trim(), decimals: d.range.decimals });
 
-/** A draft as the API wants it. YES/NO bets send no outcomes. */
-const betBody = (d: BetDraft) =>
+/** A draft as the API wants it. YES/NO bets send no outcomes. The closing time goes as an exact instant. */
+const betBody = (d: BetDraft) => ({ ...betShapeOf(d), closesAt: fromLocalInput(d.closesAt) });
+const betShapeOf = (d: BetDraft) =>
   d.kind === "range"
     ? { question: d.question.trim(), ...rangeBody(d) }
     : d.kind === "multi"
@@ -112,11 +114,15 @@ function makeApi(act: Act, once: Once) {
       act(
         "PATCH",
         b(id, betId),
-        d.kind === "range"
-          ? { question: d.question.trim(), ...rangeBody(d) }
-          : d.kind === "multi"
-            ? { question: d.question.trim(), kind: "multi", outcomes: d.outcomes.map((o) => ({ id: o.id, label: o.label.trim() })), tieRule: d.tieRule }
-            : { question: d.question.trim(), kind: "binary" },
+        {
+          ...(d.kind === "range"
+            ? { question: d.question.trim(), ...rangeBody(d) }
+            : d.kind === "multi"
+              ? { question: d.question.trim(), kind: "multi", outcomes: d.outcomes.map((o) => ({ id: o.id, label: o.label.trim() })), tieRule: d.tieRule }
+              : { question: d.question.trim(), kind: "binary" }),
+          // Set, move or clear the closing time (null clears it).
+          closesAt: fromLocalInput(d.closesAt),
+        },
         ok
       ),
     removeDraftBet: (id: Id, betId: Id, ok?: string) => act("DELETE", b(id, betId), undefined, ok),

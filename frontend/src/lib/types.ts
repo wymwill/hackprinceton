@@ -110,6 +110,8 @@ export type Bet = {
   status: BetStatus;
   openedAt?: string | null;
   closedAt?: string | null;
+  /** When betting closes on its own (server time), or null for no closing time. */
+  closesAt?: string | null;
   settledAt?: string | null;
   /** The winning outcome. Null on a resolved bet means it was refunded (one-sided pool, or a tie under the refund rule). */
   outcomeId?: Id | null;
@@ -197,6 +199,8 @@ export type BetDraft = {
   outcomes: { id?: Id; label: string }[];
   tieRule: TieRule;
   range: RangeDraft;
+  /** Optional closing time, as a datetime-local value in this browser's timezone ("" = none). */
+  closesAt: string;
 };
 
 /**
@@ -280,3 +284,26 @@ export type WagerReceipt = {
   /** True when this answer is the original receipt for a repeated submission. */
   replayed: boolean;
 };
+
+export type ReminderKind = "closing_bet" | "unresolved_result" | "punishment_pick";
+
+/** One in-app reminder: `my_notifications` in supabase/migrations/202611140019_reminders.sql. */
+export type Reminder = {
+  id: number;
+  kind: ReminderKind;
+  /** The bet or punishment assignment it's about. */
+  refId: Id;
+  seriesId: Id;
+  title: string;
+  body: string;
+  link: string;
+  dueAt: string | null;
+  createdAt: string;
+  read: boolean;
+};
+
+/** Which reminders you asked for. All off until you turn them on. */
+export type ReminderPrefs = { closingBets: boolean; unresolvedResults: boolean; punishmentPicks: boolean };
+
+/** GET /api/notifications */
+export type ReminderState = { prefs: ReminderPrefs; notifications: Reminder[]; unread: number };
