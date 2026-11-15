@@ -94,6 +94,7 @@ See the [planner implementation and test guide](docs/game-planner.md) for API de
 | --- | --- | --- |
 | The House commentary | `OPENAI_API_KEY`, `OPENAI_HOUSE_MODEL`, `HOUSE_MODE`, optional `HOUSE_CACHE_DIR` | [Commentary guide](docs/the-house.md). Deterministic commentary works without a key. This is separate from the Gemini planner. |
 | Linked-account proof | Provider credentials as needed | [Linked accounts](docs/linked-accounts.md): Strava, Fitbit, Oura, Whoop, Spotify, and GitHub. |
+| Text Bookie (iMessage) | `SPECTRUM_PROJECT_ID`, `SPECTRUM_PROJECT_SECRET`, `BOOKIE_AGENT_SECRET`, `BOOKIE_IMESSAGE_ADDRESS` | [iMessage agent](docs/imessage-agent.md): players bet by text through [Photon](https://photon.codes). Run with `npm run agent`. |
 | Reminders | Opt in from Profile | In-app only; no email service is required. |
 | Scheduled bet closing | Database migrations; optional `pg_cron` | Wagers check the database deadline. With the optional cron job, closings are also recorded while nobody is visiting. |
 
@@ -168,6 +169,7 @@ HTTP and browser checks need test servers or credentials. Follow each script's h
 - [Supabase setup and series rules](docs/supabase-series.md)
 - [Google sign-in setup](docs/supabase-setup.md)
 - [Linked accounts](docs/linked-accounts.md)
+- [Text Bookie: the iMessage agent](docs/imessage-agent.md)
 - [The House commentary](docs/the-house.md)
 - [Wrapped](docs/alea-wrapped.md)
 - [Feature coverage and SQL test map](docs/bet-series-coverage.md)
