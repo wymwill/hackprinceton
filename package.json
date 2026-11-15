@@ -19,7 +19,7 @@
     "test:house": "node --conditions=react-server --experimental-strip-types --test tests/house.test.mjs",
     "test:wrapped": "node --experimental-strip-types --test tests/wrapped.test.mjs",
     "test:wrapped-local": "node scripts/e2e-wrapped-local.mjs",
-    "test:wrapped-ui": "playwright test --config=playwright.house.config.mjs --grep 'public demo'",
+    "test:wrapped-ui": "playwright test --config=playwright.house.config.mjs wrapped.spec.mjs",
     "test:house-local": "node scripts/e2e-house-local.mjs",
     "test:house-ui": "playwright test --config=playwright.house.config.mjs"
   },

@@ -11,6 +11,17 @@
 
 This document is a follow-up commit to `9b2a474`. Its own final commit SHA is reported by the handoff author in the task response; obtain it in the checkout with `git rev-parse HEAD`.
 
+## Follow-up by Claude Code (latest)
+
+Everything the checklist below asked for was rerun on this branch; the fumble-slide assertion passes on desktop and mobile. Fixed along the way:
+
+- **Share card quote:** the opening “ was drawn over by the first line (each `<tspan x>` restarts at the margin). The quote marks now sit inside the first and last lines (`frontend/src/lib/poster.ts`). The old wrapper could also silently drop a word in the middle of a long quote; it now stops at the last whole word that fits and adds “…”. Unit tests in `tests/wrapped.test.mjs`.
+- **“Bets placed” headline number rendered at label size** (13px instead of ~180px) on the numbers slide, in the demo and signed-in story: `.number-hero span` also matched the number's inner span. Scoped to `.number-hero > span`; the browser test now checks the rendered size.
+- **Close button on the loading/error screen** sat in the middle of the page: its rule targeted `.wrapped-load-message .wrapped-exit`, which never matched. Now `.wrapped-loading > .wrapped-exit`.
+- **New signed-in browser test** (handoff step 5): sign in through the form, Profile → Your Alea Wrapped shows only that account's numbers (checked against the API, never another member's or the demo's), a new account gets the empty story, and a failed load shows the error state. `test:wrapped-ui` now runs the whole `wrapped.spec.mjs`.
+
+Still open: native file sharing on a real device, live OpenAI, and everything under “Deliberately deferred”.
+
 ## Project overview and architecture
 
 Alea is a social virtual-coin betting application. The repository combines a Next.js App Router server/API layer with a Vite-built React client under `frontend/`. Supabase provides authenticated identity and application data. The existing betting experience tracks markets/series and each member's current wager, while settlement records contain final stake, payout, net, and settlement time. The House commentator already exists on the base commit (`feature/ai-commentator` was merged into `main` before Wrapped work).
@@ -94,7 +105,7 @@ All files below are in implementation commit `9b2a474`.
 - **Privacy and identity:** The API ignores a supplied user ID and uses the authenticated caller's snapshot. Demo records are isolated from the account route.
 - **LLM prompt injection / unsupported facts:** User names and market descriptions are not sent to the House adapter. House outputs are bounded to the existing fixed catalog and verified numeric signals.
 - **Potential serverless cache limitation:** Existing House deduplication/cache relies on local `.data/house`; it is not a shared durable cache in many serverless environments. The endpoint remains functional with deterministic fallback, but cross-instance generation/deduplication is not guaranteed in such deployment. No schema change was introduced to solve this.
-- **Fumble browser assertion changed late:** `tests/browser/wrapped.spec.mjs` was extended to screenshot/assert the fumble slide after the last reported browser run. That specific latest addition is unverified; see next steps.
+- **Fumble browser assertion changed late:** it was added after the last browser run; it has since been rerun and passes on desktop and mobile (see the follow-up section).
 - No production defect was attempted against a live service. No production Supabase project or database was contacted or changed.
 
 ## Validation results and evidence boundary
@@ -120,8 +131,7 @@ No test here proves live OpenAI behavior, production deployment configuration, o
 
 **Implemented but needs additional verification**
 
-- The final fumble-story browser assertion/screenshot in `tests/browser/wrapped.spec.mjs` has not been rerun since it was added.
-- Real authenticated route rendering has API-level local coverage, but the browser walk-through currently uses the public fictional demo. Verify sign-in/profile CTA/private story through a local test identity and local stand-in.
+- ~~Fumble-slide assertion and a signed-in browser flow~~: done in the follow-up; both pass.
 - Native file sharing depends on browser/device capability; only the download path was automated.
 
 **Deliberately deferred**
