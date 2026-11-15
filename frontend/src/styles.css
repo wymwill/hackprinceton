@@ -2731,6 +2731,19 @@ img.avatar {
   background: var(--red-soft);
 }
 
+/* Series recap (Results and /s/:id/recap). */
+.recap .recap-line {
+  margin: 6px 0 0;
+  line-height: 1.55;
+}
+.recap .recap-line .who {
+  display: inline-flex;
+  vertical-align: middle;
+}
+.recap details p {
+  margin: 8px 0 0;
+}
+
 /* Linked accounts (profile) and proof (bet page) */
 .links {
   list-style: none;

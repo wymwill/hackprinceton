@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { NewBetModal } from "../components/Standings.tsx";
+import { RematchInvite } from "../components/RematchInvite.tsx";
 import { ConfirmButton, Panel, Pill, Who } from "../components/ui.tsx";
 import { agreesTo, isParticipant, participantIds } from "../lib/rules.ts";
 import { ago, punishmentCopy } from "../lib/format.ts";
@@ -136,6 +137,8 @@ export default function Lobby({ s }: { s: Series }) {
         </div>
         <Invite s={s} />
       </section>
+
+      <RematchInvite s={s} />
 
       <div className="grid2">
         <div className="col">
