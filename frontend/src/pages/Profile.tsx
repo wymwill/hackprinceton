@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Shell } from "../components/Shell.tsx";
+import { ReminderSettings } from "../components/ReminderSettings.tsx";
 import { Panel, initialsOf } from "../components/ui.tsx";
 import { AVATAR_STYLES, avatarUrl, parseAvatar, randomSeed, uploadAvatar, type AvatarStyle } from "../lib/avatars.ts";
 import { fmt } from "../lib/format.ts";
@@ -185,6 +186,8 @@ export default function Profile() {
                 ))}
               </div>
             </Panel>
+
+            <ReminderSettings />
           </div>
 
           <div className="col" style={{ position: "sticky", top: "calc(var(--top) + 24px)" }}>

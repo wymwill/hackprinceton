@@ -7,6 +7,7 @@ import { ago, countdown, fmt, signed, useNow } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { fmtValue, parseNum, rangeFor, rangeRule } from "../lib/ranges.ts";
 import { newRequestId } from "../lib/submit.ts";
+import { deadlineState, deadlineText, timeLeft } from "../lib/deadlines.ts";
 import type { Bet, Id, Series, WagerReceipt } from "../lib/types.ts";
 
 /** YES/NO keep their yes/no styling; other outcomes use their own color (--oc). */
@@ -399,13 +400,20 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
   const binary = bet.kind === "binary";
   const winner = list.find((o) => o.id === bet.outcomeId);
   const tied = bet.tiedOutcomeIds ?? [];
+  const dl = deadlineState(bet, now);
 
   return (
     <>
       <section className="bhead">
         <div>
           <span className="row">
-            <Pill kind={bet.status}>{bet.status === "closed" ? "Betting locked" : bet.status}</Pill>
+            {dl === "soon" ? (
+              <Pill kind="soon">Closing soon</Pill>
+            ) : dl === "closed" && bet.status === "open" ? (
+              <Pill kind="closed">Betting locked</Pill>
+            ) : (
+              <Pill kind={bet.status}>{bet.status === "closed" ? "Betting locked" : bet.status}</Pill>
+            )}
             <span className="cap">
               Bet {index} of {s.settings.betCount}
               {bet.kind === "multi" && ` · ${bet.outcomes.length} options`}
@@ -431,6 +439,17 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
             {bet.openedAt && (
               <span>
                 Opened <b>{ago(bet.openedAt, now)} ago</b>
+              </span>
+            )}
+            {bet.closesAt && (
+              <span className={`deadline ${dl}`}>
+                {dl === "closed" ? "Closed" : "Closes"} <b>{deadlineText(bet.closesAt)}</b>
+                {(dl === "soon" || dl === "open") && (
+                  <>
+                    {" "}
+                    · <b className="num">{timeLeft(Date.parse(bet.closesAt) - now)}</b> left
+                  </>
+                )}
               </span>
             )}
           </div>
@@ -529,7 +548,14 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
           )}
         </div>
         <div className="col">
-          {bet.status === "open" && playing && <Ticket s={s} bet={bet} />}
+          {bet.status === "open" && playing && dl !== "closed" && <Ticket s={s} bet={bet} />}
+          {bet.status === "open" && playing && dl === "closed" && (
+            <Panel label="Place a wager" className="ticket">
+              <p className="notice" role="status">
+                <b>Betting closed at {deadlineText(bet.closesAt!)}.</b> Wagers after the closing time aren't accepted.
+              </p>
+            </Panel>
+          )}
           {bet.status === "open" && !playing && <p className="notice">You're hosting without playing, so you can't wager.</p>}
           {bet.status === "closed" && <p className="notice">Betting is locked. Waiting for {name(s.hostId)} to call it.</p>}
           {s.hostId === me && <HostPanel s={s} bet={bet} />}

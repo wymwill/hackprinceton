@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { num, seriesAction } from "@/server/seriesApi";
+import { closesAtOf, num, seriesAction } from "@/server/seriesApi";
 
 /** Host deletes a bet that hasn't opened yet (lobby only). */
 export async function DELETE(req: NextRequest, ctx: RouteContext<"/api/series/[seriesId]/bets/[betId]">) {
@@ -16,8 +16,11 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<"/api/series/[s
  */
 export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/series/[seriesId]/bets/[betId]">) {
   const { seriesId, betId } = await ctx.params;
-  return seriesAction(req, ({ body, rpc }) =>
-    rpc("update_series_bet", {
+  return seriesAction(req, async ({ body, rpc }) => {
+    // Optional { closesAt }: set, move or clear (null) the closing time, here or on an open bet.
+    const closesAt = closesAtOf(body);
+    const edits = ["question", "kind", "outcomes", "tieRule", "ranges", "unit", "decimals"].some((k) => k in body);
+    let bet: unknown = edits ? await rpc("update_series_bet", {
       p_series_id: seriesId,
       p_bet_id: betId,
       p_question: typeof body.question === "string" ? body.question : null,
@@ -27,6 +30,8 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/series/[se
       p_ranges: Array.isArray(body.ranges) ? body.ranges : null,
       p_unit: typeof body.unit === "string" ? body.unit : null,
       p_decimals: num(body.decimals),
-    })
-  );
+    }) : null;
+    if (closesAt !== undefined) bet = await rpc("set_series_bet_deadline", { p_series_id: seriesId, p_bet_id: betId, p_closes_at: closesAt });
+    return bet;
+  });
 }

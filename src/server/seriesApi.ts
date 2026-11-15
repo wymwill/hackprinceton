@@ -146,6 +146,18 @@ export const outcomeRef = (body: Record<string, unknown>) => {
 };
 export const text = (v: unknown) => (typeof v === "string" ? v : "");
 /**
+ * A bet's closing time from a request: undefined when not given, null to clear it, or an
+ * ISO date-time with an explicit offset (Z or ±hh:mm), so it can't depend on any server's
+ * timezone. Anything else is refused. The database checks it's in the future.
+ */
+export function closesAtOf(body: Record<string, unknown>): string | null | undefined {
+  if (!("closesAt" in body)) return undefined;
+  const v = body.closesAt;
+  if (v === null || v === "") return null;
+  if (typeof v === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d(:\d\d(\.\d+)?)?(Z|[+-]\d\d:?\d\d)$/.test(v) && !Number.isNaN(Date.parse(v))) return v;
+  throw new AppError(400, "invalid_deadline", "Closing times need a date, a time and a timezone.");
+}
+/**
  * The client's submission id (a UUID), which makes a wager or a new series happen at
  * most once however often the request is repeated. Null when the request has none
  * (older callers); a value that isn't a UUID is refused rather than ignored.
