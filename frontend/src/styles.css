@@ -1,8 +1,5 @@
-/* Alea
- * Colors: bright orange (#FF5F1F) on dark grey (#1C1B1F), matching the main app.
- * Layout language from Scarlet Market: framed panels with label tags, tracked
- * uppercase captions, rounded display type, mono figures, YES teal / NO violet.
- * No retro effects (no scanlines, grain, grid, flicker or corner brackets). */
+/* Alea's base layout and component rules. The party game theme in party.css
+ * supplies the current colors, shapes, type treatments, and card surfaces. */
 
 :root {
   --bg: #1c1b1f;

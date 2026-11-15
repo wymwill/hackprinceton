@@ -22,7 +22,7 @@ export function themePref(): ThemePref {
 function apply(pref: ThemePref) {
   const theme = pref === "system" ? (media().matches ? "light" : "dark") : pref;
   document.documentElement.dataset.theme = theme;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#ece4d6" : "#1c1b1f");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#fff2d8" : "#14132e");
   return theme;
 }
 
