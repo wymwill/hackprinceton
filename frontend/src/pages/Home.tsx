@@ -58,8 +58,8 @@ function ActionCards({ onJoin }: { onJoin: () => void }) {
       </Link>
       <Link to="/new" className="panel home-action primary">
         <span className="home-action-icon" aria-hidden="true">+</span>
-        <b>Start a bet</b>
-        <span className="dim">Set up a series of bets with friends. From a clan's page, the setup fills itself in.</span>
+        <b>Start a quick game</b>
+        <span className="dim">Pick a game, edit a few predictions, and invite friends in under a minute.</span>
       </Link>
       <button type="button" className="panel home-action" onClick={onJoin}>
         <span className="home-action-icon" aria-hidden="true">#</span>
