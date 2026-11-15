@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Shell } from "../components/Shell.tsx";
 import { Panel, initialsOf } from "../components/ui.tsx";
 import { AVATAR_STYLES, avatarUrl, parseAvatar, randomSeed, uploadAvatar, type AvatarStyle } from "../lib/avatars.ts";
@@ -111,6 +112,10 @@ export default function Profile() {
           <div>
             <h1>Your profile</h1>
             <p>This is how friends see you in every series.</p>
+          </div>
+          <div className="row" style={{ flexWrap: "wrap" }}>
+            <Link to="/wrapped" className="btn primary">Your Alea Wrapped ✳</Link>
+            <Link to="/wrapped-demo" className="btn">Explore demo</Link>
           </div>
         </section>
 

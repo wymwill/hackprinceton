@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { houseEvent, houseComment, houseChoices } from "../shared/house.ts";
+import { houseEvent, houseComment, houseChoices, houseFumbleQuip } from "../shared/house.ts";
 import { createHouseService, commentOnEvent } from "../src/server/house/service.ts";
 import { openAIChoice } from "../src/server/house/openai.ts";
 import { createHouseClient } from "../frontend/src/lib/house-client.ts";
@@ -129,6 +129,27 @@ test("OpenAI adapter sends only anonymous structured facts and validates the ret
   });
   assert.equal(result, choice);
   assert.equal(houseComment(e, "invented-result", "openai").source, "fallback");
+});
+
+test("Wrapped uses The House's existing constrained adapter without exposing player or market text", async () => {
+  const e = { ...event(), id: "wrapped/2026/abc", flavor: "wrapped", fact: "PRIVATE USER NAME: Piggopie; market question: confidential", signals: { bets: 84, wins: 38, winRate: 0.45, net: 1240 } };
+  const choices = houseChoices(e);
+  assert.ok(choices.length >= 4);
+  const result = await openAIChoice(e, { apiKey: "test-only-not-a-real-key", fetcher: async (_url, options) => {
+    assert.doesNotMatch(options.body, /Piggopie|confidential|PRIVATE USER NAME/);
+    const body = JSON.parse(options.body);
+    assert.deepEqual(JSON.parse(body.input).facts, e.signals);
+    return Response.json({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ quipId: choices[0].id }) }] }] });
+  } });
+  assert.equal(result, choices[0].id);
+  assert.match(choices[0].text, /confidence|year|record|coins|campaign|scoreboard/i);
+});
+
+test("greatest-fumble roast is stable, playful, and selected only from the House catalog", () => {
+  const line = houseFumbleQuip("verified-bet-id");
+  assert.equal(houseFumbleQuip("verified-bet-id"), line);
+  assert.ok(houseChoices({ ...event(), flavor: "fumble" }).some((choice) => choice.text === line));
+  assert.doesNotMatch(line, /slur|threat|personal|trait/i);
 });
 
 test("provider failures, malformed output, refusal, extra fields and invented text are rejected", async () => {
