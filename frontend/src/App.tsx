@@ -11,6 +11,7 @@ import Friends, { AddFriendLink } from "./pages/Friends.tsx";
 import Clans, { ClanDetail, JoinClanLink } from "./pages/Clans.tsx";
 import ClanChat from "./pages/ClanChat.tsx";
 import { SeriesBet, SeriesHome, SeriesLeaderboard, SeriesRules } from "./pages/SeriesRoutes.tsx";
+import SeriesRecap from "./pages/Recap.tsx";
 
 // Alea Wrapped: loaded only when opened. /wrapped-demo is public (fictional data), so it renders without sign-in.
 const Wrapped = lazy(() => import("./pages/Wrapped.tsx"));
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/s/:id/bets/:betId" element={<SeriesBet />} />
           <Route path="/s/:id/leaderboard" element={<SeriesLeaderboard />} />
           <Route path="/s/:id/rules" element={<SeriesRules />} />
+          <Route path="/s/:id/recap" element={<SeriesRecap />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </WrappedDemoOrStore>
