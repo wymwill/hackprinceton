@@ -10,7 +10,7 @@
     "postinstall": "npm --prefix frontend install --no-audit --no-fund",
     "lint": "eslint",
     "typecheck": "tsc --noEmit && npm --prefix frontend run typecheck",
-    "test:series-sql": "node --test supabase/tests/series.test.mjs supabase/tests/outcomes.test.mjs supabase/tests/ranges.test.mjs supabase/tests/upgrade.test.mjs supabase/tests/social.test.mjs supabase/tests/chat.test.mjs supabase/tests/clan-series.test.mjs",
+    "test:series-sql": "node --test supabase/tests/series.test.mjs supabase/tests/outcomes.test.mjs supabase/tests/ranges.test.mjs supabase/tests/upgrade.test.mjs supabase/tests/social.test.mjs supabase/tests/chat.test.mjs supabase/tests/clan-series.test.mjs supabase/tests/idempotency.test.mjs",
     "test:series": "node scripts/e2e-series.mjs",
     "create:demo-users": "node scripts/create-demo-users.mjs",
     "test:outcomes-local": "node scripts/e2e-outcomes-local.mjs",
@@ -19,6 +19,8 @@
     "test:house": "node --conditions=react-server --experimental-strip-types --test tests/house.test.mjs",
     "test:wrapped": "node --experimental-strip-types --test tests/wrapped.test.mjs",
     "test:wrapped-local": "node scripts/e2e-wrapped-local.mjs",
+    "test:idempotency-local": "node scripts/e2e-idempotency-local.mjs",
+    "test:submissions-ui": "playwright test --config=playwright.house.config.mjs submissions.spec.mjs",
     "test:wrapped-ui": "playwright test --config=playwright.house.config.mjs wrapped.spec.mjs",
     "test:house-local": "node scripts/e2e-house-local.mjs",
     "test:house-ui": "playwright test --config=playwright.house.config.mjs"

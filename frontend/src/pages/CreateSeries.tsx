@@ -7,6 +7,7 @@ import { Panel } from "../components/ui.tsx";
 import { DEFAULT_SETTINGS } from "../lib/rules.ts";
 import { MODE_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
+import { newRequestId } from "../lib/submit.ts";
 import type { BetDraft, Mode, Settings } from "../lib/types.ts";
 
 const MODES: { mode: Mode; letter: string; blurb: string }[] = [
@@ -33,8 +34,28 @@ function Seg<T extends string | number | boolean>({
   );
 }
 
+/** The series submission waiting for an answer: its id and the exact details sent (kept across a reload). */
+type PendingSeries = { requestId: string; key: string };
+const PENDING_SERIES = "alea:pending-series";
+function loadPendingSeries(): PendingSeries | null {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(PENDING_SERIES) ?? "null");
+    return v && typeof v.requestId === "string" && typeof v.key === "string" ? v : null;
+  } catch {
+    return null;
+  }
+}
+function savePendingSeries(p: PendingSeries | null) {
+  try {
+    if (p) sessionStorage.setItem(PENDING_SERIES, JSON.stringify(p));
+    else sessionStorage.removeItem(PENDING_SERIES);
+  } catch {
+    // Storage unavailable: the double-click guard still holds for this visit.
+  }
+}
+
 export default function CreateSeries() {
-  const { api } = useStore();
+  const { api, toast } = useStore();
   const nav = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -66,13 +87,35 @@ export default function CreateSeries() {
     setSt((s) => ({ ...s, losers: n >= 6 ? 2 : 1, mode: "pool", hostPlays: true }));
   }, [clan]);
 
+  // Creating happens at most once per submission id. Submitting the same details again (a double
+  // click, or a retry after no answer, even after a reload) reuses the id, so the server returns the
+  // series it already made instead of making another. Different details are a different series.
+  const inFlight = useRef(false);
+  const [phase, setPhase] = useState<"idle" | "creating" | "unknown">("idle");
   const submit = async () => {
-    const s = await api.createSeries(
-      { name, description, settings: st, bets: written },
-      clan ? undefined : "Series created. Share the invite link to fill the lobby."
-    );
-    if (!s) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setPhase("creating");
+    const input = { name, description, settings: st, bets: written };
+    const key = JSON.stringify(input);
+    const prior = loadPendingSeries();
+    const requestId = prior?.key === key ? prior.requestId : newRequestId();
+    savePendingSeries({ requestId, key });
+    const r = await api.createSeries(input, requestId);
+    inFlight.current = false;
+    if (r.kind === "unknown") {
+      setPhase("unknown");
+      return;
+    }
+    savePendingSeries(null);
+    setPhase("idle");
+    if (r.kind === "refused") {
+      toast(r.message, "err");
+      return;
+    }
+    const s = r.result;
     if (clan) await api.addClan(s.id, clan.id, `Series created. Everyone in ${clan.name} is in the lobby.`);
+    else toast(s.replayed ? "That series was already created. Here it is." : "Series created. Share the invite link to fill the lobby.");
     nav(`/s/${s.id}`);
   };
 
@@ -309,8 +352,29 @@ export default function CreateSeries() {
               {st.hostPlays ? ", counting you" : ""}.
             </p>
             <div style={{ height: 14 }} />
-            <button type="button" className="btn primary block" onClick={submit} disabled={!name.trim() || tooMany || !!draftProblem} title={draftProblem ?? undefined}>
-              Create series
+            {phase === "unknown" && (
+              <p className="notice" role="alert" style={{ marginBottom: 10 }}>
+                <b>We couldn't confirm the series was created.</b> Retrying with the same details is safe: it can't create
+                a second one. If you change the details first, that's a new series.
+              </p>
+            )}
+            <button
+              type="button"
+              className="btn primary block"
+              onClick={submit}
+              aria-busy={phase === "creating"}
+              disabled={phase === "creating" || !name.trim() || tooMany || !!draftProblem}
+              title={draftProblem ?? undefined}
+            >
+              {phase === "creating" ? (
+                <>
+                  <span className="spinner" aria-hidden="true" /> Creating…
+                </>
+              ) : phase === "unknown" ? (
+                "Retry safely"
+              ) : (
+                "Create series"
+              )}
             </button>
           </Panel>
         </div>
