@@ -31,8 +31,7 @@ export function ReminderSettings() {
           </label>
         ))}
         <p className="hint">
-          Off until you turn them on. Reminders show in Your moves, once per thing to do, and go away when it's done. They
-          aren't emailed.
+          Off until you turn them on. Reminders show in Your moves, once per thing to do. Actions stay in Your moves until they're done. They aren't emailed.
         </p>
       </div>
     </Panel>

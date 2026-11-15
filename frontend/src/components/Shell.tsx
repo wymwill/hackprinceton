@@ -5,11 +5,10 @@ import { fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { useTheme } from "../lib/theme.ts";
 import { useCredits } from "../lib/credits.ts";
-import { useChatUnread } from "../lib/chat.ts";
 import type { Series } from "../lib/types.ts";
 import { Avatar, Modal, Toasts } from "./ui.tsx";
+import { useReminders } from "../lib/reminders.ts";
 import { useTour } from "./NavigationTour.tsx";
-import { useMoveCount } from "./YourMoves.tsx";
 
 /** "ABC123", or an invite link ending in /join/ABC123. */
 export const codeFrom = (input: string) => (input.trim().match(/\/join\/([A-Za-z0-9]+)\/?$/)?.[1] ?? input).trim().toUpperCase();
@@ -81,21 +80,8 @@ function Account() {
   );
 }
 
-/** "Groups", with a count of unread group chat messages. */
-function GroupsLink() {
-  const unread = useChatUnread();
-  return (
-    <NavLink to="/groups" data-tour="groups">
-      Groups
-      {unread > 0 && <b aria-label={`${unread} unread messages`}>{unread > 99 ? "99+" : unread}</b>}
-    </NavLink>
-  );
-}
-
 function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: string; name: string } }) {
   const [joining, setJoining] = useState(false);
-  const moves = useMoveCount();
-  const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
   return (
     <aside className="sidebar">
       <Link to="/" className="brand" aria-label="Bookie home">
@@ -103,14 +89,12 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
         <span className="brand-name brand-letters" aria-hidden="true">{Array.from("ookie").map((letter, i) => <span key={i}>{letter}</span>)}</span>
       </Link>
       <nav className="nav" aria-label="Main">
-        <NavLink to="/" end data-tour="home" title={moves ? `${moves} thing${moves === 1 ? "" : "s"} you can do now` : undefined}>
-          Home{moves > 0 && <b aria-label={`${moves} moves waiting`}>{moves}</b>}
-        </NavLink>
+        <NavLink to="/" end data-tour="home">Home</NavLink>
         <NavLink to="/series">All series</NavLink>
         {current && (
           <div className="series-nav">
             <NavLink to={`/s/${current.id}`} end className="series-nav-title" title={current.name}>
-              <span className="truncate">{current.name}</span>{openBets > 0 && <b>{openBets}</b>}
+              <span className="truncate">{current.name}</span>
             </NavLink>
             {current.status !== "lobby" && <NavLink to={`/s/${current.id}/leaderboard`}>Leaderboard</NavLink>}
             {current.status !== "lobby" && <NavLink to={`/s/${current.id}/rules`}>Rules &amp; players</NavLink>}
@@ -119,7 +103,7 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
         <NavLink to="/new" data-tour="new-series">New series</NavLink>
         <button type="button" data-tour="join" onClick={() => setJoining(true)}>Join with a code</button>
         <NavLink to="/friends" data-tour="friends">Friends</NavLink>
-        <GroupsLink />
+        <NavLink to="/groups" data-tour="groups">Groups</NavLink>
         {clanNav && <details className="series-nav clan-nav" open key={clanNav.id}>
           <summary title={clanNav.name}>{clanNav.name}</summary>
           <NavLink to={`/groups/${clanNav.id}`} end>Overview</NavLink>
@@ -199,6 +183,7 @@ export function Shell({ crumbs = [], children, fill = false, clanNav }: { crumbs
   const m = useMatch("/s/:id/*");
   const current = m ? db.series.find((s) => s.id === m.params.id) : undefined;
   useVisualViewport(fill);
+  useReminders(true);
   return (
     <div className={`app ${fill ? "fill" : ""}`}>
       <Sidebar current={current} clanNav={clanNav} />

@@ -402,9 +402,9 @@ html, body {
 .tour-text-link:hover { color: var(--red-hi); text-decoration: underline; }
 
 /* A tightly packed, slightly jumbled wordmark. */
-.brand { gap: 7px; overflow: visible; }
+.brand { gap: 2px; overflow: visible; }
 .brand .brand-mark { position: relative; z-index: 1; margin-right: 0; }
-.brand-letters { display: inline-flex; align-items: baseline; transform: rotate(-5deg); transform-origin: left center; letter-spacing: -.04em; padding: 5px 3px; overflow: visible; flex-shrink: 0; }
+.brand-letters { display: inline-flex; align-items: baseline; transform: rotate(-5deg); transform-origin: left center; letter-spacing: -.04em; padding: 5px 3px 5px 0; overflow: visible; flex-shrink: 0; }
 .brand-letters > span { display: inline-block; }
 .brand-letters > span:nth-child(1) { transform: translateY(2px) rotate(8deg); }
 .brand-letters > span:nth-child(2) { transform: translateY(-1px) rotate(-7deg); }

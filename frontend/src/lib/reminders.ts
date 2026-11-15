@@ -3,7 +3,8 @@
  * due each time this asks, so a reminder appears once per action and is gone as soon
  * as the action is done. Nothing is sent outside the app.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { request, useStore } from "./store.tsx";
 import type { Reminder, ReminderPrefs, ReminderState } from "./types.ts";
 
@@ -14,7 +15,9 @@ const CHANGED = "alea:reminders-changed";
 export const reminderTodoKey = (r: Reminder) =>
   `${r.seriesId}:${r.kind === "closing_bet" ? "bet" : r.kind === "unresolved_result" ? "call" : "pick"}:${r.refId}`;
 
-export function useReminders() {
+export function useReminders(markVisited = false) {
+  const { pathname } = useLocation();
+  const pending = useRef(new Set<number>());
   const { toast } = useStore();
   const [state, setState] = useState<ReminderState | null>(null);
 
@@ -64,14 +67,32 @@ export function useReminders() {
   );
 
   const markRead = useCallback(async (ids: number[]) => {
-    if (!ids.length) return;
+    const fresh = [...new Set(ids)].filter((id) => !pending.current.has(id));
+    if (!fresh.length) return;
+    fresh.forEach((id) => pending.current.add(id));
     try {
-      await request("POST", "/notifications/read", { ids });
-      setState((s) => (s ? { ...s, unread: Math.max(0, s.unread - ids.length), notifications: s.notifications.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n)) } : s));
+      await request("POST", "/notifications/read", { ids: fresh });
+      setState((s) => {
+        if (!s) return s;
+        const notifications = s.notifications.map((n) => fresh.includes(n.id) ? { ...n, read: true } : n);
+        return { ...s, notifications, unread: notifications.filter((n) => !n.read).length };
+      });
+      // Other mounted reminder views must also forget the unread indicator.
+      window.dispatchEvent(new Event(CHANGED));
     } catch {
-      // They'll show as new again next time; harmless.
+      // A later poll or revisit retries; navigation never waits for reminders.
+    } finally {
+      fresh.forEach((id) => pending.current.delete(id));
     }
   }, []);
+
+  // Opening the destination directly also counts, including browser back/forward.
+  const visitedIds = markVisited ? (state?.notifications ?? [])
+    .filter((n) => !n.read && n.link.split(/[?#]/)[0] === pathname)
+    .map((n) => n.id).join(",") : "";
+  useEffect(() => {
+    if (visitedIds) void markRead(visitedIds.split(",").map(Number));
+  }, [visitedIds, markRead]);
 
   return { state, setPrefs, markRead };
 }

@@ -11,7 +11,7 @@ const COPY = [
   { title: "Your home base", text: "Home brings your series, open predictions, and next moves together. Play with virtual coins; the bottom players owe a punishment." },
   { title: "Start a game", text: "New series lets you pick a quick game or write your own predictions. Set the rules in the lobby before betting starts." },
   { title: "Join your friends", text: "Have an invite? Use Join with a code to enter a friend's series. You can explore the platform during this tour—nothing is submitted for you." },
-  { title: "Keep the group together", text: "Groups gives your friends a shared place to chat and start series. The badge shows unread messages." },
+  { title: "Keep the group together", text: "Groups gives your friends a shared place to chat and start series." },
   { title: "Find your people", text: "Add friends here and invite them to play. When betting opens, pick an outcome and a coin amount. Winners split the pool in proportion to their stakes." },
   { title: "Make it yours", text: "Profile is where you choose your picture, manage reminders, and see your credits. Tutorial credits become extra starting coins in your next series." },
   { title: "Help is always here", text: "Use this question mark to replay the tour whenever you like. Completing it earns 200 credits once per account; replays are always free." },
