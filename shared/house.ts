@@ -1,7 +1,7 @@
 import type { Bet, Series } from "../frontend/src/lib/types.ts";
 
 export type HouseKind = "bet_placed" | "bet_resolved" | "upset";
-export type HouseFlavor = "large" | "contrarian" | "ordinary" | "upset" | "close" | "win" | "refund" | "tie" | "void";
+export type HouseFlavor = "large" | "contrarian" | "ordinary" | "upset" | "close" | "win" | "refund" | "tie" | "void" | "wrapped" | "fumble";
 export type HouseEvent = {
   id: string;
   seriesId: string;
@@ -11,7 +11,7 @@ export type HouseEvent = {
   at: string;
   fact: string;
   /** Only numeric/boolean facts and fixed enums go to the model. No user text. */
-  signals: { amount?: number; startingBankrollPercent?: number; contrarian?: boolean; pool?: number; winningPoolPercent?: number; players?: number; largestPayout?: number };
+  signals: { amount?: number; startingBankrollPercent?: number; contrarian?: boolean; pool?: number; winningPoolPercent?: number; players?: number; largestPayout?: number; bets?: number; wins?: number; winRate?: number; net?: number };
 };
 export type HouseComment = {
   event: Pick<HouseEvent, "id" | "seriesId" | "betId" | "kind" | "at">;
@@ -73,10 +73,33 @@ const QUIPS: Record<HouseFlavor, readonly string[]> = {
     "This prediction has been canceled, not proven correct.",
     "Wagers returned. On to the next contest.",
   ],
+  wrapped: [
+    "Your confidence has filed an annual report. The numbers have added footnotes.",
+    "A season of bold calls, settled receipts, and absolutely no need to explain that one.",
+    "The record is in. The group chat may now begin its peer review.",
+    "Every coin has a story. A few of yours are requesting legal representation.",
+    "A memorable campaign. The spreadsheet is still processing the plot twists.",
+    "The scoreboard remembers. Luckily, it also remembers the comeback.",
+  ],
+  fumble: [
+    "Your coins made a bold exit. Your confidence stayed for questions.",
+    "Strong conviction. The result has entered evidence.",
+    "The scoreboard filed this under: decisive, if not correct.",
+    "A confident investment in the wrong plot.",
+    "Today's market is now part of the exhibit on certainty.",
+  ],
 };
 
 export function houseChoices(event: HouseEvent) {
   return QUIPS[event.flavor].map((text, i) => ({ id: `${event.flavor}-${i}`, text }));
+}
+
+/** Stable local one-liner for a verified personal fumble; never needs an API call. */
+export function houseFumbleQuip(eventId: string) {
+  let hash = 0;
+  for (const c of eventId) hash = (Math.imul(hash, 31) + c.charCodeAt(0)) >>> 0;
+  const quips = QUIPS.fumble;
+  return quips[hash % quips.length];
 }
 
 export function fallbackChoice(event: HouseEvent): string {
