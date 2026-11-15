@@ -7,10 +7,12 @@ import Home from "./pages/Home.tsx";
 import JoinLink from "./pages/JoinLink.tsx";
 import Profile from "./pages/Profile.tsx";
 import Tutorial from "./pages/Tutorial.tsx";
+import ConnectCallback from "./pages/ConnectCallback.tsx";
 import Friends, { AddFriendLink } from "./pages/Friends.tsx";
 import Clans, { ClanDetail, JoinClanLink } from "./pages/Clans.tsx";
 import ClanChat from "./pages/ClanChat.tsx";
 import { SeriesBet, SeriesHome, SeriesLeaderboard, SeriesRules } from "./pages/SeriesRoutes.tsx";
+import SeriesRecap from "./pages/Recap.tsx";
 
 // Alea Wrapped: loaded only when opened. /wrapped-demo is public (fictional data), so it renders without sign-in.
 const Wrapped = lazy(() => import("./pages/Wrapped.tsx"));
@@ -32,6 +34,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/tutorial" element={<Tutorial />} />
           <Route path="/wrapped" element={<Suspense fallback={<WrappedFallback />}><Wrapped /></Suspense>} />
+          <Route path="/connect/:provider/callback" element={<ConnectCallback />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/add/:code" element={<AddFriendLink />} />
           <Route path="/clans" element={<Clans />} />
@@ -43,6 +46,7 @@ export default function App() {
           <Route path="/s/:id/bets/:betId" element={<SeriesBet />} />
           <Route path="/s/:id/leaderboard" element={<SeriesLeaderboard />} />
           <Route path="/s/:id/rules" element={<SeriesRules />} />
+          <Route path="/s/:id/recap" element={<SeriesRecap />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </WrappedDemoOrStore>

@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/browser",
-  testMatch: ["house.spec.mjs", "wrapped.spec.mjs", "submissions.spec.mjs", "deadlines.spec.mjs"],
+  testMatch: ["house.spec.mjs", "wrapped.spec.mjs", "submissions.spec.mjs", "deadlines.spec.mjs", "recap.spec.mjs"],
   outputDir: "./.data/house-ui-results",
   workers: 1,
   timeout: 45_000,

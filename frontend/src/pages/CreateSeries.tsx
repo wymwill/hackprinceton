@@ -9,6 +9,7 @@ import { MODE_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { QUICK_TEMPLATES, quickSettings, templateDrafts, type QuickTemplate } from "../lib/quickGame.ts";
 import { newRequestId } from "../lib/submit.ts";
+import { rematchInvitees, rematchName } from "../lib/recap.ts";
 import type { BetDraft, Mode, Settings } from "../lib/types.ts";
 
 type SavedDraft = { name: string; description: string; drafts: BetDraft[]; settings: Settings; quick: boolean; templateId: string | null; punishments: string[] };
@@ -69,11 +70,13 @@ function savePendingSeries(p: PendingSeries | null) {
 }
 
 export default function CreateSeries() {
-  const { api, me, toast } = useStore();
+  const { api, me, toast, db } = useStore();
   const nav = useNavigate();
   const [params] = useSearchParams();
   const clanId = params.get("clan");
-  const key = draftKey(me, clanId);
+  // A rematch keeps its own saved draft, so it never picks up (or overwrites) another setup in progress.
+  const rematchId = params.get("rematch");
+  const key = draftKey(me, rematchId ? `rematch-${rematchId}` : clanId);
   const saved = useRef(readDraft(key)).current;
   const [name, setName] = useState(saved?.name ?? "");
   const [description, setDescription] = useState(saved?.description ?? "");
@@ -130,6 +133,27 @@ export default function CreateSeries() {
     setSt((s) => ({ ...s, losers: n >= 6 ? 2 : 1, mode: "pool", hostPlays: true }));
   }, [clan, saved]);
 
+  // /new?rematch=ID: play again with the same group. Name, description and every setting
+  // carry over (all editable); bets, coins, wagers and punishments start fresh. Last time's
+  // players are listed to invite; nobody is added until they join themselves.
+  const rematchFrom = rematchId ? db.series.find((x) => x.id === rematchId) : undefined;
+  const invitees = rematchFrom ? rematchInvitees(rematchFrom, me) : [];
+  const rematchFilled = useRef(false);
+  useEffect(() => {
+    if (!rematchFrom || rematchFilled.current) return;
+    rematchFilled.current = true;
+    // Coming back to a rematch you were editing restores your edits instead.
+    if (saved) return;
+    setName(rematchName(rematchFrom.name));
+    setDescription(rematchFrom.description);
+    setSt({ ...DEFAULT_SETTINGS, ...rematchFrom.settings });
+    // Fresh bets and punishments, in the detailed form (where the carried-over settings show).
+    setDrafts([newDraft()]);
+    setPunishments([]);
+    setTemplateId(null);
+    setQuick(false);
+  }, [rematchFrom, saved]);
+
   // Creating happens at most once per submission id. Submitting the same details again (a double
   // click, or a retry after no answer, even after a reload) reuses the id, so the server returns the
   // series it already made instead of making another. Different details are a different series.
@@ -176,7 +200,7 @@ export default function CreateSeries() {
     }
     try { localStorage.removeItem(key); } catch { /* Storage may be unavailable. */ }
     setPhase("idle");
-    nav(`/s/${s.id}`);
+    nav(`/s/${s.id}${rematchFrom ? `?rematchOf=${encodeURIComponent(rematchFrom.id)}` : ""}`);
   };
 
   return (
@@ -190,6 +214,23 @@ export default function CreateSeries() {
           <p>Rules lock when betting starts.</p>
         </div>
       </section>
+
+      {rematchId && (
+        <p className={`notice ${rematchFrom ? "ok" : ""}`} style={{ marginBottom: 20 }}>
+          {rematchFrom ? (
+            <>
+              <b>Rematch of {rematchFrom.name}.</b> The settings carry over; change anything you like. Bets, coins and
+              punishments start fresh. After you create it, invite{" "}
+              {invitees.length ? invitees.map((m) => m.name).join(", ") : "your friends"} with the invite link or QR code.
+              Nobody joins until they accept.
+            </>
+          ) : (
+            <>
+              <b>That series wasn't found.</b> You may not be in it. You can still create a new series.
+            </>
+          )}
+        </p>
+      )}
 
       {clanId && (
         <p className={`notice ${clan ? "ok" : ""}`} style={{ marginBottom: 20 }}>
