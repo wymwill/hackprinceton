@@ -5,7 +5,8 @@ import { TOUR_STEPS } from "../../../shared/navigationTour.ts";
 import { useStore } from "../lib/store.tsx";
 import { useCredits } from "../lib/credits.ts";
 
-const TourContext = createContext({ start: () => {} });
+/** `active`: a tour is running, so the phone menu stays open and its targets are visible. */
+const TourContext = createContext({ start: () => {}, active: false });
 export const useTour = () => useContext(TourContext);
 const COPY = [
   { title: "Your home base", text: "Home brings your series, open predictions, and next moves together. Play with virtual coins; the bottom players owe a punishment." },
@@ -107,7 +108,7 @@ export function NavigationTourProvider({ children }: { children: ReactNode }) {
   const active = step !== null && !paused;
   // Place the card at the opposite end of the screen from the highlighted control.
   const cardAtTop = box && box.top > window.innerHeight / 2;
-  return <TourContext.Provider value={{ start }}>
+  return <TourContext.Provider value={{ start, active: step !== null }}>
     {children}
     {active && createPortal(<div className="navigation-tour">
       {box && <div className="tour-highlight" aria-hidden="true" style={{ top: box.top - 5, left: box.left - 5, width: box.width + 10, height: box.height + 10 }} />}

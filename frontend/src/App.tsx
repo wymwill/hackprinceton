@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { StoreProvider } from "./lib/store.tsx";
+import { ErrorBoundary, RouteErrorBoundary } from "./components/ErrorBoundary.tsx";
 import CreateSeries from "./pages/CreateSeries.tsx";
 import AllSeries from "./pages/AllSeries.tsx";
 import Home from "./pages/Home.tsx";
@@ -28,8 +29,10 @@ function LegacyClanRoute({ chat = false }: { chat?: boolean }) {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <WrappedDemoOrStore>
+        <RouteErrorBoundary>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/series" element={<AllSeries />} />
@@ -57,7 +60,9 @@ export default function App() {
           <Route path="/s/:id/recap" element={<SeriesRecap />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </RouteErrorBoundary>
       </WrappedDemoOrStore>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
