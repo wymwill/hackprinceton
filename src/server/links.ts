@@ -330,7 +330,7 @@ const github: Provider = {
       type: string;
       created_at: string;
       repo: { name: string };
-      payload: { size?: number; distinct_size?: number; commits?: unknown[]; action?: string; pull_request?: { merged?: boolean; title?: string; html_url?: string; number?: number } };
+      payload: { size?: number; commits?: unknown[]; action?: string; number?: number; pull_request?: { merged?: boolean; title?: string; html_url?: string; number?: number } };
     };
     const rows: ProofRow[] = [];
     for (let page = 1; page <= 3; page++) {
@@ -342,18 +342,22 @@ const github: Provider = {
       for (const e of events) {
         if (Date.parse(e.created_at) < from.getTime()) continue;
         if (e.type === "PushEvent") {
-          const commits = e.payload.size ?? e.payload.distinct_size ?? e.payload.commits?.length ?? 1;
-          rows.push({ id: `event-${e.id}`, kind: "push", title: `Pushed to ${e.repo.name}`, value: commits, unit: "commits", startedAt: e.created_at, extras: { repo: e.repo.name } });
-        } else if (e.type === "PullRequestEvent" && e.payload.action === "closed" && e.payload.pull_request?.merged) {
-          const pr = e.payload.pull_request;
+          // GitHub's public events no longer say how many commits a push had, so pushes are counted.
+          // Older events that still carry the count keep it in extras.
+          const commits = e.payload.size ?? e.payload.commits?.length ?? null;
+          rows.push({ id: `event-${e.id}`, kind: "push", title: `Pushed to ${e.repo.name}`, value: 1, unit: "pushes", startedAt: e.created_at, extras: { repo: e.repo.name, commits } });
+        } else if (e.type === "PullRequestEvent" && (e.payload.action === "merged" || (e.payload.action === "closed" && e.payload.pull_request?.merged))) {
+          // Newer events report merges as their own action and leave the title out.
+          const pr = e.payload.pull_request ?? {};
+          const number = pr.number ?? e.payload.number;
           rows.push({
             id: `event-${e.id}`,
             kind: "pull_request",
-            title: pr.title ? `Merged: ${pr.title}` : `Merged a pull request in ${e.repo.name}`,
+            title: pr.title ? `Merged: ${pr.title}` : `Merged #${number ?? "?"} in ${e.repo.name}`,
             value: 1,
             unit: "merged",
             startedAt: e.created_at,
-            extras: { repo: e.repo.name, url: pr.html_url ?? null },
+            extras: { repo: e.repo.name, url: pr.html_url ?? (number ? `https://github.com/${e.repo.name}/pull/${number}` : null) },
           });
         }
       }

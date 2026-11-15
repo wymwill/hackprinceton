@@ -74,6 +74,7 @@ export function measure(value: number, unit: string) {
   if (unit === "score") return `${Math.round(v)}`;
   if (unit === "%") return `${Math.round(v)}%`;
   if (unit === "commits") return `${v} ${v === 1 ? "commit" : "commits"}`;
+  if (unit === "pushes") return `${v} ${v === 1 ? "push" : "pushes"}`;
   if (unit === "merged") return "merged";
   return `${v} ${unit}`.trim();
 }

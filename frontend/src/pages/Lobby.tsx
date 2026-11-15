@@ -4,8 +4,9 @@ import { NewBetModal } from "../components/Standings.tsx";
 import { RematchInvite } from "../components/RematchInvite.tsx";
 import { ConfirmButton, Panel, Pill, Who } from "../components/ui.tsx";
 import { agreesTo, isParticipant, participantIds } from "../lib/rules.ts";
-import { ago, punishmentCopy } from "../lib/format.ts";
+import { ago, fmt as fmtCoins, punishmentCopy } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
+import { useCredits } from "../lib/credits.ts";
 import type { Bet, Favor, Series } from "../lib/types.ts";
 import { RulesList } from "./Rules.tsx";
 
@@ -123,6 +124,7 @@ export default function Lobby({ s }: { s: Series }) {
   const playing = isParticipant(s, me);
   const pool = s.settings.mode === "pool";
   const unagreed = pool ? s.favors.filter((f) => !agreesTo(f, me)).length : 0;
+  const credits = useCredits().data?.credits ?? 0;
 
   return (
     <>
@@ -142,6 +144,11 @@ export default function Lobby({ s }: { s: Series }) {
 
       <div className="grid2">
         <div className="col">
+          {playing && credits > 0 && (
+            <p className="notice ok">
+              Your <b>{fmtCoins(credits)} tutorial credits</b> will be added to your starting coins when this series starts.
+            </p>
+          )}
           <Panel label="Before you start" right="Rules lock at start">
             <details className="rules-details">
               <summary>Read series rules</summary>
