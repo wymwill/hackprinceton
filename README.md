@@ -6,6 +6,7 @@ Friend groups compete over a **series** of bets with virtual coins: YES/NO, mult
 - **API:** the Next.js app in `src/app/api/series`, which calls Supabase.
 - **Rules and data:** Supabase Postgres, as SQL functions in `supabase/migrations`. See [docs/supabase-series.md](docs/supabase-series.md).
 - **Sign-in:** Supabase Auth, with Google or email and password.
+- **Linked accounts:** Strava, Fitbit, Oura, Whoop, Spotify and GitHub as proof on bets. See [docs/linked-accounts.md](docs/linked-accounts.md).
 
 ## Where things live
 
