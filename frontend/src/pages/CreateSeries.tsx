@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSocial } from "../lib/social.tsx";
+import { GamePlanner } from "../components/GamePlanner.tsx";
 import { Shell } from "../components/Shell.tsx";
 import OutcomeEditor, { newDraft, outcomeProblem } from "../components/OutcomeEditor.tsx";
 import { Panel } from "../components/ui.tsx";
@@ -82,6 +83,7 @@ export default function CreateSeries() {
   const [description, setDescription] = useState(saved?.description ?? "");
   const [drafts, setDrafts] = useState<BetDraft[]>(saved?.drafts ?? [newDraft()]);
   const [st, setSt] = useState<Settings>(saved?.settings ?? { ...DEFAULT_SETTINGS });
+  const [planning, setPlanning] = useState(false);
   const [quick, setQuick] = useState(saved?.quick ?? true);
   const [templateId, setTemplateId] = useState<string | null>(saved?.templateId ?? null);
   const [category, setCategory] = useState<QuickTemplate["category"]>(QUICK_TEMPLATES.find((t) => t.id === saved?.templateId)?.category ?? "game");
@@ -249,13 +251,23 @@ export default function CreateSeries() {
         </p>
       )}
 
-      <div className="row" style={{ marginBottom: 18 }}>
-        <button type="button" className={`btn ${quick ? "primary" : ""}`} onClick={() => setQuick(true)}>Quick game</button>
-        <button type="button" className={`btn ${quick ? "" : "primary"}`} onClick={() => setQuick(false)}>Detailed setup</button>
+      <div className="row wrap setup-modes" style={{ marginBottom: 18 }}>
+        <button type="button" className={`btn ${quick && !planning ? "primary" : ""}`} aria-pressed={quick && !planning} onClick={() => { setPlanning(false); setQuick(true); }}>Quick game</button>
+        <button type="button" className={`btn ${!quick && !planning ? "primary" : ""}`} aria-pressed={!quick && !planning} onClick={() => { setPlanning(false); setQuick(false); }}>Detailed setup</button>
+        <button type="button" className={`btn ${planning ? "primary" : ""}`} aria-pressed={planning} onClick={() => setPlanning(true)}>AI game planner</button>
         <span className="hint">Draft saves automatically on this device.</span>
       </div>
 
-      {quick && <div className="grid2 quick-setup">
+      {planning && <GamePlanner onApply={(plan) => {
+        setName(plan.name); setDescription(plan.description);
+        setDrafts(plan.questions.map((q) => newDraft(q)));
+        setSt(quickSettings(plan.questions.length));
+        setPunishments(plan.punishments.slice(0, 2));
+        setTemplateId(null); setQuick(false); setPlanning(false);
+        toast("Draft loaded. Review the rules, then create your series.");
+      }} />}
+
+      {quick && !planning && <div className="grid2 quick-setup">
         <div className="col">
           <Panel label="01 · Pick a starting point">
             <div className="quick-categories">
@@ -310,7 +322,7 @@ export default function CreateSeries() {
         </div>
       </div>}
 
-      {!quick && <div className="grid2">
+      {!quick && !planning && <div className="grid2">
         <div className="col">
           <Panel label="01 · Basics">
             <div className="stack">
@@ -343,6 +355,12 @@ export default function CreateSeries() {
             </div>
           </Panel>
 
+          {st.mode === "pool" && st.hostPlays && punishments.length > 0 && <Panel label="Your punishment ideas">
+            <div className="stack">
+              <p className="hint">The first {st.favorsPerPlayer} ideas will be added as your contributions. Friends add their own in the lobby.</p>
+              {punishments.map((p, i) => <label className="field" key={i}><span>Idea {i + 1}</span><input className="input" value={p} maxLength={120} onChange={(e) => setPunishments((xs) => xs.map((v, j) => j === i ? e.target.value : v))} /></label>)}
+            </div>
+          </Panel>}
           <Panel label="02 · Bets" right={`${written.length}/${st.betCount} written`}>
             <div className="stack">
               <p className="hint">Write them now or in the lobby.</p>

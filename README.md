@@ -1,87 +1,173 @@
-# Alea
+# Bookie
 
-Friend groups compete over a **series** of bets with virtual coins: YES/NO, multiple choice with 2 to 10 outcomes the host names, or numerical ranges ("tomorrow's high: below 60°F, 60–64°F, …") settled by entering the measured value. Whoever finishes at the bottom owes a favor: one they pledged, or one the winners pick from a shared pool. No money moves.
+**Turn your group's plans into a prediction game.** Create a series, invite friends, and bet virtual coins on what happens next. Players at the bottom owe the punishments agreed on before play starts.
 
-- **Screens:** `frontend/`, a React app (Vite, React Router). See [frontend/README.md](frontend/README.md).
-- **API:** the Next.js app in `src/app/api/series`, which calls Supabase.
-- **Rules and data:** Supabase Postgres, as SQL functions in `supabase/migrations`. See [docs/supabase-series.md](docs/supabase-series.md).
-- **Sign-in:** Supabase Auth, with Google or email and password.
-- **Linked accounts:** Strava, Fitbit, Oura, Whoop, Spotify and GitHub as proof on bets. See [docs/linked-accounts.md](docs/linked-accounts.md).
+Bookie supports game nights, roommate challenges, weekend plans, and custom predictions. The app does not collect or transfer money.
 
-## Where things live
+## How it works
 
-The repo root is the Next.js app. It serves the API, and in production it also serves the built React app.
+1. **Build a series.** Choose Quick game, Detailed setup, or the AI game planner.
+2. **Invite your friends.** Share a link, QR code, or invite code. Review the rules and punishments together in the lobby.
+3. **Make predictions.** Bet on YES/NO questions, multiple-choice outcomes, or numerical ranges using virtual coins.
+4. **Call the results.** The host confirms what happened. Winners split the pool in proportion to their stakes, and the leaderboard updates.
+5. **Finish the game.** Assign punishments, share the recap, or start a rematch.
 
+### Features
+
+- **Three ways to start:** ready-made templates, full manual setup, or a Gemini-powered game planner built with LangChain's Deep Agents SDK.
+- **Friends and groups:** invite codes, shared series, and private group chat.
+- **Clear betting controls:** payout estimates, optional withdrawal windows, scheduled closing times, and host settlement controls.
+- **Guided onboarding:** a dismissible navigation tour, replayable from the top-right `?`. Completing it earns 200 credits once per account, applied when your next series starts.
+- **Results worth sharing:** standings, series recaps, rematches, and Bookie Wrapped.
+- **Optional extras:** linked-account proof, in-app reminders, and The House commentary.
+
+## Local setup
+
+Use **Node.js 24 or newer**, npm, and a Supabase project. The test commands use Node's built-in TypeScript support.
+
+```bash
+npm install
+cp .env.example .env.local
 ```
-frontend/              The React app people use (Vite, own package.json)
-  src/pages/           One file per screen: Home, Tutorial, Lobby, bets, Clans, Wrapped…
-  src/components/      Shared pieces: the shell and sidebar, bet cards, Your moves
-  src/lib/             API client and session (store.tsx), rules helpers, types, theme
-src/                   The Next.js API (Next requires this folder name)
-  app/api/series/      One route per Bet Series action, each a thin call into server/
-  app/api/social/      Friends, clans and clan chat
-  app/api/wrapped/     Alea Wrapped
-  server/              Shared server code: Supabase calls, errors, The House
-  lib/                 App icon drawing and sign-in settings
-  app/manifest.ts, app/icons/   Home-screen install files
-shared/                Code both apps import (The House copy, Wrapped maths)
-supabase/
-  migrations/          Tables, rules (SQL functions) and storage, applied in order
-  diagnostics/         Read-only SQL for checking a live project
+
+Set the following in `.env.local` at the repository root:
+
+```dotenv
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+```
+
+Use the publishable/anon key, not a Supabase service-role key. Both the Next API and the frontend build read this configuration.
+
+Before signing in:
+
+1. Apply the SQL files in `supabase/migrations/` in filename order. For a linked Supabase CLI project, use `supabase db push`; otherwise apply them through the SQL editor.
+2. Enable email/password sign-in in Supabase Auth. Google sign-in is optional; follow the [Google sign-in setup guide](docs/supabase-setup.md).
+3. Add `http://localhost:3000/**` to your Supabase Auth redirect URLs. Add your production domain when deploying.
+
+Start the app:
+
+```bash
+npm run dev
+```
+
+Open [localhost:3000](http://localhost:3000). The launcher starts Next on port **3000** and Vite on **5173**. Next forwards app pages to Vite during development and handles API requests itself.
+
+`npm install` also installs the frontend dependencies. `npm run dev:lan` exposes the Next server to devices on the same network.
+
+### Try it without a hosted Supabase project
+
+Run the in-memory test server in one terminal:
+
+```bash
+node tests/sql/local-supabase.mjs
+```
+
+Start Bookie in another:
+
+```bash
+SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local npm run dev
+```
+
+Create an email/password account in the app. This server is for local testing only: data disappears when it stops, and it does not provide Google OAuth.
+
+## Gemini game planner
+
+The **AI game planner** sits beside Quick game and Detailed setup on New series. Describe your game, choose the player and question counts, then generate a draft. Edit the preview and select **Use this draft** to load it into Detailed setup. The host still reviews the rules and clicks **Create series**.
+
+Add a key from [Google AI Studio](https://aistudio.google.com/apikey) to `.env.local`, then restart the dev server:
+
+```dotenv
+GOOGLE_API_KEY=your-gemini-api-key
+GEMINI_PLANNER_MODEL=gemini-3.5-flash-lite
+```
+
+`GEMINI_API_KEY` is also accepted as an alias. These variables are server-only; never prefix them with `VITE_` or `NEXT_PUBLIC_`.
+
+The planner uses `createDeepAgent`, LangChain's `ChatGoogle` adapter, a shared template catalog, and validated structured output. It generates 3–8 YES/NO questions and punishment ideas. It cannot create a series, place a bet, or settle a result. Without a Gemini key, Quick game and Detailed setup still work.
+
+See the [planner implementation and test guide](docs/game-planner.md) for API details, limits, and verification.
+
+## Optional integrations
+
+| Feature | Configuration | Details |
+| --- | --- | --- |
+| The House commentary | `OPENAI_API_KEY`, `OPENAI_HOUSE_MODEL`, `HOUSE_MODE`, optional `HOUSE_CACHE_DIR` | [Commentary guide](docs/the-house.md). Deterministic commentary works without a key. This is separate from the Gemini planner. |
+| Linked-account proof | Provider credentials as needed | [Linked accounts](docs/linked-accounts.md): Strava, Fitbit, Oura, Whoop, Spotify, and GitHub. |
+| Reminders | Opt in from Profile | In-app only; no email service is required. |
+| Scheduled bet closing | Database migrations; optional `pg_cron` | Wagers check the database deadline. With the optional cron job, closings are also recorded while nobody is visiting. |
+
+See [.env.example](.env.example) for supported variables. Some legacy filenames and API identifiers still use “Alea,” “clan,” or “favor”; the interface uses Bookie, groups, and punishments.
+
+## Architecture
+
+```text
+React frontend ── /api ──> Next.js server ── authenticated RPCs ──> Supabase
+                                  │
+                                  └── Deep Agents + Gemini → editable game draft
+```
+
+The frontend is a Vite app with React Router. Next.js serves the API and the production frontend. Supabase provides authentication, Postgres, Realtime chat, and avatar storage. Betting rules, permissions, and coin accounting live in database functions; the UI displays their results.
+
+```text
+frontend/src/
+  pages/                Screens and routes
+  components/           Navigation, tour, planner, betting controls, shared UI
+  lib/                  API client, session, types, and display helpers
+src/
+  app/api/              Series, social, planner, rewards, and integration endpoints
+  server/planner/       Deep Agents game planner and generation limits
+  server/house/         Commentary adapter and cache
+  server/               Authentication and shared API helpers
+shared/                 Game-plan schema, template catalog, and shared logic
+supabase/migrations/    Database schema and rules, applied in order
 tests/
-  sql/                 SQL rule tests on in-memory Postgres, plus local-supabase.mjs (a stand-in Supabase)
-  e2e/                 End-to-end checks over HTTP. Most run against the stand-in; series.mjs hits the real project
-  unit/                Unit tests for The House and Wrapped
-  browser/             Playwright specs
-scripts/               Dev launcher (dev.mjs), demo users, catch-up SQL, live clan-chat checks
-docs/                  How each feature works, setup guides and test write-ups
+  unit/                 Planner, commentary, recap, and Wrapped tests
+  sql/                  Rule tests on PGlite and the local Supabase stand-in
+  e2e/                  HTTP integration checks
+  browser/              Playwright specs
+scripts/                Dev launcher and maintenance utilities
+docs/                   Setup, feature, and testing guides
 ```
 
-## Run it
-
-1. Put the Supabase project's URL and publishable key in `.env.local` at the repo root (copy `.env.example`):
-   ```
-   SUPABASE_URL=https://<project-ref>.supabase.co
-   SUPABASE_PUBLISHABLE_KEY=<publishable key>
-   ```
-2. Install and start:
-   ```bash
-   npm install
-   npm run dev
-   ```
-3. Open **http://localhost:3000**.
-
-`npm install` also installs `frontend/`. `npm run dev` starts both the Next server (API, port 3000) and the Vite server (screens, port 5173). Next forwards every page to Vite, so always open port 3000; live reload still works. `npm run dev:lan` lets phones on the same Wi-Fi open it.
+For frontend routes and conventions, see [frontend/README.md](frontend/README.md).
 
 ## Build and deploy
 
 ```bash
-npm run build   # builds frontend/ into public/app/, then the Next app
+npm run build
 npm start
 ```
 
-Every path that isn't an API route or an icon serves `public/app/index.html`, and the React app takes it from there. On Vercel, set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in the project's environment variables. The frontend build reads them too, so set them before deploying. Then add the deployed address to Supabase's redirect URLs (see below).
+The build writes the frontend to `public/app/`, then builds Next. The Next server serves both the API and app pages, including direct links into a series.
 
-Scheduling and reminders need no extra service. Bets close at their closing time on their own: the database checks the time on every wager, so nothing has to run on a timer. If you enable the `pg_cron` extension in Supabase (Database → Extensions) before applying migration `202611140018_scheduled_bet_closing.sql`, it also adds a once-a-minute job that records closings and refunds one-sided pools even when nobody has the app open; without it that happens on the next visit. Reminders are in the app only (Your moves); sending them by email would need a mail provider, which this project doesn't have yet.
+Configure Supabase variables in the deployment environment **before building**, because the frontend includes its public Supabase configuration at build time. Add your deployed domain to Supabase's redirect URLs and apply migrations before using the app. Supply the Gemini key at runtime if you want the planner enabled. Deploy the planner on a Node.js runtime that allows its 45-second generation window.
 
-## Sign-in setup
-
-Supabase project → **Authentication**:
-
-- **URL Configuration → Redirect URLs:** `http://localhost:3000/**`, plus `https://<your-domain>/**` once deployed. People come back to the page they started on, so the wildcard matters.
-- **Sign In / Providers → Google:** on, with a Google OAuth client. See [docs/supabase-setup.md](docs/supabase-setup.md).
-- **Email:** on by default. New accounts confirm their email first. Supabase's built-in mailer only sends a few emails an hour, so connect your own SMTP before real users sign up.
-
-The sign-in page switches the Google button off by itself while Google isn't enabled.
+The money mode records contributions owed outside the app; it does not process payments.
 
 ## Checks
 
+These checks do not require live AI provider calls:
+
 ```bash
-npm run typecheck        # Next app and frontend
+npm run typecheck        # API and frontend TypeScript
 npm run lint
-npm run test:series-sql      # the SQL rules, on an in-memory Postgres (bets, upgrades, friends, clans and clan chat)
-npm run test:outcomes-local  # multiple-choice bets over HTTP, against the local Supabase stand-in (see the script header)
-npm run test:ranges-local    # numerical range bets over HTTP, same setup
-npm run test:chat-local      # clan chat over HTTP and Realtime, same setup
-npm run test:series          # API end to end against the real Supabase project (needs .supabase-test-secret)
+npm run test:planner     # Real Deep Agents graph with a scripted model
+npm run test:series-sql  # Database rules, permissions, rewards, and reminders
+npm run test:house
+npm run test:wrapped
+npm run test:recap
+npm run build
 ```
+
+HTTP and browser checks need test servers or credentials. Follow each script's header before running `test:outcomes-local`, `test:ranges-local`, `test:chat-local`, or the Playwright commands. `npm run test:series` targets a configured Supabase project and requires test credentials; use a dedicated test project.
+
+## Further reading
+
+- [Game planner setup and API](docs/game-planner.md)
+- [Supabase setup and series rules](docs/supabase-series.md)
+- [Google sign-in setup](docs/supabase-setup.md)
+- [Linked accounts](docs/linked-accounts.md)
+- [The House commentary](docs/the-house.md)
+- [Wrapped](docs/alea-wrapped.md)
+- [Feature coverage and SQL test map](docs/bet-series-coverage.md)

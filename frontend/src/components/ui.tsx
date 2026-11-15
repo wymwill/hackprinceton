@@ -62,8 +62,8 @@ export function Modal({
 }
 
 export const Pill = ({ kind, children }: { kind: string; children: ReactNode }) => (
-  <span className={kind === "active" || kind === "host" ? `status-label ${kind}` : `pill ${kind}`}>
-    {kind !== "active" && kind !== "host" && <span className="dot" />}
+  <span className={["active", "host", "finished"].includes(kind) ? `status-label ${kind}` : `pill ${kind}`}>
+    {!["active", "host", "finished"].includes(kind) && <span className="dot" />}
     {children}
   </span>
 );

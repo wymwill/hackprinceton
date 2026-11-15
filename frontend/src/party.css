@@ -451,3 +451,14 @@ html, body {
 }
 
 .bet-tools .disclosure-panel > .pbody { max-height: 340px; overflow-y: auto; scrollbar-width: thin; }
+
+.status-label.finished { color: var(--link); }
+
+.planner-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.planner-layout > * { min-width: 0; }
+.planner-prompt { min-height: 150px; resize: vertical; }
+.planner-empty { padding: 48px 24px; text-align: center; color: var(--dim); }
+.planner-empty > span { display: block; color: var(--red); font-size: 52px; }
+.planner-empty h2 { margin: 16px 0 10px; color: var(--bright); font-family: var(--display); }
+.planner-layout .input { width: 100%; }
+@media (max-width: 1050px) { .planner-layout { grid-template-columns: minmax(0, 1fr); } .planner-empty { padding: 20px; } }

@@ -9,6 +9,7 @@ import type { NextConfig } from "next";
 const dev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["deepagents", "langchain", "@langchain/core", "@langchain/google", "@langchain/langgraph"],
   distDir: process.env.NEXT_BUILD_DIR ?? ".next",
   async rewrites() {
     return {

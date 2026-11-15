@@ -1,4 +1,4 @@
-import { Panel, Who } from "../components/ui.tsx";
+import { Panel, Pill, Who } from "../components/ui.tsx";
 import { MODE_LABEL, STATUS_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Series } from "../lib/types.ts";
@@ -65,7 +65,7 @@ export default function Rules({ s }: { s: Series }) {
     <>
       <section className="hero">
         <div>
-          <span className="pill finished">{STATUS_LABEL[s.status]}</span>
+          <Pill kind={s.status}>{STATUS_LABEL[s.status]}</Pill>
           <h1 style={{ marginTop: 14 }}>Rules &amp; players</h1>
           <p>{s.status === "lobby" ? "These lock when the host starts betting." : "Locked since betting started."}</p>
         </div>
