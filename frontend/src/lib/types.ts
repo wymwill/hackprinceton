@@ -110,6 +110,8 @@ export type Bet = {
   status: BetStatus;
   openedAt?: string | null;
   closedAt?: string | null;
+  /** When betting stops by itself, if the host set a time. Past it, the server reports the bet as closed. */
+  closesAt?: string | null;
   settledAt?: string | null;
   /** The winning outcome. Null on a resolved bet means it was refunded (one-sided pool, or a tie under the refund rule). */
   outcomeId?: Id | null;
@@ -197,6 +199,8 @@ export type BetDraft = {
   outcomes: { id?: Id; label: string }[];
   tieRule: TieRule;
   range: RangeDraft;
+  /** "Betting closes at", as a datetime-local value (local time, no zone); "" for none. */
+  closesAt: string;
 };
 
 /**

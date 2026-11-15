@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { defaultRange, generateCuts, MAX_RANGES, parseNum, rangeLabel, rangeProblem, rangeRule, rangesOf, UNIT_SUGGESTIONS } from "../lib/ranges.ts";
+import { fromLocalInput, toLocalInput } from "../lib/format.ts";
 import type { BetDraft, BetKind, RangeDraft } from "../lib/types.ts";
 
 export const MAX_OUTCOMES = 10;
@@ -12,6 +13,7 @@ export const newDraft = (question = ""): BetDraft => ({
   outcomes: [{ label: "" }, { label: "" }],
   tieRule: "refund",
   range: defaultRange(),
+  closesAt: "",
 });
 
 /**
@@ -19,6 +21,11 @@ export const newDraft = (question = ""): BetDraft => ({
  * (_bs_clean_outcomes in 0009, _bs_clean_ranges in 0010) so the button can explain itself.
  */
 export function outcomeProblem(d: BetDraft): string | null {
+  if (d.closesAt) {
+    const at = fromLocalInput(d.closesAt);
+    if (!at) return "That closing time isn't a date and time.";
+    if (Date.parse(at) <= Date.now()) return "Pick a closing time in the future.";
+  }
   if (d.kind === "range") return rangeProblem(d.range);
   if (d.kind !== "multi") return null;
   const labels = d.outcomes.map((o) => o.label.trim().replace(/\s+/g, " "));
@@ -268,6 +275,34 @@ export default function OutcomeEditor({ value, onChange, idPrefix }: { value: Be
           </p>
         </>
       )}
+      <CloseTimeField value={value.closesAt} onChange={(closesAt) => set({ closesAt })} id={`${idPrefix}-closes`} />
+    </div>
+  );
+}
+
+/** "Betting closes at" for a bet: optional; wagers and withdrawals stop at that time. */
+export function CloseTimeField({ value, onChange, id }: { value: string; onChange: (v: string) => void; id: string }) {
+  return (
+    <div className="stack" style={{ gap: 6 }}>
+      <label className="field" htmlFor={id}>
+        <span>Betting closes (optional)</span>
+      </label>
+      <div className="row" style={{ flexWrap: "nowrap" }}>
+        <input
+          id={id}
+          type="datetime-local"
+          className="input"
+          value={value}
+          min={toLocalInput(new Date().toISOString())}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {value && (
+          <button type="button" className="btn ghost sm" onClick={() => onChange("")}>
+            Clear
+          </button>
+        )}
+      </div>
+      <p className="hint">Wagers and withdrawals stop at this time, so nobody can bet once the answer is known. You still call the result.</p>
     </div>
   );
 }

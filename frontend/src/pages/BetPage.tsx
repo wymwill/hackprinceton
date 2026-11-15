@@ -1,8 +1,21 @@
 import { useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ConfirmButton, OutcomeTag, Panel, Pill, PoolBar, Who } from "../components/ui.tsx";
-import { balances, findOutcome, isParticipant, labelOf, leader, payoutIfWins, resultText, shares, TIE_RULE_TEXT, withdrawUntil } from "../lib/rules.ts";
-import { ago, countdown, fmt, signed, useNow } from "../lib/format.ts";
+import {
+  balances,
+  findOutcome,
+  isParticipant,
+  labelOf,
+  leader,
+  payoutIfWins,
+  pastClose,
+  resultText,
+  shares,
+  shownStatus,
+  TIE_RULE_TEXT,
+  withdrawUntil,
+} from "../lib/rules.ts";
+import { ago, countdown, fmt, fromLocalInput, signed, toLocalInput, untilText, useNow, whenText } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { fmtValue, parseNum, rangeFor, rangeRule } from "../lib/ranges.ts";
 import type { Bet, Id, Series } from "../lib/types.ts";
@@ -206,39 +219,83 @@ function RangeSettle({ s, bet }: { s: Series; bet: Bet }) {
         />
       </label>
       <p id={`settle-${bet.id}`} className={value === null || tooPrecise ? "hint" : hit ? "hint" : "hint warn"} role="status">
-        {raw.trim() === ""
-          ? `Enter the measured number${decimals ? ` to ${decimals} decimal place${decimals === 1 ? "" : "s"}` : ""}. The matching range is picked automatically.`
-          : value === null
-            ? "That isn't a number."
-            : tooPrecise
-              ? `This bet is measured to ${decimals} decimal place${decimals === 1 ? "" : "s"}.`
-              : hit
-                ? <>
-                    {shown} falls in <b>{hit.label}</b>.
-                  </>
-                : `${shown} is outside every range, so everyone gets their coins back.`}
+        {raw.trim() === "" ? (
+          `Enter the measured number${decimals ? ` to ${decimals} decimal place${decimals === 1 ? "" : "s"}` : ""}. The matching range is picked automatically.`
+        ) : value === null ? (
+          "That isn't a number."
+        ) : tooPrecise ? (
+          `This bet is measured to ${decimals} decimal place${decimals === 1 ? "" : "s"}.`
+        ) : hit ? (
+          <>
+            {shown} falls in <b>{hit.label}</b>.
+          </>
+        ) : (
+          `${shown} is outside every range, so everyone gets their coins back.`
+        )}
       </p>
       <ConfirmButton
         className="btn"
         disabled={value === null || tooPrecise}
         label={value === null || tooPrecise ? "Settle" : `Settle at ${shown}`}
         confirm={hit ? `Confirm ${shown} → ${hit.label}` : `Confirm ${shown} (refund everyone)`}
-        onConfirm={() => api.resolveValue(s.id, bet.id, value!, hit ? `Result ${shown}: ${hit.label} wins.` : `Result ${shown}: outside every range, coins returned.`)}
+        onConfirm={() =>
+          api.resolveValue(s.id, bet.id, value!, hit ? `Result ${shown}: ${hit.label} wins.` : `Result ${shown}: outside every range, coins returned.`)
+        }
       />
     </div>
   );
 }
 
-function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
+/** Host: set, move or remove an open bet's close time (until it passes). */
+function CloseTimeControl({ s, bet }: { s: Series; bet: Bet }) {
   const { api } = useStore();
-  if (bet.status !== "open" && bet.status !== "closed") return null;
+  const [value, setValue] = useState(() => toLocalInput(bet.closesAt));
+  const at = fromLocalInput(value);
+  const changed = (at ?? null) !== (bet.closesAt ? new Date(bet.closesAt).toISOString() : null);
+  const bad = value !== "" && (!at || Date.parse(at) <= Date.now());
+  return (
+    <form
+      className="stack"
+      style={{ gap: 6 }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!bad && changed) api.setBetClose(s.id, bet.id, at, at ? "Closing time set." : "Closing time removed.");
+      }}
+    >
+      <label className="cap" htmlFor={`close-${bet.id}`}>
+        Betting closes
+      </label>
+      <div className="row" style={{ flexWrap: "nowrap" }}>
+        <input
+          id={`close-${bet.id}`}
+          type="datetime-local"
+          className="input"
+          value={value}
+          min={toLocalInput(new Date().toISOString())}
+          onChange={(e) => setValue(e.target.value)}
+        />
+        <button className="btn sm" disabled={bad || !changed} title={bad ? "Pick a time in the future." : undefined}>
+          {value ? "Save" : bet.closesAt ? "Remove" : "Save"}
+        </button>
+      </div>
+      <p className={bad ? "hint warn" : "hint"}>
+        {bad ? "Pick a time in the future." : "Wagers and withdrawals stop at this time. Leave it empty to close by hand."}
+      </p>
+    </form>
+  );
+}
+
+function HostPanel({ s, bet, status }: { s: Series; bet: Bet; status: Bet["status"] }) {
+  const { api } = useStore();
+  if (status !== "open" && status !== "closed") return null;
   const { list } = shares(bet);
   const binary = bet.kind === "binary";
   return (
     <Panel label="Host controls">
       <div className="stack">
-        {bet.status === "open" && (
+        {status === "open" && (
           <>
+            <CloseTimeControl key={bet.closesAt ?? "none"} s={s} bet={bet} />
             <button type="button" className="btn" onClick={() => api.lockBet(s.id, bet.id, "Betting locked.")}>
               Lock betting
             </button>
@@ -249,18 +306,18 @@ function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
         {bet.kind === "range" ? (
           <RangeSettle s={s} bet={bet} />
         ) : (
-        <div className={binary ? "resolve-grid" : "resolve-list"}>
-          {list.map((o, i) => (
-            <ConfirmButton
-              key={o.id}
-              className={binary ? (i === 0 ? "y" : "n") : "oc"}
-              style={binary ? undefined : ocStyle(o.color)}
-              label={binary ? (i === 0 ? "Yes" : "No") : o.label}
-              confirm={`Confirm ${o.label}`}
-              onConfirm={() => api.resolveBet(s.id, bet.id, o.id, `Resolved: ${o.label}.`)}
-            />
-          ))}
-        </div>
+          <div className={binary ? "resolve-grid" : "resolve-list"}>
+            {list.map((o, i) => (
+              <ConfirmButton
+                key={o.id}
+                className={binary ? (i === 0 ? "y" : "n") : "oc"}
+                style={binary ? undefined : ocStyle(o.color)}
+                label={binary ? (i === 0 ? "Yes" : "No") : o.label}
+                confirm={`Confirm ${o.label}`}
+                onConfirm={() => api.resolveBet(s.id, bet.id, o.id, `Resolved: ${o.label}.`)}
+              />
+            ))}
+          </div>
         )}
         {bet.kind === "multi" && <TieReport s={s} bet={bet} />}
         <ConfirmButton
@@ -282,6 +339,9 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
   const now = useNow(1000) + skew;
   const until = withdrawUntil(bet, s.settings);
   const playing = isParticipant(s, me);
+  // An open bet past its close time shows as closed right away, before the next refresh confirms it.
+  const status = shownStatus(bet, now);
+  const closedByTime = bet.status !== "draft" && pastClose(bet, now);
   const index = s.bets.indexOf(bet) + 1;
   const binary = bet.kind === "binary";
   const winner = list.find((o) => o.id === bet.outcomeId);
@@ -292,7 +352,7 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
       <section className="bhead">
         <div>
           <span className="row">
-            <Pill kind={bet.status}>{bet.status === "closed" ? "Betting locked" : bet.status}</Pill>
+            <Pill kind={status}>{status === "closed" ? "Betting locked" : status}</Pill>
             <span className="cap">
               Bet {index} of {s.settings.betCount}
               {bet.kind === "multi" && ` · ${bet.outcomes.length} options`}
@@ -310,7 +370,17 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
             <span>
               Host <b>{name(s.hostId)}</b>
             </span>
-            {bet.status === "open" && until !== null && (
+            {bet.closesAt && (status === "open" || status === "draft") && (
+              <span title={whenText(bet.closesAt)}>
+                Betting closes <b>{status === "draft" ? whenText(bet.closesAt) : `in ${untilText(Date.parse(bet.closesAt) - now)}`}</b>
+              </span>
+            )}
+            {bet.closesAt && closedByTime && status === "closed" && (
+              <span>
+                Closed <b>{whenText(bet.closesAt)}</b>
+              </span>
+            )}
+            {status === "open" && until !== null && (
               <span>
                 Withdrawals <b>{now < until ? `${countdown(until - now)} left` : "closed"}</b>
               </span>
@@ -321,7 +391,11 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
               </span>
             )}
           </div>
-          {bet.kind === "multi" && <p className="hint" style={{ marginTop: 8 }}>{TIE_RULE_TEXT[bet.tieRule]}</p>}
+          {bet.kind === "multi" && (
+            <p className="hint" style={{ marginTop: 8 }}>
+              {TIE_RULE_TEXT[bet.tieRule]}
+            </p>
+          )}
           {bet.kind === "range" && (
             <p className="hint" style={{ marginTop: 8 }}>
               Each range includes its lower number and stops just before the next. The host enters the measured result
@@ -329,14 +403,14 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
             </p>
           )}
         </div>
-        {(bet.status === "open" || bet.status === "closed") && (
-        <div className="readout" title="Share of the coins in the pool, not a probability">
-          <div className="v">
-            {!total ? "–" : binary ? list[0].pct : top!.pct}
-            {total > 0 && <small>%</small>}
+        {(status === "open" || status === "closed") && (
+          <div className="readout" title="Share of the coins in the pool, not a probability">
+            <div className="v">
+              {!total ? "–" : binary ? list[0].pct : top!.pct}
+              {total > 0 && <small>%</small>}
+            </div>
+            <span className="cap">{!total ? "no coins yet" : binary ? "of the pool on yes" : `of the pool on ${top!.label}`}</span>
           </div>
-          <span className="cap">{!total ? "no coins yet" : binary ? "of the pool on yes" : `of the pool on ${top!.label}`}</span>
-        </div>
         )}
       </section>
 
@@ -356,15 +430,15 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
                         ? "Nobody was on another range, so every coin went back."
                         : "Winners split the pool in proportion to their stakes.")
                   : tied.length
-                  ? bet.outcomeId
-                    ? `${tied.map((id) => labelOf(bet, id)).join(" and ")} tied. ${labelOf(bet, bet.outcomeId)} was listed first, so it wins.` +
-                      (bet.refunded ? " Nobody was on it alone, so every coin went back." : "")
-                    : `${tied.map((id) => labelOf(bet, id)).join(" and ")} tied, so every coin went back.`
-                  : bet.refunded
                     ? bet.outcomeId
-                      ? "Nobody was on another outcome, so every coin went back."
-                      : "Every coin was on one outcome when betting locked, so it all went back."
-                    : "Winners split the pool in proportion to their stakes."}
+                      ? `${tied.map((id) => labelOf(bet, id)).join(" and ")} tied. ${labelOf(bet, bet.outcomeId)} was listed first, so it wins.` +
+                        (bet.refunded ? " Nobody was on it alone, so every coin went back." : "")
+                      : `${tied.map((id) => labelOf(bet, id)).join(" and ")} tied, so every coin went back.`
+                    : bet.refunded
+                      ? bet.outcomeId
+                        ? "Nobody was on another outcome, so every coin went back."
+                        : "Every coin was on one outcome when betting locked, so it all went back."
+                      : "Winners split the pool in proportion to their stakes."}
               </span>
             </Panel>
           )}
@@ -395,29 +469,35 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...bet.results].sort((a, b) => b.net - a.net).map((r) => (
-                    <tr key={r.userId} className={r.userId === me ? "me" : ""}>
-                      <td>
-                        <Who id={r.userId} />
-                      </td>
-                      <td>
-                        <OutcomeTag bet={bet} id={r.outcomeId} strong={false} />
-                      </td>
-                      <td className="r num">{fmt(r.stake)}</td>
-                      <td className="r num">{fmt(r.payout)}</td>
-                      <td className={`r num ${r.net > 0 ? "up" : r.net < 0 ? "down" : "dim"}`}>{signed(r.net)}</td>
-                    </tr>
-                  ))}
+                  {[...bet.results]
+                    .sort((a, b) => b.net - a.net)
+                    .map((r) => (
+                      <tr key={r.userId} className={r.userId === me ? "me" : ""}>
+                        <td>
+                          <Who id={r.userId} />
+                        </td>
+                        <td>
+                          <OutcomeTag bet={bet} id={r.outcomeId} strong={false} />
+                        </td>
+                        <td className="r num">{fmt(r.stake)}</td>
+                        <td className="r num">{fmt(r.payout)}</td>
+                        <td className={`r num ${r.net > 0 ? "up" : r.net < 0 ? "down" : "dim"}`}>{signed(r.net)}</td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </Panel>
           )}
         </div>
         <div className="col">
-          {bet.status === "open" && playing && <Ticket s={s} bet={bet} />}
-          {bet.status === "open" && !playing && <p className="notice">You're hosting without playing, so you can't wager.</p>}
-          {bet.status === "closed" && <p className="notice">Betting is locked. Waiting for {name(s.hostId)} to call it.</p>}
-          {s.hostId === me && <HostPanel s={s} bet={bet} />}
+          {status === "open" && playing && <Ticket s={s} bet={bet} />}
+          {status === "open" && !playing && <p className="notice">You're hosting without playing, so you can't wager.</p>}
+          {status === "closed" && (
+            <p className="notice">
+              {closedByTime ? "Betting closed at its closing time." : "Betting is locked."} Waiting for {name(s.hostId)} to call it.
+            </p>
+          )}
+          {s.hostId === me && <HostPanel s={s} bet={bet} status={status} />}
           <Link to={`/s/${s.id}`} className="btn ghost">
             ← Back to all bets
           </Link>

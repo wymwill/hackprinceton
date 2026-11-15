@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { NewBetModal } from "../components/Standings.tsx";
 import { ConfirmButton, Panel, Pill, Who } from "../components/ui.tsx";
 import { agreesTo, isParticipant, participantIds } from "../lib/rules.ts";
-import { ago } from "../lib/format.ts";
+import { ago, whenText } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Bet, Favor, Series } from "../lib/types.ts";
 import { RulesList } from "./Rules.tsx";
@@ -188,6 +188,10 @@ export default function Lobby({ s }: { s: Series }) {
                           : b.kind === "range"
                             ? `Range${b.unit ? ` in ${b.unit}` : ""}: ${b.outcomes.map((o) => o.label).join(" · ")}`
                             : `${b.outcomes.map((o) => o.label).join(" · ")} — ${b.tieRule === "refund" ? "tie refunds" : "tie: first listed wins"}`}
+                        {b.closesAt &&
+                          (Date.parse(b.closesAt) <= Date.now()
+                            ? " · its closing time has passed, so it will open already closed. Edit it to move the time."
+                            : ` · betting closes ${whenText(b.closesAt)}`)}
                       </span>
                     </span>
                     {isHost && (

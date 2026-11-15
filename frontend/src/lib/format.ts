@@ -41,6 +41,36 @@ export const ordinal = (n: number) => {
   return `${n}${s[(v - 20) % 10] ?? s[v] ?? s[0]}`;
 };
 
+/** "2d 3h", "4h 12m", "12m", "45s": how long until something. */
+export function untilText(ms: number) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.ceil(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ${m % 60}m`;
+  return `${Math.floor(h / 24)}d ${h % 24}h`;
+}
+
+/** "Sat, Nov 15, 3:00 PM" in the viewer's time zone. */
+export const whenText = (iso: string) =>
+  new Date(iso).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+/** An ISO time as a datetime-local input value, in local time. */
+export function toLocalInput(iso?: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** A datetime-local input value as an ISO time, or null when empty or invalid. */
+export function fromLocalInput(v: string) {
+  if (!v) return null;
+  const t = new Date(v).getTime();
+  return Number.isNaN(t) ? null : new Date(t).toISOString();
+}
+
 export function useNow(ms = 1000) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {

@@ -80,9 +80,17 @@ export const TIE_RULE_TEXT: Record<Bet["tieRule"], string> = {
 };
 
 /** When a wager on this bet can no longer be withdrawn, or null if never. */
+/** True once an open bet's close time has passed (the server will report it closed on the next refresh). */
+export const pastClose = (bet: Bet, now: number) => !!bet.closesAt && now >= Date.parse(bet.closesAt);
+
+/** The status to show: an open bet past its close time is closed, even before the next refresh. */
+export const shownStatus = (bet: Bet, now: number) => (bet.status === "open" && pastClose(bet, now) ? "closed" : bet.status);
+
 export function withdrawUntil(bet: Bet, settings: Settings): number | null {
   if (!bet.openedAt || settings.withdrawMinutes <= 0) return null;
-  return Date.parse(bet.openedAt) + settings.withdrawMinutes * 60_000;
+  const end = Date.parse(bet.openedAt) + settings.withdrawMinutes * 60_000;
+  // Withdrawals also stop at the bet's close time.
+  return bet.closesAt ? Math.min(end, Date.parse(bet.closesAt)) : end;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { balances, isParticipant, participantIds, standings } from "../lib/rules.ts";
 import { STATUS_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
@@ -128,7 +128,12 @@ function Account() {
         </span>
       </Link>
       <div className="row">
-        <button type="button" className="btn ghost sm" onClick={() => choose(theme === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
+        <button
+          type="button"
+          className="btn ghost sm"
+          onClick={() => choose(theme === "light" ? "dark" : "light")}
+          aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+        >
           {theme === "light" ? "Dark mode" : "Light mode"}
         </button>
         <button type="button" className="btn ghost sm" onClick={signOut}>
@@ -153,41 +158,137 @@ function ClansLink() {
 function Sidebar({ current }: { current?: Series }) {
   const { me } = useStore();
   const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
+  // On phones the nav and account fold away behind a Menu button; the bottom tabs cover the usual moves.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+  useEffect(() => setMenuOpen(false), [pathname]);
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
       <Link to="/" className="brand" aria-label="Alea home">
-        <span className="brand-mark">B</span>
+        <span className="brand-mark">A</span>
         <span className="brand-name">Alea</span>
       </Link>
       <SeriesSwitcher current={current} />
-      {current ? (
-        <nav className="nav" aria-label="Series">
-          <span className="cap">This series</span>
-          <NavLink to={`/s/${current.id}`} end>
-            {current.status === "lobby" ? "Lobby" : current.status === "active" ? "Dashboard" : "Results"}
-            {openBets > 0 && <b>{openBets}</b>}
-          </NavLink>
-          {current.status !== "lobby" && <NavLink to={`/s/${current.id}/leaderboard`}>Leaderboard</NavLink>}
-          <NavLink to={`/s/${current.id}/rules`}>Rules &amp; players</NavLink>
-          {current.hostId === me && current.status === "active" && <span className="cap" style={{ padding: "10px 4px 0" }}>You're the host</span>}
-          <span className="cap" style={{ padding: "14px 4px 0" }}>You</span>
-          <NavLink to="/friends">Friends</NavLink>
-          <ClansLink />
-        </nav>
-      ) : (
-        <nav className="nav" aria-label="Main">
-          <NavLink to="/" end>
-            All series
-          </NavLink>
-          <NavLink to="/new">New series</NavLink>
-          <NavLink to="/friends">Friends</NavLink>
-          <ClansLink />
-          <NavLink to="/profile">Profile</NavLink>
-        </nav>
-      )}
-      <div className="grow" />
-      <Account />
+      <button
+        type="button"
+        className="menu-btn"
+        aria-expanded={menuOpen}
+        aria-controls="side-more"
+        aria-label={menuOpen ? "Close menu" : "Open menu"}
+        onClick={() => setMenuOpen((o) => !o)}
+      >
+        {menuOpen ? <Icon name="close" /> : <Icon name="menu" />}
+      </button>
+      <div className="side-more" id="side-more">
+        {current ? (
+          <nav className="nav" aria-label="Series">
+            <span className="cap">This series</span>
+            <NavLink to={`/s/${current.id}`} end>
+              {current.status === "lobby" ? "Lobby" : current.status === "active" ? "Dashboard" : "Results"}
+              {openBets > 0 && <b>{openBets}</b>}
+            </NavLink>
+            {current.status !== "lobby" && <NavLink to={`/s/${current.id}/leaderboard`}>Leaderboard</NavLink>}
+            <NavLink to={`/s/${current.id}/rules`}>Rules &amp; players</NavLink>
+            {current.hostId === me && current.status === "active" && (
+              <span className="cap" style={{ padding: "10px 4px 0" }}>
+                You're the host
+              </span>
+            )}
+            <span className="cap" style={{ padding: "14px 4px 0" }}>
+              You
+            </span>
+            <NavLink to="/friends">Friends</NavLink>
+            <ClansLink />
+          </nav>
+        ) : (
+          <nav className="nav" aria-label="Main">
+            <NavLink to="/" end>
+              All series
+            </NavLink>
+            <NavLink to="/new">New series</NavLink>
+            <NavLink to="/friends">Friends</NavLink>
+            <ClansLink />
+            <NavLink to="/profile">Profile</NavLink>
+          </nav>
+        )}
+        <div className="grow" />
+        <Account />
+      </div>
     </aside>
+  );
+}
+
+const ICONS: Record<string, string> = {
+  bets: "M4 5h16v4H4zM4 11h16v4H4zM4 17h10v2H4z",
+  board: "M5 20V10h3v10zM10.5 20V4h3v16zM16 20v-7h3v7z",
+  rules: "M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7",
+  clans: "M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 3-5 6-5s6 2 6 5M12 15.5c1-.4 2.4-.5 4-.5 3 0 6 2 6 5",
+  me: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6",
+  home: "M3 11l9-7 9 7M6 9.5V20h12V9.5",
+  plus: "M12 5v14M5 12h14",
+  friends: "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5M18 8v6M15 11h6",
+  menu: "M4 7h16M4 12h16M4 17h16",
+  close: "M6 6l12 12M18 6L6 18",
+};
+
+function Icon({ name }: { name: keyof typeof ICONS }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="22"
+      height="22"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={ICONS[name]} />
+    </svg>
+  );
+}
+
+function Tab({ to, icon, label, end, badge }: { to: string; icon: keyof typeof ICONS; label: string; end?: boolean; badge?: number }) {
+  return (
+    <NavLink to={to} end={end}>
+      <span className="tab-icon">
+        <Icon name={icon} />
+        {!!badge && <b aria-label={`${badge} new`}>{badge > 99 ? "99+" : badge}</b>}
+      </span>
+      <span>{label}</span>
+    </NavLink>
+  );
+}
+
+/** Phones only: the main places, one thumb away. */
+function BottomTabs({ current }: { current?: Series }) {
+  const unread = useChatUnread();
+  const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
+  return (
+    <nav className="bottom-tabs" aria-label="Quick">
+      {current ? (
+        <>
+          <Tab
+            to={`/s/${current.id}`}
+            end
+            icon="bets"
+            label={current.status === "lobby" ? "Lobby" : current.status === "active" ? "Bets" : "Results"}
+            badge={openBets}
+          />
+          {current.status !== "lobby" && <Tab to={`/s/${current.id}/leaderboard`} icon="board" label="Board" />}
+          <Tab to={`/s/${current.id}/rules`} icon="rules" label="Rules" />
+        </>
+      ) : (
+        <>
+          <Tab to="/" end icon="home" label="Series" />
+          <Tab to="/new" icon="plus" label="New" />
+          <Tab to="/friends" icon="friends" label="Friends" />
+        </>
+      )}
+      <Tab to="/clans" icon="clans" label="Clans" badge={unread} />
+      <Tab to="/profile" icon="me" label="Me" />
+    </nav>
   );
 }
 
@@ -261,6 +362,7 @@ export function Shell({ crumbs = [], children, fill = false }: { crumbs?: Crumb[
         <TopBar crumbs={crumbs} current={current} />
         <main className={`page ${fill ? "fill" : ""}`}>{children}</main>
       </div>
+      {!fill && <BottomTabs current={current} />}
       <Toasts />
     </div>
   );

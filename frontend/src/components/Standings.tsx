@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { standings } from "../lib/rules.ts";
-import { fmt, signed } from "../lib/format.ts";
+import { fmt, signed, toLocalInput } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Bet, BetDraft, Series } from "../lib/types.ts";
 import OutcomeEditor, { newDraft, outcomeProblem } from "./OutcomeEditor.tsx";
@@ -55,6 +55,7 @@ export function NewBetModal({ s, bet, onClose }: { s: Series; bet?: Bet; onClose
           outcomes: bet.kind === "multi" ? bet.outcomes.map((o) => ({ id: o.id, label: o.label })) : [{ label: "" }, { label: "" }],
           tieRule: bet.tieRule,
           range: bet.kind === "range" ? draftFromBet(bet) : defaultRange(),
+          closesAt: toLocalInput(bet.closesAt),
         }
       : newDraft()
   );

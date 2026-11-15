@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Session } from "@supabase/supabase-js";
 import SignIn from "../pages/SignIn.tsx";
 import { rangesOf } from "./ranges.ts";
+import { fromLocalInput } from "./format.ts";
 import { supabase } from "./supabase.ts";
 import type { AppState, BetDraft, Db, Id, Me, Series, Settings } from "./types.ts";
 
@@ -18,7 +19,11 @@ type Toast = { id: number; text: string; tone: "ok" | "err" };
 
 /** A refused or failed API call: the HTTP status, the server's stable error code, and its message. */
 export class ApiError extends Error {
-  constructor(public status: number, message: string, public code?: string) {
+  constructor(
+    public status: number,
+    message: string,
+    public code?: string,
+  ) {
     super(message);
   }
 }
@@ -54,7 +59,8 @@ export type CreateSeriesInput = { name: string; description: string; settings: S
 const rangeBody = (d: BetDraft) => ({ kind: "range", ranges: rangesOf(d.range), unit: d.range.unit.trim(), decimals: d.range.decimals });
 
 /** A draft as the API wants it. YES/NO bets send no outcomes. */
-const betBody = (d: BetDraft) =>
+const betBody = (d: BetDraft) => ({ ...shapeBody(d), ...(d.closesAt ? { closesAt: fromLocalInput(d.closesAt) } : {}) });
+const shapeBody = (d: BetDraft) =>
   d.kind === "range"
     ? { question: d.question.trim(), ...rangeBody(d) }
     : d.kind === "multi"
@@ -90,7 +96,7 @@ function makeApi(act: Act) {
             hostPlays: st.hostPlays,
           },
         },
-        ok
+        ok,
       ),
     joinByCode: (code: string, ok?: string) => act<{ id: Id }>("POST", "/series/join", { code }, ok),
     joinSeries: (id: Id, ok?: string) => act("POST", `${s(id)}/join`, undefined, ok),
@@ -98,8 +104,7 @@ function makeApi(act: Act) {
     kick: (id: Id, userId: Id, ok?: string) => act("DELETE", `${s(id)}/participants/${encodeURIComponent(userId)}`, undefined, ok),
     submitFavor: (id: Id, text: string, ok?: string) => act("POST", `${s(id)}/favors`, { description: text }, ok),
     removeFavor: (id: Id, favorId: Id, ok?: string) => act("DELETE", `${s(id)}/favors/${encodeURIComponent(favorId)}`, undefined, ok),
-    agreeToFavor: (favorId: Id, consent: boolean, ok?: string) =>
-      act("POST", `/series/favors/${encodeURIComponent(favorId)}/consent`, { consent }, ok),
+    agreeToFavor: (favorId: Id, consent: boolean, ok?: string) => act("POST", `/series/favors/${encodeURIComponent(favorId)}/consent`, { consent }, ok),
     setReady: (id: Id, ready: boolean, ok?: string) => act("POST", `${s(id)}/ready`, { ready }, ok),
     start: (id: Id, ok?: string) => act("POST", `${s(id)}/start`, undefined, ok),
     addBet: (id: Id, draft: BetDraft, ok?: string) => act("POST", `${s(id)}/bets`, betBody(draft), ok),
@@ -108,16 +113,20 @@ function makeApi(act: Act) {
       act(
         "PATCH",
         b(id, betId),
-        d.kind === "range"
-          ? { question: d.question.trim(), ...rangeBody(d) }
-          : d.kind === "multi"
-            ? { question: d.question.trim(), kind: "multi", outcomes: d.outcomes.map((o) => ({ id: o.id, label: o.label.trim() })), tieRule: d.tieRule }
-            : { question: d.question.trim(), kind: "binary" },
-        ok
+        {
+          ...(d.kind === "range"
+            ? { question: d.question.trim(), ...rangeBody(d) }
+            : d.kind === "multi"
+              ? { question: d.question.trim(), kind: "multi", outcomes: d.outcomes.map((o) => ({ id: o.id, label: o.label.trim() })), tieRule: d.tieRule }
+              : { question: d.question.trim(), kind: "binary" }),
+          closesAt: fromLocalInput(d.closesAt),
+        },
+        ok,
       ),
+    /** Set or (with null) remove a bet's close time. Works on open bets too, until the time passes. */
+    setBetClose: (id: Id, betId: Id, closesAt: string | null, ok?: string) => act("PATCH", b(id, betId), { closesAt }, ok),
     removeDraftBet: (id: Id, betId: Id, ok?: string) => act("DELETE", b(id, betId), undefined, ok),
-    wager: (id: Id, betId: Id, outcomeId: Id, amount: number, ok?: string) =>
-      act("POST", `${b(id, betId)}/wagers`, { outcomeId, amount }, ok),
+    wager: (id: Id, betId: Id, outcomeId: Id, amount: number, ok?: string) => act("POST", `${b(id, betId)}/wagers`, { outcomeId, amount }, ok),
     withdraw: (id: Id, betId: Id, ok?: string) => act("POST", `${b(id, betId)}/withdraw`, undefined, ok),
     lockBet: (id: Id, betId: Id, ok?: string) => act("POST", `${b(id, betId)}/lock`, undefined, ok),
     resolveBet: (id: Id, betId: Id, outcomeId: Id, ok?: string) => act("POST", `${b(id, betId)}/resolve`, { outcomeId }, ok),
@@ -242,7 +251,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return undefined;
       }
     },
-    [refresh, toast]
+    [refresh, toast],
   );
 
   const api = useMemo(() => makeApi(act), [act]);
@@ -270,7 +279,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       toast("Profile saved.");
       return true;
     },
-    [state, refresh, toast]
+    [state, refresh, toast],
   );
 
   const value = useMemo<Store | null>(() => {
@@ -304,9 +313,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return (
       <Boot>
         <p className="notice" style={{ maxWidth: 520, textAlign: "left" }}>
-          <b>Sign-in isn't set up yet.</b> Put <code>SUPABASE_URL</code> and <code>SUPABASE_PUBLISHABLE_KEY</code> (the
-          project's publishable / anon key) in <code>.env.local</code> at the repo root, then restart{" "}
-          <code>npm run dev</code> here and in the repo root. See <code>docs/supabase-series.md</code>.
+          <b>Sign-in isn't set up yet.</b> Put <code>SUPABASE_URL</code> and <code>SUPABASE_PUBLISHABLE_KEY</code> (the project's publishable / anon key) in{" "}
+          <code>.env.local</code> at the repo root, then restart <code>npm run dev</code> here and in the repo root. See <code>docs/supabase-series.md</code>.
         </p>
       </Boot>
     );

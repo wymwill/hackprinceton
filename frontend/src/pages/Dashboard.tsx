@@ -2,8 +2,8 @@ import { useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { NewBetModal, StandingsTable } from "../components/Standings.tsx";
 import { ConfirmButton, Empty, OutcomeTag, Panel, Pill, PoolBar } from "../components/ui.tsx";
-import { balances, isParticipant, leader, resultText, shares, standings } from "../lib/rules.ts";
-import { ago, fmt, ordinal, signed } from "../lib/format.ts";
+import { balances, isParticipant, leader, resultText, shares, shownStatus, standings } from "../lib/rules.ts";
+import { ago, fmt, ordinal, signed, untilText, useNow, whenText } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Bet, Series } from "../lib/types.ts";
 
@@ -16,7 +16,9 @@ const STATUS: Record<Bet["status"], string> = {
 };
 
 export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
-  const { me } = useStore();
+  const { me, skew } = useStore();
+  const now = useNow(5000) + skew;
+  const status = shownStatus(bet, now);
   const p = shares(bet);
   const top = leader(bet);
   const binary = bet.kind === "binary";
@@ -28,7 +30,14 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
     <article className="panel bcard">
       <div className="head">
         <div className="stack" style={{ gap: 8 }}>
-          <Pill kind={bet.status}>{STATUS[bet.status]}</Pill>
+          <span className="row" style={{ gap: 8 }}>
+            <Pill kind={status}>{STATUS[status]}</Pill>
+            {status === "open" && bet.closesAt && (
+              <span className="cap" title={whenText(bet.closesAt)}>
+                Closes in {untilText(Date.parse(bet.closesAt) - now)}
+              </span>
+            )}
+          </span>
           <h3>
             <Link to={href}>{bet.question}</Link>
           </h3>
@@ -71,7 +80,7 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
           )}
         </span>
       </div>
-      {bet.status === "open" && isParticipant(s, me) && binary ? (
+      {status === "open" && isParticipant(s, me) && binary ? (
         <div className="yn">
           <Link className="y" to={`${href}?outcome=${p.list[0].id}`}>
             Yes <span className="num">{fmt(p.list[0].pool)}</span>
@@ -80,7 +89,7 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
             No <span className="num">{fmt(p.list[1].pool)}</span>
           </Link>
         </div>
-      ) : bet.status === "open" && isParticipant(s, me) ? (
+      ) : status === "open" && isParticipant(s, me) ? (
         <Link to={href} className="settled pick">
           <span>{mine ? "Add to your pick" : bet.kind === "range" ? `Pick one of ${bet.outcomes.length} ranges` : `Pick one of ${bet.outcomes.length}`}</span>
           <span>Bet →</span>
@@ -119,7 +128,8 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
 type Filter = "open" | "closed" | "done";
 
 export default function Dashboard({ s }: { s: Series }) {
-  const { me } = useStore();
+  const { me, skew } = useStore();
+  const now = useNow(5000) + skew;
   const [filter, setFilter] = useState<Filter>("open");
   const [writing, setWriting] = useState(false);
   const { api } = useStore();
@@ -128,8 +138,8 @@ export default function Dashboard({ s }: { s: Series }) {
   const bal = playing ? balances(s).get(me)! : undefined;
   const st = playing ? standings(s).find((r) => r.userId === me)! : undefined;
   const groups: Record<Filter, Bet[]> = {
-    open: s.bets.filter((b) => b.status === "open"),
-    closed: s.bets.filter((b) => b.status === "closed"),
+    open: s.bets.filter((b) => shownStatus(b, now) === "open"),
+    closed: s.bets.filter((b) => shownStatus(b, now) === "closed"),
     done: s.bets.filter((b) => b.status === "resolved" || b.status === "canceled"),
   };
   const shown = groups[filter];

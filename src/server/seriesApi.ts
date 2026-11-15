@@ -160,3 +160,21 @@ export const betShape = (body: Record<string, unknown>) => ({
   p_unit: typeof body.unit === "string" ? body.unit : null,
   p_decimals: num(body.decimals),
 });
+
+/**
+ * A bet's `closesAt` from a request body: undefined when the field is missing (leave it alone),
+ * null to remove the close time, otherwise an ISO time that must be in the future.
+ * Checked here as well as in the SQL so a bad time fails before the bet is created.
+ */
+export function closesAt(body: Record<string, unknown>): string | null | undefined {
+  if (!("closesAt" in body) || body.closesAt === undefined) return undefined;
+  if (body.closesAt === null || body.closesAt === "") return null;
+  const t = typeof body.closesAt === "string" ? Date.parse(body.closesAt) : NaN;
+  if (Number.isNaN(t)) throw new AppError(400, "invalid_close_time", "That closing time isn't a date and time.");
+  if (t <= Date.now()) throw new AppError(400, "invalid_close_time", "Pick a closing time in the future.");
+  return new Date(t).toISOString();
+}
+
+/** Set (or with null, remove) a bet's close time. */
+export const setClose = (rpc: SeriesCtx["rpc"], seriesId: string, betId: string, at: string | null) =>
+  rpc("set_series_bet_close", { p_series_id: seriesId, p_bet_id: betId, p_closes_at: at });
