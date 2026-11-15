@@ -24,7 +24,7 @@ What each app provides:
 | Oura | sleep_night (score), readiness_day (score), workouts | Scopes `daily sleep workout`. |
 | Whoop | recovery_day (%), sleep_night (minutes), workouts | Scopes `read:recovery read:sleep read:workout read:profile offline`. |
 | Spotify | listen (one per song, in minutes) | PKCE, no secret. Spotify only keeps your last 50 plays, so proof only reaches back as far as the most recent sync. |
-| GitHub | push (commits), pull_request (merged) | No sign-in: people link a public username. Public events only, from the last 90 days (at most 300). |
+| GitHub | push (count of pushes), pull_request (merged) | No sign-in: people link a public username. Public events only, from the last 90 days (at most 300). GitHub's public events no longer include commit counts, so pushes are counted. |
 
 ## Setting up each app
 
