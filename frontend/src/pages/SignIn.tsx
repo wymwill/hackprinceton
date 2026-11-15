@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { providerEnabled, supabase } from "../lib/supabase.ts";
+import { authErrorText, providerEnabled, supabase } from "../lib/supabase.ts";
 
 /**
  * Sign in with Google, or with an email and password (works with no provider
@@ -23,7 +23,7 @@ export default function SignIn() {
   const google = async () => {
     setMessage(null);
     const { error } = await supabase!.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.href } });
-    if (error) setMessage({ text: error.message, tone: "err" });
+    if (error) setMessage({ text: authErrorText(error), tone: "err" });
   };
 
   const submit = async () => {
@@ -32,14 +32,14 @@ export default function SignIn() {
     const auth = supabase!.auth;
     if (mode === "in") {
       const { error } = await auth.signInWithPassword({ email, password });
-      if (error) setMessage({ text: error.message, tone: "err" });
+      if (error) setMessage({ text: authErrorText(error), tone: "err" });
     } else {
       const { data, error } = await auth.signUp({
         email,
         password,
         options: { data: { full_name: name.trim() || undefined }, emailRedirectTo: window.location.href },
       });
-      if (error) setMessage({ text: error.message, tone: "err" });
+      if (error) setMessage({ text: authErrorText(error), tone: "err" });
       else if (!data.session) setMessage({ text: "Check your email to confirm your account, then sign in.", tone: "ok" });
     }
     setBusy(false);

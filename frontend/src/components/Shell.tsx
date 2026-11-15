@@ -7,6 +7,7 @@ import { useTheme } from "../lib/theme.ts";
 import { useChatUnread } from "../lib/chat.ts";
 import type { Series } from "../lib/types.ts";
 import { Avatar, Modal, Toasts } from "./ui.tsx";
+import { useMoveCount } from "./YourMoves.tsx";
 
 /** "ABC123", or an invite link ending in /join/ABC123. */
 export const codeFrom = (input: string) => (input.trim().match(/\/join\/([A-Za-z0-9]+)\/?$/)?.[1] ?? input).trim().toUpperCase();
@@ -90,6 +91,7 @@ function ClansLink() {
 
 function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: string; name: string } }) {
   const [joining, setJoining] = useState(false);
+  const moves = useMoveCount();
   const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
   return (
     <aside className="sidebar">
@@ -98,7 +100,10 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
         <span className="brand-name">Alea</span>
       </Link>
       <nav className="nav" aria-label="Main">
-        <NavLink to="/" end>All series</NavLink>
+        <NavLink to="/" end title={moves ? `${moves} thing${moves === 1 ? "" : "s"} you can do now` : undefined}>
+          Home{moves > 0 && <b aria-label={`${moves} moves waiting`}>{moves}</b>}
+        </NavLink>
+        <NavLink to="/series">All series</NavLink>
         {current && (
           <div className="series-nav">
             <NavLink to={`/s/${current.id}`} end className="series-nav-title" title={current.name}>
@@ -117,6 +122,7 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
           <NavLink to={`/clans/${clanNav.id}`} end>Overview</NavLink>
           <NavLink to={`/clans/${clanNav.id}/chat`}>Chat</NavLink>
         </details>}
+        <NavLink to="/tutorial">Tutorial</NavLink>
         <NavLink to="/profile">Profile</NavLink>
       </nav>
       {joining && <JoinModal onClose={() => setJoining(false)} />}
@@ -143,7 +149,7 @@ function TopBar({ crumbs, current }: { crumbs: Crumb[]; current?: Series }) {
   return (
     <header className="topbar">
       <nav className="crumbs" aria-label="Breadcrumb">
-        <Link to="/">Series</Link>
+        <Link to="/">Home</Link>
         {crumbs.map((c, i) => (
           <Fragment key={i}>
             <span className="sep">/</span>

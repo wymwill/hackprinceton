@@ -21,7 +21,7 @@ function Missing() {
     <Shell>
       <Panel>
         <Empty title="Series not found">
-          You may not be in it, or it may have been removed. <Link to="/" className="red-t">Back to your series</Link>
+          You may not be in it, or it may have been removed. <Link to="/series" className="red-t">Back to your series</Link>
         </Empty>
       </Panel>
     </Shell>

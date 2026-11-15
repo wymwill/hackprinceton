@@ -15,7 +15,8 @@ const STATUS: Record<Bet["status"], string> = {
   canceled: "Canceled",
 };
 
-export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
+/** `showSeries`: name the series above the question (for lists that mix series, like Home). */
+export function BetCard({ s, bet, showSeries = false }: { s: Series; bet: Bet; showSeries?: boolean }) {
   const { me } = useStore();
   const p = shares(bet);
   const top = leader(bet);
@@ -29,6 +30,7 @@ export function BetCard({ s, bet }: { s: Series; bet: Bet }) {
       <Link className="bcard-link" to={href} aria-label={`Open bet: ${bet.question}`} />
       <div className="head">
         <div className="stack" style={{ gap: 8 }}>
+          {showSeries && <span className="cap bcard-series truncate">{s.name}</span>}
           <Pill kind={bet.status}>{STATUS[bet.status]}</Pill>
           <h3>
             <Link to={href}>{bet.question}</Link>
