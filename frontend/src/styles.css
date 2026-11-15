@@ -2701,3 +2701,18 @@ img.avatar {
 .wager-receipt .linkish {
   align-self: flex-start;
 }
+
+/* Scheduled closing: "Closing soon" pill and the countdown in the bet header. */
+.pill.soon {
+  color: var(--red-hi);
+}
+.bhead .sub .deadline.soon b {
+  color: var(--red-hi);
+}
+/* A reminder you asked for, on an item in Your moves. */
+.pill.reminder {
+  color: var(--red-hi);
+}
+.pill.reminder.unread {
+  background: var(--red-soft);
+}
