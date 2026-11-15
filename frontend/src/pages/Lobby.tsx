@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { NewBetModal } from "../components/Standings.tsx";
 import { ConfirmButton, Panel, Pill, Who } from "../components/ui.tsx";
 import { agreesTo, isParticipant, participantIds } from "../lib/rules.ts";
-import { ago } from "../lib/format.ts";
+import { ago, punishmentCopy } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Bet, Favor, Series } from "../lib/types.ts";
 import { RulesList } from "./Rules.tsx";
@@ -24,7 +24,7 @@ function Agreement({ s, f }: { s: Series; f: Favor }) {
         <button
           type="button"
           className={`btn sm ${mine ? "" : "primary"}`}
-          onClick={() => api.agreeToFavor(f.id, !mine, mine ? "Agreement taken back. You're not ready." : "You agreed to this favor.")}
+          onClick={() => api.agreeToFavor(f.id, !mine, mine ? "Agreement taken back. You're not ready." : "You agreed to this punishment.")}
         >
           {mine ? "✓ Agreed" : "Agree"}
         </button>
@@ -41,19 +41,19 @@ function Favors({ s }: { s: Series }) {
   const mine = s.favors.filter((f) => f.authorId === me);
   const canAdd = playing && (pledge || mine.length < s.settings.favorsPerPlayer);
   return (
-    <Panel label={pledge ? "Pledged favors" : "Favor pool"} right={`${s.favors.length} in`}>
+    <Panel label={pledge ? "Pledged punishments" : "Punishment pool"} right={`${s.favors.length} in`}>
       <div className="stack">
         <p className="hint">
           {pledge
-            ? `Pledge the favor you'll do if you finish in the bottom ${s.settings.losers}. Everyone can see who pledged what. Changing or removing a pledge resets everyone's "ready".`
-            : `Add up to ${s.settings.favorsPerPlayer} favor${s.settings.favorsPerPlayer === 1 ? "" : "s"} (at least 1). The top ${s.settings.losers} pick from this pool for the bottom ${s.settings.losers}, but only favors that player agreed to. Changing the pool resets everyone's "ready".`}
+            ? `Pledge the punishment you'll do if you finish in the bottom ${s.settings.losers}. Everyone can see who pledged what. Changing or removing a pledge resets everyone's "ready".`
+            : `Add up to ${s.settings.favorsPerPlayer} punishment${s.settings.favorsPerPlayer === 1 ? "" : "s"} (at least 1). The top ${s.settings.losers} pick from this pool for the bottom ${s.settings.losers}, but only punishments that player agreed to. Changing the pool resets everyone's "ready".`}
         </p>
         {canAdd && (
           <form
             className="row"
             onSubmit={async (e) => {
               e.preventDefault();
-              if (await api.submitFavor(s.id, text, pledge ? "Favor pledged." : "Added to the pool.")) setText("");
+              if (await api.submitFavor(s.id, text, pledge ? "Punishment pledged." : "Added to the pool.")) setText("");
             }}
           >
             <input className="input text" value={text} onChange={(e) => setText(e.target.value)} maxLength={120} placeholder="Placeholder placeholder" />
@@ -63,7 +63,7 @@ function Favors({ s }: { s: Series }) {
           </form>
         )}
         <div className="people">
-          {s.favors.length === 0 && <span className="hint">No favors yet.</span>}
+          {s.favors.length === 0 && <span className="hint">No punishments yet.</span>}
           {s.favors.map((f) => (
             <div key={f.id} className="person favor-row">
               <span className="stack" style={{ gap: 4, minWidth: 0 }}>
@@ -132,15 +132,18 @@ export default function Lobby({ s }: { s: Series }) {
             {isHost && <Pill kind="host">You host</Pill>}
           </span>
           <h1 style={{ marginTop: 14 }}>{s.name}</h1>
-          <p>{s.description || "Players join, read the rules and submit favors. Rules lock when betting starts."}</p>
+          <p>{s.description || "Players join, read the rules and submit punishments. Rules lock when betting starts."}</p>
         </div>
         <Invite s={s} />
       </section>
 
       <div className="grid2">
         <div className="col">
-          <Panel label="Rules" right="Locked at start">
-            <RulesList s={s} />
+          <Panel label="Before you start" right="Rules lock at start">
+            <details className="rules-details">
+              <summary>Read series rules</summary>
+              <RulesList s={s} />
+            </details>
             {playing && member && (
               <>
                 <div className="rule" />
@@ -155,7 +158,7 @@ export default function Lobby({ s }: { s: Series }) {
                     {s.settings.mode === "money"
                       ? ""
                       : pool
-                        ? ` and agree to every favor in the pool${unagreed ? ` (this agrees to the ${unagreed} you haven't yet)` : ""}. I'll do the one picked for me if I finish in the bottom ${s.settings.losers}`
+                        ? ` and agree to every punishment in the pool${unagreed ? ` (this agrees to the ${unagreed} you haven't yet)` : ""}. I'll do the one picked for me if I finish in the bottom ${s.settings.losers}`
                         : ` and will do my pledge if I finish in the bottom ${s.settings.losers}`}
                     . I'm ready.
                   </span>
@@ -228,7 +231,7 @@ export default function Lobby({ s }: { s: Series }) {
                       ) : (
                         <span className="cap">Not playing</span>
                       )}
-                      {pool && m.plays && <span className="cap">{favors} favor{favors === 1 ? "" : "s"}</span>}
+                      {pool && m.plays && <span className="cap">{favors} punishment{favors === 1 ? "" : "s"}</span>}
                       {isHost && !host && (
                         <ConfirmButton className="btn ghost sm danger" label="Kick" confirm="Sure?" onConfirm={() => api.kick(s.id, m.userId, "Player removed.")} />
                       )}
@@ -284,7 +287,7 @@ export default function Lobby({ s }: { s: Series }) {
             <div className="tape">
               {s.activity.slice(0, 8).map((a, i) => (
                 <div key={i} className="tape-row">
-                  <span>{a.text}</span>
+                  <span>{punishmentCopy(a.text)}</span>
                   <span className="when">{ago(a.at)}</span>
                 </div>
               ))}

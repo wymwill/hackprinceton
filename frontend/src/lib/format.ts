@@ -4,6 +4,13 @@ import type { Mode, SeriesStatus } from "./types.ts";
 export const fmt = (n: number) => n.toLocaleString("en-US");
 export const signed = (n: number) => (n > 0 ? `+${fmt(n)}` : n < 0 ? `−${fmt(-n)}` : "0");
 
+/** Older database activity and errors still use the former UI term. */
+export const punishmentCopy = (value: string) => value
+  .replace(/\bFavors\b/g, "Punishments")
+  .replace(/\bFavor\b/g, "Punishment")
+  .replace(/\bfavors\b/g, "punishments")
+  .replace(/\bfavor\b/g, "punishment");
+
 export function ago(iso: string, now = Date.now()) {
   const s = Math.max(0, Math.floor((now - Date.parse(iso)) / 1000));
   if (s < 60) return `${s}s`;
@@ -22,8 +29,8 @@ export function countdown(ms: number) {
 
 export const MODE_LABEL: Record<Mode, string> = {
   money: "Real money",
-  pledge: "Self-pledged favors",
-  pool: "Shared favor pool",
+  pledge: "Self-pledged punishments",
+  pool: "Shared punishment pool",
 };
 
 export const MODE_LETTER: Record<Mode, string> = { money: "A", pledge: "B", pool: "C" };
@@ -31,7 +38,7 @@ export const MODE_LETTER: Record<Mode, string> = { money: "A", pledge: "B", pool
 export const STATUS_LABEL: Record<SeriesStatus, string> = {
   lobby: "Lobby",
   active: "Live",
-  assigning: "Picking favors",
+  assigning: "Picking punishments",
   finished: "Finished",
 };
 

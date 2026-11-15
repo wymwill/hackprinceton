@@ -21,7 +21,7 @@ export function RulesList({ s }: { s: Series }) {
       )}
       {st.mode === "pool" && (
         <div className="kv">
-          Favor pool <b className="text">{st.favorsPerPlayer} per player max · {st.exclusivePool ? "each picked once" : "reusable"}</b>
+          Punishment pool <b className="text">{st.favorsPerPlayer} per player max · {st.exclusivePool ? "each picked once" : "reusable"}</b>
         </div>
       )}
       <div className="kv">
@@ -56,12 +56,12 @@ export function RulesList({ s }: { s: Series }) {
         </li>
         <li>The host decides each result, even when they're playing.</li>
         <li>The leaderboard only moves when a bet is resolved.</li>
-        {st.mode === "pledge" && <li>The bottom {st.losers} do the favor they pledged.</li>}
+        {st.mode === "pledge" && <li>The bottom {st.losers} do the punishment they pledged.</li>}
         {st.mode === "pool" && (
           <>
-            <li>Every player agrees to each favor in the pool before betting starts ("I'm ready" agrees to all of them).</li>
-            <li>1st picks a favor for last place, 2nd for second-to-last, and so on, only from favors that player agreed to.</li>
-            <li>A favor isn't owed until the loser accepts it. If they decline, the winner picks another.</li>
+            <li>Every player agrees to each punishment in the pool before betting starts ("I'm ready" agrees to all of them).</li>
+            <li>1st picks a punishment for last place, 2nd for second-to-last, and so on, only from punishments that player agreed to.</li>
+            <li>The chosen punishment is owed as soon as the winner picks it.</li>
           </>
         )}
         {st.mode === "money" && <li>The bottom {st.losers} owe the real-money contribution (not processed in this demo).</li>}

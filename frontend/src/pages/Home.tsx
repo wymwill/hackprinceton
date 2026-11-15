@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { JoinModal, Shell, mySeries } from "../components/Shell.tsx";
+import { JoinModal, Shell } from "../components/Shell.tsx";
 import { Empty, Panel, Pill } from "../components/ui.tsx";
 import { balances, isParticipant, participantIds, standings } from "../lib/rules.ts";
 import { MODE_LABEL, STATUS_LABEL, fmt, ordinal } from "../lib/format.ts";
@@ -46,7 +46,7 @@ function SeriesCard({ s }: { s: Series }) {
 export default function Home() {
   const { db } = useStore();
   const [joining, setJoining] = useState(false);
-  const list = [...mySeries(db)];
+  const list = [...db.series];
   const order: Series["status"][] = ["active", "assigning", "lobby", "finished"];
   list.sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status) || b.createdAt.localeCompare(a.createdAt));
 
@@ -59,7 +59,7 @@ export default function Home() {
           </h1>
           <p>
             YES/NO bets with friends, played for virtual coins across a whole series. Whoever ends with the fewest coins
-            owes a favor.
+            owes a punishment.
           </p>
         </div>
         <div className="row">
