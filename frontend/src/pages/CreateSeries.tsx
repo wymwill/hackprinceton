@@ -14,6 +14,11 @@ import type { BetDraft, Mode, Settings } from "../lib/types.ts";
 
 type SavedDraft = { name: string; description: string; drafts: BetDraft[]; settings: Settings; quick: boolean; templateId: string | null; punishments: string[] };
 const draftKey = (userId: string, clanId: string | null) => `alea:create-draft:v1:${userId}:${clanId ?? "solo"}`;
+const oldRoommateQuestions = [
+  "Will our next delivery arrive before its estimated time?",
+  "Will we try a new recipe together this week?",
+  "Will our next takeout order include something extra?",
+];
 function readDraft(key: string): SavedDraft | null {
   try {
     const raw = localStorage.getItem(key);
@@ -21,7 +26,11 @@ function readDraft(key: string): SavedDraft | null {
     const d = JSON.parse(raw) as Partial<SavedDraft>;
     if (typeof d.name !== "string" || typeof d.description !== "string" || !Array.isArray(d.drafts) || !d.settings || typeof d.settings !== "object") return null;
     if (!d.drafts.every((b) => b && typeof b.question === "string" && ["binary", "multi", "range"].includes(b.kind))) return null;
-    return { name: d.name, description: d.description, drafts: d.drafts.length ? d.drafts : [newDraft()], settings: { ...DEFAULT_SETTINGS, ...d.settings }, quick: d.quick === true, templateId: typeof d.templateId === "string" ? d.templateId : null, punishments: Array.isArray(d.punishments) ? d.punishments.filter((p): p is string => typeof p === "string") : [] };
+    const oldUntouchedRoommates = d.templateId === "roommates" && d.drafts.length === oldRoommateQuestions.length
+      && d.drafts.every((draft, i) => JSON.stringify(draft) === JSON.stringify(newDraft(oldRoommateQuestions[i])));
+    const roommateTemplate = QUICK_TEMPLATES.find((template) => template.id === "roommates");
+    const drafts = oldUntouchedRoommates && roommateTemplate ? templateDrafts(roommateTemplate) : d.drafts;
+    return { name: d.name, description: d.description, drafts: drafts.length ? drafts : [newDraft()], settings: { ...DEFAULT_SETTINGS, ...d.settings }, quick: d.quick === true, templateId: typeof d.templateId === "string" ? d.templateId : null, punishments: Array.isArray(d.punishments) ? d.punishments.filter((p): p is string => typeof p === "string") : [] };
   } catch { return null; }
 }
 
@@ -276,7 +285,7 @@ export default function CreateSeries() {
               <div className="stack">
                 <label className="field"><span>Series name</span><input className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} /></label>
                 <label className="field"><span>Description</span><input className="input" value={description} maxLength={280} onChange={(e) => setDescription(e.target.value)} /></label>
-                <p className="hint">Edit these questions, then create the lobby and share its invite link with your friends or clan. For Keep It Clean, each bet has Person 1–5 as possible answers; agree on who each placeholder means before betting starts.</p>
+                <p className="hint">Edit these questions, then create the lobby and share its invite link with your friends or clan. Keep It Clean and the last Roommate challenge use Person 1–5 as possible answers; agree on who each placeholder means before betting starts.</p>
                 {drafts.map((d, i) => <div className="row quick-question" key={i}>
                   <span className="num dim">{String(i + 1).padStart(2, "0")}</span>
                   <input className="input text" value={d.question} maxLength={300} onChange={(e) => setDraft(i, { ...d, question: e.target.value })} aria-label={`Question ${i + 1}`} placeholder="Write a prediction" />
@@ -416,6 +425,11 @@ export default function CreateSeries() {
                     <span>Punishments per player</span>
                     <input className="input" type="number" min={1} max={5} value={st.favorsPerPlayer} onChange={(e) => set("favorsPerPlayer", Number(e.target.value))} />
                   </label>
+                  <label className="field">
+                    <span>Require every player to contribute</span>
+                    <Seg value={st.requireFavorContribution} onChange={(v) => set("requireFavorContribution", v)} options={[{ value: true, label: "Required" }, { value: false, label: "Optional" }]} />
+                  </label>
+                  {!st.requireFavorContribution && <p className="hint" style={{ gridColumn: "1 / -1" }}>Players may skip adding punishments. The pool still needs enough options for the losers under the repeat rule.</p>}
                   <div className="field">
                     <span>Punishment pool</span>
                     <Seg

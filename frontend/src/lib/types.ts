@@ -46,6 +46,8 @@ export type Settings = {
   minContribution: number;
   /** Mode C: how many favors each player may add to the pool (at least 1 required). */
   favorsPerPlayer: number;
+  /** Shared pool: when false, players may skip contributing, if the pool has enough options. */
+  requireFavorContribution: boolean;
   /** Mode C: true = a favor can be picked once. */
   exclusivePool: boolean;
   tiebreak: Tiebreak;

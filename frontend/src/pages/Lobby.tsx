@@ -232,9 +232,9 @@ export default function Lobby({ s }: { s: Series }) {
                 const host = m.userId === s.hostId;
                 const favors = s.favors.filter((f) => f.authorId === m.userId).length;
                 return (
-                  <div key={m.userId} className="person">
+                  <div key={m.userId} className="person lobby-player">
                     <Who id={m.userId} />
-                    <span className="row">
+                    <div className="lobby-player-details">
                       {host && <span className="pill host">Host</span>}
                       {m.plays ? (
                         <span className={`pill ${m.ready ? "open" : "canceled"}`}>{m.ready ? "Ready" : "Not ready"}</span>
@@ -245,7 +245,7 @@ export default function Lobby({ s }: { s: Series }) {
                       {isHost && !host && (
                         <ConfirmButton className="btn ghost sm danger" label="Kick" confirm="Sure?" onConfirm={() => api.kick(s.id, m.userId, "Player removed.")} />
                       )}
-                    </span>
+                    </div>
                   </div>
                 );
               })}
@@ -277,7 +277,7 @@ export default function Lobby({ s }: { s: Series }) {
                     ))}
                   </div>
                 ) : (
-                  <p className="notice ok">
+                  <p className="notice ok start-ready">
                     <b>Everyone's ready.</b> Starting gives each player {s.settings.startingCoins.toLocaleString()} coins and
                     locks the rules.
                   </p>

@@ -586,6 +586,9 @@ textarea.input {
 .notice.ok b {
   color: var(--yes);
 }
+.notice.start-ready {
+  border-left: 0;
+}
 .seg {
   display: grid;
   grid-auto-flow: column;
@@ -1127,6 +1130,37 @@ textarea.input {
 .person:last-child {
   border: 0;
 }
+/* Lobby roster: names get their own line so badges and actions can wrap. */
+.person.lobby-player {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 14px 4px;
+}
+.lobby-player .who {
+  max-width: 100%;
+  align-self: flex-start;
+}
+.lobby-player .who > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.lobby-player-details {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  padding-left: 38px;
+}
+.lobby-player-details .pill,
+.lobby-player-details .cap,
+.lobby-player-details .btn {
+  flex: 0 0 auto;
+}
+.lobby-player-details .btn {
+  margin-left: auto;
+}
 .who {
   display: inline-flex;
   align-items: center;
@@ -1443,7 +1477,9 @@ textarea.input {
   left: 50%;
   width: min(560px, calc(100vw - 32px));
   max-height: calc(100vh - 48px);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   transform: translate(-50%, -50%);
   background: var(--side);
   border: 1px solid var(--line-hi);
@@ -1452,6 +1488,7 @@ textarea.input {
 }
 .modal .m-head {
   display: flex;
+  flex: none;
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
@@ -1477,6 +1514,11 @@ textarea.input {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-hi) transparent;
 }
 @keyframes fade {
   from {

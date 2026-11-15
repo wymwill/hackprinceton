@@ -89,6 +89,7 @@ function makeApi(act: Act, once: Once) {
         settings: {
           minContribution: st.minContribution,
           favorsPerPlayer: st.favorsPerPlayer,
+          requireFavorContribution: st.requireFavorContribution,
           exclusivePool: st.exclusivePool,
           tiebreak: st.tiebreak,
           betCreation: st.betCreation,

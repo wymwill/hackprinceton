@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS: Settings = {
   mode: "pool",
   minContribution: 5,
   favorsPerPlayer: 2,
+  requireFavorContribution: true,
   exclusivePool: true,
   tiebreak: "first",
   betCreation: "during",

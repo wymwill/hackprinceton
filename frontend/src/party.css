@@ -82,10 +82,9 @@ html[data-theme="light"] {
 html, body {
   background:
     radial-gradient(circle at 8% 10%, var(--party-yellow-soft) 0 3px, transparent 4px),
-    radial-gradient(circle at 87% 26%, var(--red-soft) 0 3px, transparent 4px),
     radial-gradient(ellipse 60% 50% at 100% 0%, var(--red-soft), transparent 75%),
     var(--bg);
-  background-size: 90px 90px, 126px 126px, auto, auto;
+  background-size: 90px 90px, auto, auto;
   color: var(--fg);
 }
 
@@ -184,7 +183,7 @@ html, body {
   letter-spacing: .03em;
   transform: rotate(-2deg);
 }
-.pright { top: -12px; right: 18px; padding: 4px 8px; border-radius: 7px; background: var(--panel); }
+.pright { top: -12px; right: 18px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); }
 .cap, .field > span { letter-spacing: .035em; font-weight: 800; }
 
 .hero {
@@ -250,9 +249,7 @@ html, body {
 .scard h3 { font-size: 31px; font-weight: 700; }
 .scard .stats { border-top: 2px dashed var(--line); }
 .stat b { font-size: 18px; font-weight: 700; }
-.bcard { padding: 22px; border-top: 6px solid var(--party-yellow); }
-.bgrid .bcard:nth-child(3n + 2) { border-top-color: var(--no); }
-.bgrid .bcard:nth-child(3n + 3) { border-top-color: var(--yes); }
+.bcard { padding: 22px; }
 .bcard h3 { font-family: var(--display); font-size: 22px; font-weight: 600; }
 .chance .v, .readout .v, .big-num { font-family: var(--display); font-weight: 700; }
 .chance .v { color: var(--red-hi); }
@@ -280,10 +277,16 @@ html, body {
 }
 .quick-tile:hover, .quick-game:hover, .choice:hover, .favor-chip:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--red); }
 .quick-tile.on, .quick-game.on { border-color: var(--party-ink); background: var(--party-yellow-soft); box-shadow: 3px 4px 0 var(--party-shadow); }
-.quick-categories .quick-tile:nth-child(3n + 1) { background: var(--party-card-a); }
-.quick-categories .quick-tile:nth-child(3n + 2) { background: var(--party-card-b); }
-.quick-categories .quick-tile:nth-child(3n + 3) { background: var(--party-card-c); }
-.quick-categories .quick-tile.on { outline: 3px solid var(--red); outline-offset: -5px; }
+.quick-categories .quick-tile { background: var(--panel); }
+.quick-categories .quick-tile.on,
+.quick-categories .quick-tile:hover {
+  border-color: var(--party-ink);
+  background: var(--red);
+  color: #fff;
+  box-shadow: 3px 4px 0 var(--party-shadow);
+}
+.quick-categories .quick-tile.on span,
+.quick-categories .quick-tile:hover span { color: #fff; }
 .quick-tile b { font-family: var(--display); font-size: 19px; }
 .home-action-icon { width: 44px; height: 44px; border-radius: 14px; font-family: var(--display); font-size: 24px; transform: rotate(-5deg); }
 .home-action b { font-family: var(--display); font-size: 21px; }

@@ -102,7 +102,7 @@ export function ClanDetail() {
       ) : <div className="social">
         <section className="hero"><div><h1>{clan.name}</h1><p>{rank ? `#${rank} on the clan board · ` : ""}{fmt(total)} coins wagered</p></div></section>
         <div className="grid2">
-          <Panel label="Members" right={`${clan.members.length}`}>
+          <Panel label="Members">
             <table className="table"><thead><tr><th>#</th><th>Member</th><th className="r">Wagered</th></tr></thead><tbody>
               {clan.members.map((m, i) => <tr key={m.id} className={m.id === me ? "me" : ""}>
                 <td className="rank">{i + 1}</td><td><span className="who"><PersonAvatar name={m.name} url={m.avatarUrl} me={m.id === me} /><span>{m.name}{m.id === me && <span className="dim"> (you)</span>}{m.id === clan.ownerId && <span className="pill host" style={{ marginLeft: 8 }}>Owner</span>}</span></span></td>

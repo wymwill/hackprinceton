@@ -56,7 +56,7 @@ export const QUICK_TEMPLATES: QuickTemplate[] = [
   {
     id: "roommates", category: "roommate", label: "Roommate challenges", name: "Roommate challenges",
     description: "Small, funny predictions about life at home.",
-    questions: ["Will our next delivery arrive before its estimated time?", "Will we try a new recipe together this week?", "Will our next takeout order include something extra?", "Will we watch a movie none of us has seen?"],
+    questions: ["Will our Amazon package arrive on time?", "Will anyone be caught with stolen snacks?", "Who will stay up the latest across the week?"],
     punishments: ["Make breakfast for the house", "Choose and organize the next movie night", "Draw a mascot for the apartment", "Make a themed playlist for the apartment"],
   },
 ];
@@ -66,9 +66,9 @@ export const quickSettings = (questionCount: number): Settings => ({
   betCreation: "upfront", hostPlays: true,
 });
 
-export const templateDrafts = (template: QuickTemplate): BetDraft[] => template.questions.slice(0, 3).map((question) => {
+export const templateDrafts = (template: QuickTemplate): BetDraft[] => template.questions.slice(0, 3).map((question, index) => {
   const draft = newDraft(question);
-  if (template.id === "keep-it-clean") {
+  if (template.id === "keep-it-clean" || (template.id === "roommates" && index === 2)) {
     draft.kind = "multi";
     draft.outcomes = Array.from({ length: 5 }, (_, i) => ({ label: `Person ${i + 1}` }));
   }

@@ -56,7 +56,7 @@ function PoolPicks({ s }: { s: Series }) {
   const held = new Set(list.filter((a) => a.status === "pending" || a.status === "accepted").map((a) => a.favorId));
   const nextUp = s.settings.exclusivePool ? list.find((a) => a.status === "picking") : undefined;
   return (
-    <Panel label="Punishment picks" right={s.settings.exclusivePool ? "Each punishment once" : "Punishments reusable"}>
+    <Panel label="Punishment picks">
       <p className="hint">
         1st picks for last place, 2nd for second-to-last, and so on{s.settings.exclusivePool ? ", in that order" : ""}. Only
         punishments the loser agreed to before the series started can be picked. The choice is owed immediately.
