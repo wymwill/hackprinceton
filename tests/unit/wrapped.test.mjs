@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { demoWrappedSummary, getWrappedSummary } from "../shared/wrapped.ts";
+import { demoWrappedSummary, getWrappedSummary } from "../../shared/wrapped.ts";
 
 const YEAR = 2026;
 function series(id = "s", members = []) {
@@ -104,7 +104,7 @@ test("empty real histories stay empty while the separate demo mode is clearly la
 });
 
 test("share-card quote: curly quotes inside the lines, never a skipped word, an ellipsis when it doesn't fit", async () => {
-  const { posterLines } = await import("../frontend/src/lib/poster.ts");
+  const { posterLines } = await import("../../frontend/src/lib/poster.ts");
   // The demo verdict: quote marks belong to the first and last lines (a separate opening mark was overdrawn by the first line).
   const demo = posterLines("THE COMEBACK KID. The receipts are in. Your confidence is still under investigation.");
   assert.deepEqual(demo, ["“THE COMEBACK KID. The receipts are in.", "Your confidence is still under", "investigation.”"]);

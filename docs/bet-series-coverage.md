@@ -3,8 +3,8 @@
 Every requirement from the Bet Series feature list, where it shows up in `frontend/`, the route in `src/app/api/series` that carries it out, and the test that checks it.
 
 - **Rules:** SQL in `supabase/migrations/` (0001–0006 from the `codex/backend` branch, 0007 brings it up to the full spec).
-- **Rule tests:** `supabase/tests/series.test.mjs` and `upgrade.test.mjs` (`npm run test:series-sql`, in-process Postgres).
-- **Live test:** `scripts/e2e-series.mjs` against the real project.
+- **Rule tests:** `tests/sql/series.test.mjs` and `upgrade.test.mjs` (`npm run test:series-sql`, in-process Postgres).
+- **Live test:** `tests/e2e/series.mjs` against the real project.
 
 As of 2026-11-14 every item is covered.
 

@@ -15,7 +15,7 @@ This document is a follow-up commit to `9b2a474`. Its own final commit SHA is re
 
 Everything the checklist below asked for was rerun on this branch; the fumble-slide assertion passes on desktop and mobile. Fixed along the way:
 
-- **Share card quote:** the opening “ was drawn over by the first line (each `<tspan x>` restarts at the margin). The quote marks now sit inside the first and last lines (`frontend/src/lib/poster.ts`). The old wrapper could also silently drop a word in the middle of a long quote; it now stops at the last whole word that fits and adds “…”. Unit tests in `tests/wrapped.test.mjs`.
+- **Share card quote:** the opening “ was drawn over by the first line (each `<tspan x>` restarts at the margin). The quote marks now sit inside the first and last lines (`frontend/src/lib/poster.ts`). The old wrapper could also silently drop a word in the middle of a long quote; it now stops at the last whole word that fits and adds “…”. Unit tests in `tests/unit/wrapped.test.mjs`.
 - **“Bets placed” headline number rendered at label size** (13px instead of ~180px) on the numbers slide, in the demo and signed-in story: `.number-hero span` also matched the number's inner span. Scoped to `.number-hero > span`; the browser test now checks the rendered size.
 - **Close button on the loading/error screen** sat in the middle of the page: its rule targeted `.wrapped-load-message .wrapped-exit`, which never matched. Now `.wrapped-loading > .wrapped-exit`.
 - **New signed-in browser test** (handoff step 5): sign in through the form, Profile → Your Alea Wrapped shows only that account's numbers (checked against the API, never another member's or the demo's), a new account gets the empty story, and a failed load shows the error state. `test:wrapped-ui` now runs the whole `wrapped.spec.mjs`.
@@ -83,9 +83,9 @@ All files below are in implementation commit `9b2a474`.
 - `src/app/api/wrapped/route.ts` — authenticated private API endpoint.
 - `frontend/src/pages/Wrapped.tsx` — story mode, navigation, loading/error/empty states, demo, and poster export/share.
 - `frontend/src/pages/Wrapped.css` — story visuals, responsive layouts, transitions, reduced motion.
-- `tests/wrapped.test.mjs` — deterministic analytics tests.
+- `tests/unit/wrapped.test.mjs` — deterministic analytics tests.
 - `tests/browser/wrapped.spec.mjs` — browser coverage for demo flow, navigation, mobile swipe, reduced motion, and image export.
-- `scripts/e2e-wrapped-local.mjs` — loopback-only local API test using the repository's in-memory Supabase test stand-in.
+- `tests/e2e/wrapped-local.mjs` — loopback-only local API test using the repository's in-memory Supabase test stand-in.
 - `docs/alea-wrapped.md` — user/developer-facing definitions and local test commands.
 
 **Modified files**
@@ -93,7 +93,7 @@ All files below are in implementation commit `9b2a474`.
 - `frontend/src/App.tsx` — lazy route composition for `/wrapped` and `/wrapped-demo`; demo can render without sign-in/provider initialization.
 - `frontend/src/pages/Profile.tsx` — personal Wrapped and demo entry points.
 - `shared/house.ts` — Wrapped event flavor and stable deterministic fumble quip support.
-- `tests/house.test.mjs` — Wrapped adapter/fallback coverage.
+- `tests/unit/house.test.mjs` — Wrapped adapter/fallback coverage.
 - `playwright.house.config.mjs` — include Wrapped browser spec in the existing test configuration.
 - `package.json` — Wrapped test scripts.
 

@@ -39,7 +39,7 @@ The local API script refuses non-loopback service URLs and uses the in-memory Su
 `test:wrapped-local`, `test:wrapped-ui` and `test:house-ui` need the app and the stand-in running locally (defaults: app on 127.0.0.1:3219, stand-in on 127.0.0.1:54419; override with `API_URL` and `SUPABASE_URL`):
 
 ```sh
-PORT=54419 node supabase/tests/local-supabase.mjs
+PORT=54419 node tests/sql/local-supabase.mjs
 SUPABASE_URL=http://127.0.0.1:54419 SUPABASE_PUBLISHABLE_KEY=local npm run build
 SUPABASE_URL=http://127.0.0.1:54419 SUPABASE_PUBLISHABLE_KEY=local HOUSE_MODE=offline npx next start -H 127.0.0.1 -p 3219
 ```

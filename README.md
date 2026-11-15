@@ -7,6 +7,35 @@ Friend groups compete over a **series** of bets with virtual coins: YES/NO, mult
 - **Rules and data:** Supabase Postgres, as SQL functions in `supabase/migrations`. See [docs/supabase-series.md](docs/supabase-series.md).
 - **Sign-in:** Supabase Auth, with Google or email and password.
 
+## Where things live
+
+The repo root is the Next.js app. It serves the API, and in production it also serves the built React app.
+
+```
+frontend/              The React app people use (Vite, own package.json)
+  src/pages/           One file per screen: Home, Tutorial, Lobby, bets, Clans, Wrapped…
+  src/components/      Shared pieces: the shell and sidebar, bet cards, Your moves
+  src/lib/             API client and session (store.tsx), rules helpers, types, theme
+src/                   The Next.js API (Next requires this folder name)
+  app/api/series/      One route per Bet Series action, each a thin call into server/
+  app/api/social/      Friends, clans and clan chat
+  app/api/wrapped/     Alea Wrapped
+  server/              Shared server code: Supabase calls, errors, The House
+  lib/                 App icon drawing and sign-in settings
+  app/manifest.ts, app/icons/   Home-screen install files
+shared/                Code both apps import (The House copy, Wrapped maths)
+supabase/
+  migrations/          Tables, rules (SQL functions) and storage, applied in order
+  diagnostics/         Read-only SQL for checking a live project
+tests/
+  sql/                 SQL rule tests on in-memory Postgres, plus local-supabase.mjs (a stand-in Supabase)
+  e2e/                 End-to-end checks over HTTP. Most run against the stand-in; series.mjs hits the real project
+  unit/                Unit tests for The House and Wrapped
+  browser/             Playwright specs
+scripts/               Dev launcher (dev.mjs), demo users, catch-up SQL, live clan-chat checks
+docs/                  How each feature works, setup guides and test write-ups
+```
+
 ## Run it
 
 1. Put the Supabase project's URL and publishable key in `.env.local` at the repo root (copy `.env.example`):
@@ -53,14 +82,3 @@ npm run test:ranges-local    # numerical range bets over HTTP, same setup
 npm run test:chat-local      # clan chat over HTTP and Realtime, same setup
 npm run test:series          # API end to end against the real Supabase project (needs .supabase-test-secret)
 ```
-
-## Layout
-
-| Path | What's there |
-| --- | --- |
-| `frontend/src/pages` | Screens: home, new series, lobby, dashboard, bets, results, profile |
-| `frontend/src/lib` | API client and session (`store.tsx`), rules helpers, avatars, theme |
-| `src/app/api/series` | One route per action, each a thin call into `src/server/seriesApi.ts` |
-| `src/app/manifest.ts`, `src/app/icons` | Home-screen install files |
-| `supabase/migrations` | Tables, rules and the avatar storage bucket |
-| `scripts/dev.mjs` | Starts both dev servers |

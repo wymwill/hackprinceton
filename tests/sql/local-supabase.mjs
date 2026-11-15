@@ -12,9 +12,9 @@
 // Test hook: POST /__test/realtime/drop closes every Realtime connection, so tests
 // can check that clients reconnect and catch up without duplicates.
 //
-//   node supabase/tests/local-supabase.mjs            # http://localhost:54399
+//   node tests/sql/local-supabase.mjs                 # http://localhost:54399
 //   SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local npm run dev
-//   MIGRATIONS_UP_TO=202611140013 node supabase/tests/local-supabase.mjs   # a database without clan chat
+//   MIGRATIONS_UP_TO=202611140013 node tests/sql/local-supabase.mjs        # a database without clan chat
 import http from "node:http";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { createDb } from "./harness.mjs";

@@ -20,7 +20,7 @@ From the Supabase project (Project Settings → API):
 
 Put both in `.env.local` at the repo root. The Next app and `frontend/` both read them from there; `frontend/vite.config.ts` picks up only these two values, so no other variable reaches the browser. The `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` names from the first version of this branch also work.
 
-Never use the `service_role` / secret key in either app. Only `scripts/e2e-series.mjs` and `scripts/create-demo-users.mjs` need it, and they read it from the git-ignored `.supabase-test-secret` file.
+Never use the `service_role` / secret key in either app. Only `tests/e2e/series.mjs` and `scripts/create-demo-users.mjs` need it, and they read it from the git-ignored `.supabase-test-secret` file.
 
 ## Set up the project
 
@@ -164,13 +164,13 @@ Recovery verification on 2026-11-14: all 87 SQL tests passed, including original
 | Command | Runs against | Needs |
 | --- | --- | --- |
 | `npm run test:series-sql` | The migrations in an in-process Postgres (PGlite) with RLS, as the `authenticated` role | Nothing |
-| `node supabase/tests/local-supabase.mjs` | A stand-in Supabase (email Auth, RPC, simple table reads, and Realtime postgres_changes with RLS checks, on PGlite) for running the whole app offline. Start the Next app and `frontend/` with `SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local`. In memory, test only | Nothing |
+| `node tests/sql/local-supabase.mjs` | A stand-in Supabase (email Auth, RPC, simple table reads, and Realtime postgres_changes with RLS checks, on PGlite) for running the whole app offline. Start the Next app and `frontend/` with `SUPABASE_URL=http://localhost:54399 SUPABASE_PUBLISHABLE_KEY=local`. In memory, test only | Nothing |
 | `npm run test:ranges-local` | Numerical range bets over HTTP through the Next API (same setup as the next row) | Nothing |
 | `npm run test:chat-local` | Clan chat over HTTP and live over the stand-in's Realtime: two members exchanging messages, other clans and nonmembers refused, deleting, a dropped connection with no duplicates, leaving | Nothing |
 | `npm run test:outcomes-local` | Multiple-choice bets over HTTP through the Next API, with users signed up on the stand-in. Start the stand-in and the Next app first (commands in the script header) | Nothing |
 | `npm run test:series` | The real project, with disposable users | `.env.local` and `.supabase-test-secret` |
 | `node scripts/verify-clan-chat-live.mjs --yes` | Clan chat on the real project after 0013: live delivery between two temporary users, privacy, deleting, leaving; removes everything after | `.env.local` and `.supabase-test-secret` |
-| `node scripts/e2e-missing-migration-local.mjs` | What chat says on a database without 0013 (stand-in started with `MIGRATIONS_UP_TO=202611140013`) | Nothing |
+| `node tests/e2e/missing-migration-local.mjs` | What chat says on a database without 0013 (stand-in started with `MIGRATIONS_UP_TO=202611140013`) | Nothing |
 
 ## Notes
 
