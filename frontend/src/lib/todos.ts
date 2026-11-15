@@ -6,6 +6,7 @@
 import { agreesTo, isParticipant } from "./rules.ts";
 import { fmt, punishmentCopy } from "./format.ts";
 import type { Id, Series } from "./types.ts";
+import { deadlineText } from "./deadlines.ts";
 
 export type Todo = {
   key: string;
@@ -57,8 +58,11 @@ function seriesTodos(s: Series, me: Id, name: (id: Id) => string): Todo[] {
 
   if (s.status === "active") {
     if (playing) {
-      const unbet = s.bets.filter((b) => b.status === "open" && !b.wagers.some((w) => w.userId === me));
-      for (const b of unbet) add(`bet:${b.id}`, "Place a bet", b.question, `${home}/bets/${b.id}`);
+      // Bets with a closing time first, soonest first.
+      const unbet = s.bets
+        .filter((b) => b.status === "open" && !b.wagers.some((w) => w.userId === me))
+        .sort((a, b) => (a.closesAt ? Date.parse(a.closesAt) : Infinity) - (b.closesAt ? Date.parse(b.closesAt) : Infinity));
+      for (const b of unbet) add(`bet:${b.id}`, "Place a bet", b.closesAt ? `${b.question} · closes ${deadlineText(b.closesAt)}` : b.question, `${home}/bets/${b.id}`);
     }
     if (isHost) {
       for (const b of s.bets.filter((x) => x.status === "closed")) {
