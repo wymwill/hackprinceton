@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ConfirmButton, OutcomeTag, Panel, Pill, PoolBar, Who } from "../components/ui.tsx";
+import { ConfirmButton, DisclosurePanel, OutcomeTag, Panel, Pill, PoolBar, Who } from "../components/ui.tsx";
 import { HouseCommentary } from "../components/HouseCommentary.tsx";
 import { balances, findOutcome, isParticipant, labelOf, leader, payoutIfWins, resultText, shares, TIE_RULE_TEXT, withdrawUntil } from "../lib/rules.ts";
 import { ago, countdown, fmt, signed, useNow } from "../lib/format.ts";
@@ -147,6 +147,7 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
 
   return (
     <Panel label={mine ? "Add to your wager" : "Place a wager"} className="ticket" right={`${fmt(free)} free`}>
+      <div className="ticket-pick">
       {binary ? (
         <div className="seg" role="radiogroup" aria-label="Your pick">
           {list.map((o, i) => (
@@ -187,10 +188,12 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
       )}
       {mine && (
         <p className="hint">
-          You're on <OutcomeTag bet={bet} id={mine.outcomeId} /> with {fmt(mine.amount)} coins.
-          {canWithdraw ? " Withdraw to pick something else." : " You can add more to it."}
+          Your pick: <OutcomeTag bet={bet} id={mine.outcomeId} /> · {fmt(mine.amount)} coins.
+          {canWithdraw ? " Withdraw to change your pick." : " Add coins below."}
         </p>
       )}
+      </div>
+      <div className="ticket-amount">
       <label className="field">
         <span>Coins</span>
         <input className="input" type="number" min={1} value={amount} disabled={locked} onChange={(e) => { setAmount(Math.floor(Number(e.target.value))); sub.clearReceipt(); }} />
@@ -205,6 +208,7 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
           All
         </button>
       </div>
+      </div>
       {/* While a wager is unconfirmed, any "after" figure could be wrong, so the estimate waits. */}
       {sub.phase !== "unknown" && <div className="summary">
         <div className="kv">
@@ -217,9 +221,10 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
           Profit <b>{signed(payout - stake)}</b>
         </div>
         <p className="hint" style={{ marginTop: 6 }}>
-          Estimate from the pool right now. It moves as others bet.
+          Estimated payout. Changes as others bet.
         </p>
       </div>}
+      <div className="ticket-actions">
       {sub.phase === "unknown" && (
         <div className="notice" role="alert">
           <b>We couldn't confirm your wager of {fmt(sub.pending?.amount ?? amount)} on {chosen.label}.</b> It may have gone
@@ -258,7 +263,8 @@ function Ticket({ s, bet }: { s: Series; bet: Bet }) {
           onConfirm={() => api.withdraw(s.id, bet.id, "Wager withdrawn.")}
         />
       )}
-      {mine && until !== null && now >= until && <p className="hint">The withdrawal window has closed.</p>}
+      {mine && until !== null && now >= until && <p className="hint">Withdrawals closed.</p>}
+      </div>
     </Panel>
   );
 }
@@ -350,17 +356,17 @@ function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
   const { list } = shares(bet);
   const binary = bet.kind === "binary";
   return (
-    <Panel label="Host controls">
+    <DisclosurePanel label="Host controls">
       <div className="stack">
         {bet.status === "open" && (
           <>
             <button type="button" className="btn" onClick={() => api.lockBet(s.id, bet.id, "Betting locked.")}>
               Lock betting
             </button>
-            <p className="hint">Stops new wagers. If every coin is on one {bet.kind === "range" ? "range" : "outcome"}, locking refunds them right away.</p>
+            <p className="hint">Stops new bets. One-sided pools are refunded.</p>
           </>
         )}
-        <span className="cap">Resolve: what happened?</span>
+        <span className="cap">Choose the result</span>
         {bet.kind === "range" ? (
           <RangeSettle s={s} bet={bet} />
         ) : (
@@ -384,9 +390,9 @@ function HostPanel({ s, bet }: { s: Series; bet: Bet }) {
           confirm="Cancel and refund everyone?"
           onConfirm={() => api.cancelBet(s.id, bet.id, "Canceled. Coins returned.")}
         />
-        <p className="hint">You decide the result even if you bet on it. Resolving pays out right away.</p>
+        <p className="hint">Confirming the result pays winners immediately.</p>
       </div>
-    </Panel>
+    </DisclosurePanel>
   );
 }
 
@@ -475,8 +481,25 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
 
       <HouseCommentary series={s} bet={bet} />
 
-      <div className="grid2">
-        <div className="col">
+      <div className="bet-layout">
+        <div className="bet-tools">
+          {bet.status === "open" && playing && dl !== "closed" && <Ticket s={s} bet={bet} />}
+          {bet.status === "open" && playing && dl === "closed" && (
+            <Panel label="Place a wager" className="ticket">
+              <p className="notice" role="status">
+                <b>Betting closed at {deadlineText(bet.closesAt!)}.</b> Wagers after the closing time aren't accepted.
+              </p>
+            </Panel>
+          )}
+          {bet.status === "open" && !playing && <p className="notice">You're hosting without playing, so you can't wager.</p>}
+          {bet.status === "closed" && <p className="notice">Betting is locked. Waiting for {name(s.hostId)} to call it.</p>}
+          {s.hostId === me && <HostPanel s={s} bet={bet} />}
+          {bet.status !== "draft" && <LinkedProof s={s} bet={bet} />}
+          <Link to={`/s/${s.id}`} className="btn ghost">
+            ← Back to all bets
+          </Link>
+        </div>
+        <div className="col bet-content">
           {bet.status === "resolved" && (
             <Panel className="outcome-banner-wrap" bodyClass="outcome-banner">
               <span className="o otag" style={winner ? ocStyle(winner.color) : undefined}>
@@ -548,23 +571,7 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
             </Panel>
           )}
         </div>
-        <div className="col">
-          {bet.status === "open" && playing && dl !== "closed" && <Ticket s={s} bet={bet} />}
-          {bet.status === "open" && playing && dl === "closed" && (
-            <Panel label="Place a wager" className="ticket">
-              <p className="notice" role="status">
-                <b>Betting closed at {deadlineText(bet.closesAt!)}.</b> Wagers after the closing time aren't accepted.
-              </p>
-            </Panel>
-          )}
-          {bet.status === "open" && !playing && <p className="notice">You're hosting without playing, so you can't wager.</p>}
-          {bet.status === "closed" && <p className="notice">Betting is locked. Waiting for {name(s.hostId)} to call it.</p>}
-          {s.hostId === me && <HostPanel s={s} bet={bet} />}
-          {bet.status !== "draft" && <LinkedProof s={s} bet={bet} />}
-          <Link to={`/s/${s.id}`} className="btn ghost">
-            ← Back to all bets
-          </Link>
-        </div>
+
       </div>
     </>
   );

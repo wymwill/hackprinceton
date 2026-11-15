@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Panel } from "./ui.tsx";
+import { DisclosurePanel } from "./ui.tsx";
 import { ago } from "../lib/format.ts";
 import { KINDS, kindLabel, measure, useProof, type ProviderId } from "../lib/links.tsx";
 import { participantIds } from "../lib/rules.ts";
@@ -43,7 +43,7 @@ export function LinkedProof({ s, bet }: { s: Series; bet: Bet }) {
   const freshness = linked.filter((l) => !app || l.provider === app);
 
   return (
-    <Panel label="Proof from linked apps">
+    <DisclosurePanel label="Linked app proof" className="proof-panel">
       <div className="stack">
         <label className="field">
           <span>Player</span>
@@ -128,6 +128,6 @@ export function LinkedProof({ s, bet }: { s: Series; bet: Bet }) {
           </>
         )}
       </div>
-    </Panel>
+    </DisclosurePanel>
   );
 }

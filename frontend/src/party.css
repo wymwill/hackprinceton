@@ -411,3 +411,43 @@ html, body {
 .brand-letters > span:nth-child(3) { transform: translateY(1px) rotate(5deg); }
 .brand-letters > span:nth-child(4) { transform: translateY(-2px) rotate(-9deg); }
 .brand-letters > span:nth-child(5) { transform: translateY(1px) rotate(7deg); }
+
+/* Compact horizontal tools, instead of a long right-hand sidebar. */
+.bet-layout { display: grid; gap: 26px; min-width: 0; }
+.bet-content { display: grid; gap: 26px; min-width: 0; }
+.bet-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.bet-tools > .ticket, .bet-tools > .notice, .bet-tools > .btn { grid-column: 1 / -1; }
+.bet-tools .ticket .pbody { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; padding: 20px; }
+.ticket-pick, .ticket-amount { display: grid; gap: 10px; min-width: 0; }
+.bet-tools .ticket .summary { border-top: 0; padding-top: 0; }
+.ticket-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.ticket-actions .submit { flex: 1; width: auto; min-width: 180px; border-radius: 12px; }
+.ticket-actions > .notice { width: 100%; }
+.ticket-actions > .btn { width: auto; }
+.disclosure-panel { min-width: 0; }
+.disclosure-panel > summary { cursor: pointer; padding: 16px 20px; font-weight: 800; color: var(--bright); }
+.disclosure-panel > summary::marker { color: var(--red); }
+.disclosure-panel[open] > summary { border-bottom: 1px solid var(--line); }
+.disclosure-panel .pbody { padding: 18px 20px; }
+.activity-panel .tape { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; max-height: 260px; overflow-y: auto; scrollbar-width: thin; }
+.activity-panel .tape-row { min-width: 0; padding: 12px 0; }
+.rules-summary { display: grid; gap: 10px; padding-left: 18px; color: var(--dim); font-size: 14px; line-height: 1.55; }
+.status-label { font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.status-label.active { color: var(--yes); }
+.status-label.host { color: var(--red); }
+@media (max-width: 1050px) {
+  .bet-tools .ticket .pbody { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bet-tools .ticket .summary { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .bet-tools .ticket .summary .kv { display: grid; gap: 4px; }
+  .bet-tools .ticket .summary .hint { grid-column: 1 / -1; margin-top: 0 !important; }
+}
+@media (max-width: 600px) {
+  .bet-tools { grid-template-columns: minmax(0, 1fr); }
+  .bet-tools .ticket .pbody { gap: 14px; padding: 18px; }
+  .bet-tools .ticket .opick { grid-template-columns: minmax(0, 1fr); }
+  .ticket-pick .hint { font-size: 12px; }
+  .ticket-actions .submit { min-width: 0; width: 100%; }
+  .activity-panel .tape { grid-template-columns: minmax(0, 1fr); }
+}
+
+.bet-tools .disclosure-panel > .pbody { max-height: 340px; overflow-y: auto; scrollbar-width: thin; }

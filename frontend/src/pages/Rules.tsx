@@ -34,37 +34,27 @@ export function RulesList({ s }: { s: Series }) {
         Losers <b className="text">Bottom {st.losers}</b>
       </div>
       <div className="kv">
-        Ties <b className="text">{st.tiebreak === "first" ? "First to reach the score" : "Random order drawn at start"}</b>
+        Ties <b className="text">{st.tiebreak === "first" ? "First to reach that score" : "Random order drawn at start"}</b>
       </div>
       <div className="kv">
-        New bets <b className="text">{st.betCreation === "upfront" ? "All written before start" : "Host can add during series"}</b>
+        New bets <b className="text">{st.betCreation === "upfront" ? "Set before starting" : "Host can add bets"}</b>
       </div>
       <div className="kv">
         Withdrawals <b className="text">{st.withdrawMinutes ? `First ${st.withdrawMinutes} min after a bet opens` : "Not allowed"}</b>
       </div>
       <div className="rule" />
-      <ul className="hint" style={{ paddingLeft: 18, display: "grid", gap: 4 }}>
-        <li>
-          Pick an outcome and wager coins: YES or NO, one of the host's options, or a numerical range. You can add more coins to
-          your pick any time betting is open, but not switch.
-        </li>
-        <li>Range bets: each range includes its lower number and stops just before the next. The host enters the measured result and the range holding it wins.</li>
-        <li>Winners split the whole pool in proportion to their stakes.</li>
-        <li>
-          If every coin is on one outcome, nobody backed the result, or the host cancels, everyone gets their coins back. Locking
-          a one-sided bet refunds it at once.
-        </li>
-        <li>The host decides each result, even when they're playing.</li>
-        <li>The leaderboard only moves when a bet is resolved.</li>
-        {st.mode === "pledge" && <li>The bottom {st.losers} do the punishment they pledged.</li>}
-        {st.mode === "pool" && (
-          <>
-            <li>Every player agrees to each punishment in the pool before betting starts ("I'm ready" agrees to all of them).</li>
-            <li>1st picks a punishment for last place, 2nd for second-to-last, and so on, only from punishments that player agreed to.</li>
-            <li>The chosen punishment is owed as soon as the winner picks it.</li>
-          </>
-        )}
-        {st.mode === "money" && <li>The bottom {st.losers} owe the real-money contribution (not processed in this demo).</li>}
+      <ul className="rules-summary">
+        <li>Pick an outcome and bet coins. Add more while betting is open; you can't switch picks.</li>
+        <li>Winners share the pool based on how much they bet.</li>
+        <li>Everyone gets their coins back if the bet is canceled, all bets are on one outcome, or nobody backed the winner.</li>
+        <li>The host confirms results, even when playing. Rankings update after each result.</li>
+        {s.bets.some((b) => b.kind === "range") && <li>For ranges, the lower number counts; the upper number doesn't. The measured result decides the winner.</li>}
+        {st.mode === "pledge" && <li>The bottom {st.losers} do their pledged punishment.</li>}
+        {st.mode === "pool" && <>
+          <li>Agree to the pool before starting. “I'm ready” agrees to all punishments.</li>
+          <li>1st picks for last place, 2nd for second-to-last. Only agreed punishments can be picked; picks are owed immediately.</li>
+        </>}
+        {st.mode === "money" && <li>The bottom {st.losers} owe the contribution. Payments happen outside the app.</li>}
       </ul>
     </div>
   );

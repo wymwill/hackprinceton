@@ -17,10 +17,9 @@ export type AvatarStyle = (typeof AVATAR_STYLES)[number]["id"];
 const BASE = "https://api.dicebear.com/9.x/";
 
 /**
- * Faces: every mouth except "drip", which adds a second drop under the mouth.
- * With it gone, a sad face has just the tear under its eye.
+ * Faces exclude extra drops, thermometers, and masks.
  */
-const FACE_MOUTHS = ["plain", "lilSmile", "sad", "shy", "cute", "wideSmile", "shout", "smileTeeth", "smileLol", "pissed", "tongueOut", "kissHeart", "sick", "faceMask"];
+const FACE_MOUTHS = ["plain", "lilSmile", "sad", "shy", "cute", "wideSmile", "shout", "smileTeeth", "smileLol", "pissed", "tongueOut", "kissHeart"];
 
 const EXTRA: Partial<Record<AvatarStyle, string>> = {
   "fun-emoji": `&mouth=${FACE_MOUTHS.join(",")}`,

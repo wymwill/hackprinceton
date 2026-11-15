@@ -21,6 +21,14 @@ export function Panel({
   );
 }
 
+/** Optional tools stay compact until the player opens them. */
+export function DisclosurePanel({ label, children, className = "" }: { label: string; children: ReactNode; className?: string }) {
+  return <details className={`panel disclosure-panel ${className}`}>
+    <summary>{label}</summary>
+    <div className="pbody">{children}</div>
+  </details>;
+}
+
 export function Modal({
   kicker, title, onClose, children,
 }: {
@@ -54,8 +62,8 @@ export function Modal({
 }
 
 export const Pill = ({ kind, children }: { kind: string; children: ReactNode }) => (
-  <span className={`pill ${kind}`}>
-    <span className="dot" />
+  <span className={kind === "active" || kind === "host" ? `status-label ${kind}` : `pill ${kind}`}>
+    {kind !== "active" && kind !== "host" && <span className="dot" />}
     {children}
   </span>
 );

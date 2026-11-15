@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { NewBetModal, StandingsTable } from "../components/Standings.tsx";
 import { SeriesBets } from "../components/SeriesBets.tsx";
-import { ConfirmButton, Panel, Pill } from "../components/ui.tsx";
+import { ConfirmButton, DisclosurePanel, Panel, Pill } from "../components/ui.tsx";
 import { balances, isParticipant, standings } from "../lib/rules.ts";
 import { ago, fmt, ordinal, punishmentCopy } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
@@ -30,7 +30,7 @@ export default function Dashboard({ s }: { s: Series }) {
           </span>
           <h1 style={{ marginTop: 14 }}>{s.name}</h1>
           <p>
-            {settled} of {s.settings.betCount} bets settled. The bottom {s.settings.losers} when it ends lose.
+            {settled} of {s.settings.betCount} bets settled. Bottom {s.settings.losers} lose.
           </p>
         </div>
         {bal && st && (
@@ -68,11 +68,11 @@ export default function Dashboard({ s }: { s: Series }) {
                 ) : (
                   <p className="hint">
                     {s.bets.length >= s.settings.betCount
-                      ? "Every bet is written. Resolve them to finish the series."
-                      : "This series locked its bets before it started."}
+                      ? "All bets are written. Settle them to finish."
+                      : "Bets were set before the series started."}
                   </p>
                 )}
-                <p className="hint">Open a bet to lock betting, resolve it, or cancel it.</p>
+                <p className="hint">Open a bet to manage it.</p>
                 <ConfirmButton
                   className="btn"
                   label="End series now"
@@ -87,18 +87,20 @@ export default function Dashboard({ s }: { s: Series }) {
           <Panel label="Leaderboard" right={<Link to={`/s/${s.id}/leaderboard`}>Full →</Link>}>
             <StandingsTable s={s} compact />
           </Panel>
-          <Panel label="Activity">
-            <div className="tape">
-              {s.activity.slice(0, 10).map((a, i) => (
+
+        </div>
+      </div>
+
+          <DisclosurePanel label={`Activity · ${s.activity.length}`} className="activity-panel">
+            <div className="tape" tabIndex={0} role="region" aria-label="Series activity">
+              {s.activity.map((a, i) => (
                 <div key={i} className="tape-row">
                   <span>{punishmentCopy(a.text)}</span>
                   <span className="when">{ago(a.at)}</span>
                 </div>
               ))}
             </div>
-          </Panel>
-        </div>
-      </div>
+          </DisclosurePanel>
 
       {writing && <NewBetModal s={s} onClose={() => setWriting(false)} />}
     </>
