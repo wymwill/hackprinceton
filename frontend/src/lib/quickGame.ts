@@ -4,7 +4,7 @@ import type { BetDraft, Settings } from "./types.ts";
 
 export type QuickTemplate = {
   id: string;
-  category: "game" | "weekend" | "roommate";
+  category: "game" | "weekend" | "roommate" | "group";
   label: string;
   name: string;
   description: string;
@@ -39,10 +39,19 @@ export const QUICK_TEMPLATES: QuickTemplate[] = [
   game("ea-fc", "EA Sports FC", ["Will anyone score a long shot from outside the box?", "Will a shot hit the crossbar?", "Will anyone score a direct free kick?", "Will anyone score from a corner?", "Will anyone score a bicycle kick?"]),
   game("other", "Another game", ["Will anyone pull off a comeback after falling behind?", "Will our first match last more than 20 minutes?", "Will the final match last longer than the first?", "Will anyone set a personal best tonight?", "Will we play more than three matches tonight?"]),
   {
-    id: "weekend", category: "weekend", label: "Weekend predictions", name: "Weekend predictions",
-    description: "Make a few lighthearted predictions about the weekend.",
-    questions: ["Will it rain during our main outing?", "Will we spot a dog at our first stop?", "Will our first restaurant have a wait of more than 20 minutes?", "Will the trip home take longer than the trip there?"],
-    punishments: ["Make a photo collage of the weekend", "Bring a snack to the next meetup", "Give the group a dramatic weekend recap", "Make a playlist for the next outing"],
+    id: "keep-it-clean", category: "group", label: "Keep It Clean", name: "Keep It Clean",
+    description: "Three bets about who gets caught breaking the rules first.",
+    questions: [
+      "Who gets caught swearing first?",
+      "Who gets caught scrolling Instagram first?",
+      "Who gets caught sleeping after 3 am first?",
+    ],
+    punishments: [
+      "Do an impression of an animal the group picks",
+      "Use a Discord display name chosen by the group for the day",
+      "Bring snacks to the next hangout",
+      "Sing the chorus of a song the group picks",
+    ],
   },
   {
     id: "roommates", category: "roommate", label: "Roommate challenges", name: "Roommate challenges",
@@ -57,4 +66,11 @@ export const quickSettings = (questionCount: number): Settings => ({
   betCreation: "upfront", hostPlays: true,
 });
 
-export const templateDrafts = (template: QuickTemplate): BetDraft[] => template.questions.slice(0, 3).map(newDraft);
+export const templateDrafts = (template: QuickTemplate): BetDraft[] => template.questions.slice(0, 3).map((question) => {
+  const draft = newDraft(question);
+  if (template.id === "keep-it-clean") {
+    draft.kind = "multi";
+    draft.outcomes = Array.from({ length: 5 }, (_, i) => ({ label: `Person ${i + 1}` }));
+  }
+  return draft;
+});

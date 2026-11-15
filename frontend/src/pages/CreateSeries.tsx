@@ -235,7 +235,7 @@ export default function CreateSeries() {
               <div className="stack">
                 <label className="field"><span>Series name</span><input className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} /></label>
                 <label className="field"><span>Description</span><input className="input" value={description} maxLength={280} onChange={(e) => setDescription(e.target.value)} /></label>
-                <p className="hint">Edit or remove any question. Template bets start as Yes / No; Detailed setup lets you change their outcomes. Lock each bet before the moment it predicts.</p>
+                <p className="hint">Edit these questions, then create the lobby and share its invite link with your friends or clan. For Keep It Clean, each bet has Person 1–5 as possible answers; agree on who each placeholder means before betting starts.</p>
                 {drafts.map((d, i) => <div className="row quick-question" key={i}>
                   <span className="num dim">{String(i + 1).padStart(2, "0")}</span>
                   <input className="input text" value={d.question} maxLength={300} onChange={(e) => setDraft(i, { ...d, question: e.target.value })} aria-label={`Question ${i + 1}`} placeholder="Write a prediction" />
