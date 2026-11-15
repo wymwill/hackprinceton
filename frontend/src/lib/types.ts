@@ -254,3 +254,29 @@ export type ChatPage = { messages: ChatMessage[]; hasMore: boolean; lastReadId: 
 
 /** GET /api/social/chat */
 export type ChatStatus = { clanId: Id | null; lastId: number | null; unread: number };
+
+/**
+ * What a wager submission did: POST /series/:id/bets/:betId/wagers with a requestId
+ * (`place_series_wager_once` in supabase/migrations/202611140017_idempotent_submissions.sql).
+ */
+export type WagerReceipt = {
+  requestId: Id;
+  wagerId: Id;
+  seriesId: Id;
+  betId: Id;
+  outcomeId: Id;
+  /** The outcome's label, e.g. "YES". */
+  outcome: string;
+  /** Coins this submission put down. */
+  amount: number;
+  /** Your stake on this outcome before, and after, this submission. */
+  previousStake: number;
+  totalStake: number;
+  /** True when it added to a stake you already had. */
+  addedToExisting: boolean;
+  /** Your free coins right after it, from the server. */
+  available: number;
+  placedAt: string;
+  /** True when this answer is the original receipt for a repeated submission. */
+  replayed: boolean;
+};
