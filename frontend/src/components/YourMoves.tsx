@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useStore } from "../lib/store.tsx";
 import { todos } from "../lib/todos.ts";
 import { reminderTodoKey, useReminders } from "../lib/reminders.ts";
+import { useTour } from "./NavigationTour.tsx";
 import { Panel } from "./ui.tsx";
 
 /** How many things the signed-in player can do right now (for the sidebar badge). */
@@ -13,6 +14,7 @@ export function useMoveCount() {
 
 /** "Your moves": everything you can do right now across your series, then what you're waiting on. */
 export function MovesPanel() {
+  const { start } = useTour();
   const { db, me, name } = useStore();
   const list = useMemo(() => todos(db.series, me, name), [db, me, name]);
   const now = list.filter((t) => t.kind === "now").length;
@@ -33,7 +35,7 @@ export function MovesPanel() {
       {list.length === 0 ? (
         <p className="hint">
           Nothing waiting on you. Start a bet or join one to get going. New here?{" "}
-          <Link to="/tutorial" className="red-t">Take the tutorial</Link>.
+          <button type="button" onClick={start} className="tour-text-link">Take the tutorial</button>.
         </p>
       ) : (
         <div className="people">

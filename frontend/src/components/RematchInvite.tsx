@@ -43,7 +43,7 @@ export function RematchInvite({ s }: { s: Series }) {
         code={s.code}
         link={link}
         shareTitle={`Rematch: ${s.name}`}
-        shareText={`Rematch time. Join ${s.name} on Alea with code ${s.code}.`}
+        shareText={`Rematch time. Join ${s.name} on Bookie with code ${s.code}.`}
         hint="Send this to last time's players, or let them scan it."
       />
     </div>

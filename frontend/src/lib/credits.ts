@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { TOUR_STEPS } from "../../../shared/navigationTour.ts";
 import { request } from "./store.tsx";
 
 export type Credits = { credits: number; tutorialDoneAt: string | null };
-export type QuizAnswers = { payout?: string; rules?: string; bottom?: string };
 
 /** Tells every useCredits() on the page to reload after a change. */
 const EVENT = "alea-credits";
@@ -24,11 +24,11 @@ export function useCredits() {
     return () => window.removeEventListener(EVENT, load);
   }, [load]);
 
-  /** Grade the quiz on the server; the first correct finish gives 200 credits. */
-  const finish = async (answers: QuizAnswers) => {
-    const r = await request<Credits & { awarded: number }>("POST", "/rewards/tutorial", { answers });
+  /** The database records the one-time reward, including across devices and replays. */
+  const finishTour = async () => {
+    const r = await request<Credits & { awarded: number }>("POST", "/rewards/tutorial", { completedSteps: [...TOUR_STEPS] });
     window.dispatchEvent(new Event(EVENT));
     return r;
   };
-  return { data, finish, reload: load };
+  return { data, finishTour, reload: load };
 }

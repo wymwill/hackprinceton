@@ -1,12 +1,12 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { StoreProvider } from "./lib/store.tsx";
 import CreateSeries from "./pages/CreateSeries.tsx";
 import AllSeries from "./pages/AllSeries.tsx";
 import Home from "./pages/Home.tsx";
 import JoinLink from "./pages/JoinLink.tsx";
 import Profile from "./pages/Profile.tsx";
-import Tutorial from "./pages/Tutorial.tsx";
+import { NavigationTourProvider } from "./components/NavigationTour.tsx";
 import ConnectCallback from "./pages/ConnectCallback.tsx";
 import Friends, { AddFriendLink } from "./pages/Friends.tsx";
 import Clans, { ClanDetail, JoinClanLink } from "./pages/Clans.tsx";
@@ -14,12 +14,16 @@ import ClanChat from "./pages/ClanChat.tsx";
 import { SeriesBet, SeriesHome, SeriesLeaderboard, SeriesRules } from "./pages/SeriesRoutes.tsx";
 import SeriesRecap from "./pages/Recap.tsx";
 
-// Alea Wrapped: loaded only when opened. /wrapped-demo is public (fictional data), so it renders without sign-in.
+// Bookie Wrapped: loaded only when opened. /wrapped-demo is public (fictional data), so it renders without sign-in.
 const Wrapped = lazy(() => import("./pages/Wrapped.tsx"));
-function WrappedFallback() { return <div className="boot"><span className="brand-name">Alea</span><p className="cap">Gathering the receipts…</p></div>; }
+function WrappedFallback() { return <div className="boot"><span className="brand-name">Bookie</span><p className="cap">Gathering the receipts…</p></div>; }
 function WrappedDemoOrStore({ children }: { children: ReactNode }) {
   if (useLocation().pathname === "/wrapped-demo") return <Suspense fallback={<WrappedFallback />}><Wrapped forceDemo /></Suspense>;
-  return <StoreProvider>{children}</StoreProvider>;
+  return <StoreProvider><NavigationTourProvider>{children}</NavigationTourProvider></StoreProvider>;
+}
+function LegacyClanRoute({ chat = false }: { chat?: boolean }) {
+  const { clanId = "" } = useParams();
+  return <Navigate to={`/groups/${encodeURIComponent(clanId)}${chat ? "/chat" : ""}`} replace />;
 }
 
 export default function App() {
@@ -32,15 +36,19 @@ export default function App() {
           <Route path="/new" element={<CreateSeries />} />
           <Route path="/join/:code" element={<JoinLink />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/tutorial" element={<Tutorial />} />
+          <Route path="/tutorial" element={<Navigate to="/?tour=1" replace />} />
           <Route path="/wrapped" element={<Suspense fallback={<WrappedFallback />}><Wrapped /></Suspense>} />
           <Route path="/connect/:provider/callback" element={<ConnectCallback />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/add/:code" element={<AddFriendLink />} />
-          <Route path="/clans" element={<Clans />} />
-          <Route path="/clans/chat" element={<Navigate to="/clans" replace />} />
-          <Route path="/clans/:clanId" element={<ClanDetail />} />
-          <Route path="/clans/:clanId/chat" element={<ClanChat />} />
+          <Route path="/groups" element={<Clans />} />
+          <Route path="/groups/:clanId" element={<ClanDetail />} />
+          <Route path="/groups/:clanId/chat" element={<ClanChat />} />
+          <Route path="/group/:code" element={<JoinClanLink />} />
+          <Route path="/clans" element={<Navigate to="/groups" replace />} />
+          <Route path="/clans/chat" element={<Navigate to="/groups" replace />} />
+          <Route path="/clans/:clanId" element={<LegacyClanRoute />} />
+          <Route path="/clans/:clanId/chat" element={<LegacyClanRoute chat />} />
           <Route path="/clan/:code" element={<JoinClanLink />} />
           <Route path="/s/:id" element={<SeriesHome />} />
           <Route path="/s/:id/bets/:betId" element={<SeriesBet />} />

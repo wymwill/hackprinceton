@@ -60,6 +60,9 @@ describe("tutorial credits", () => {
     assert.equal(await coins(ana, id), 1200);
     assert.equal(await coins(ben, id), 1000);
     assert.equal((await credits(ana)).credits, 0);
+    // Replaying after spending the original award must never refill credits.
+    assert.equal((await finish(ana, RIGHT)).awarded, 0);
+    assert.equal((await credits(ana)).credits, 0);
 
     const next = await startSeries(ben, ana);
     assert.equal(await coins(ana, next), 1000);

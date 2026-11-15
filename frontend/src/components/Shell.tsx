@@ -8,6 +8,7 @@ import { useCredits } from "../lib/credits.ts";
 import { useChatUnread } from "../lib/chat.ts";
 import type { Series } from "../lib/types.ts";
 import { Avatar, Modal, Toasts } from "./ui.tsx";
+import { useTour } from "./NavigationTour.tsx";
 import { useMoveCount } from "./YourMoves.tsx";
 
 /** "ABC123", or an invite link ending in /join/ABC123. */
@@ -80,12 +81,12 @@ function Account() {
   );
 }
 
-/** "Clans", with a count of unread clan chat messages. */
-function ClansLink() {
+/** "Groups", with a count of unread group chat messages. */
+function GroupsLink() {
   const unread = useChatUnread();
   return (
-    <NavLink to="/clans">
-      Clans
+    <NavLink to="/groups" data-tour="groups">
+      Groups
       {unread > 0 && <b aria-label={`${unread} unread messages`}>{unread > 99 ? "99+" : unread}</b>}
     </NavLink>
   );
@@ -97,12 +98,12 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
   const openBets = current?.bets.filter((b) => b.status === "open").length ?? 0;
   return (
     <aside className="sidebar">
-      <Link to="/" className="brand" aria-label="Alea home">
+      <Link to="/" className="brand" aria-label="Bookie home">
         <span className="brand-mark">B</span>
-        <span className="brand-name">Alea</span>
+        <span className="brand-name brand-letters" aria-hidden="true">{Array.from("ookie").map((letter, i) => <span key={i}>{letter}</span>)}</span>
       </Link>
       <nav className="nav" aria-label="Main">
-        <NavLink to="/" end title={moves ? `${moves} thing${moves === 1 ? "" : "s"} you can do now` : undefined}>
+        <NavLink to="/" end data-tour="home" title={moves ? `${moves} thing${moves === 1 ? "" : "s"} you can do now` : undefined}>
           Home{moves > 0 && <b aria-label={`${moves} moves waiting`}>{moves}</b>}
         </NavLink>
         <NavLink to="/series">All series</NavLink>
@@ -115,17 +116,16 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
             {current.status !== "lobby" && <NavLink to={`/s/${current.id}/rules`}>Rules &amp; players</NavLink>}
           </div>
         )}
-        <NavLink to="/new">New series</NavLink>
-        <button type="button" onClick={() => setJoining(true)}>Join with a code</button>
-        <NavLink to="/friends">Friends</NavLink>
-        <ClansLink />
+        <NavLink to="/new" data-tour="new-series">New series</NavLink>
+        <button type="button" data-tour="join" onClick={() => setJoining(true)}>Join with a code</button>
+        <NavLink to="/friends" data-tour="friends">Friends</NavLink>
+        <GroupsLink />
         {clanNav && <details className="series-nav clan-nav" open key={clanNav.id}>
           <summary title={clanNav.name}>{clanNav.name}</summary>
-          <NavLink to={`/clans/${clanNav.id}`} end>Overview</NavLink>
-          <NavLink to={`/clans/${clanNav.id}/chat`}>Chat</NavLink>
+          <NavLink to={`/groups/${clanNav.id}`} end>Overview</NavLink>
+          <NavLink to={`/groups/${clanNav.id}/chat`}>Chat</NavLink>
         </details>}
-        <NavLink to="/tutorial">Tutorial</NavLink>
-        <NavLink to="/profile">Profile</NavLink>
+        <NavLink to="/profile" data-tour="profile">Profile</NavLink>
       </nav>
       {joining && <JoinModal onClose={() => setJoining(false)} />}
       <div className="grow" />
@@ -138,6 +138,7 @@ export type Crumb = { label: string; to?: string };
 
 function TopBar({ crumbs, current }: { crumbs: Crumb[]; current?: Series }) {
   const { me } = useStore();
+  const { start } = useTour();
   let status: ReactNode = null;
   if (current && current.status !== "lobby" && isParticipant(current, me)) {
     const b = balances(current).get(me)!;
@@ -161,6 +162,7 @@ function TopBar({ crumbs, current }: { crumbs: Crumb[]; current?: Series }) {
       </nav>
       <div className="spacer" />
       {status}
+      <button type="button" className="tour-help" data-tour="help" aria-label="Start navigation tutorial" title="Take a quick tour" onClick={start}>?</button>
     </header>
   );
 }

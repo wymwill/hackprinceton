@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
-    <meta name="theme-color" content="#1c1b1f" />
+    <meta name="theme-color" content="#14132e" />
     <script>
       // Light or dark before anything draws. Kept in sync with src/lib/theme.ts.
       (function () {
@@ -11,10 +11,10 @@
         try { pref = localStorage.getItem("alea-theme"); } catch (e) {}
         var light = pref === "light" || (pref !== "dark" && window.matchMedia("(prefers-color-scheme: light)").matches);
         document.documentElement.dataset.theme = light ? "light" : "dark";
-        if (light) document.querySelector('meta[name="theme-color"]').setAttribute("content", "#ece4d6");
+        if (light) document.querySelector('meta[name="theme-color"]').setAttribute("content", "#fff2d8");
       })();
     </script>
-    <title>Alea</title>
+    <title>Bookie</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

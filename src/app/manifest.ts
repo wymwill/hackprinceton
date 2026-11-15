@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 
-/** Lets phones add Alea to the home screen and open it full screen, like an app. */
+/** Lets phones add Bookie to the home screen and open it full screen, like an app. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Alea",
-    short_name: "Alea",
+    name: "Bookie",
+    short_name: "Bookie",
     description: "Bet with your friends on real life. No money: tokens or points, a Bookie who sets the odds, and dares that get done.",
     start_url: "/",
     display: "standalone",

@@ -81,8 +81,8 @@ export default function Friends() {
                 label="Your code"
                 code={data.me.friendCode}
                 link={friendLink(data.me.friendCode)}
-                shareTitle="Add me on Alea"
-                shareText={`Add me on Alea: my friend code is ${data.me.friendCode}.`}
+                shareTitle="Add me on Bookie"
+                shareText={`Add me on Bookie: my friend code is ${data.me.friendCode}.`}
                 hint="Friends scan this with their phone camera, or open your link."
               />
             </div>

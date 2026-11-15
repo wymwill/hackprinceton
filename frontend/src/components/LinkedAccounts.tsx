@@ -14,7 +14,7 @@ export function LinkedAccounts() {
         <p className="hint">{error ?? "Loading…"}</p>
       ) : (
         <div className="stack">
-          <p className="hint">Friends in your series can use these as proof on bets. Alea only reads, and disconnecting deletes everything it copied.</p>
+          <p className="hint">Friends in your series can use these as proof on bets. Bookie only reads, and disconnecting deletes everything it copied.</p>
           {setupNeeded && <p className="notice">Integrations aren't switched on for this database yet, so connecting is turned off for now.</p>}
           <ul className="links">
             {providers.map((p) => {

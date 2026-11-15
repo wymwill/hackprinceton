@@ -116,7 +116,7 @@ export default function Profile() {
             <p>This is how friends see you in every series.</p>
           </div>
           <div className="row" style={{ flexWrap: "wrap" }}>
-            <Link to="/wrapped" className="btn primary">Your Alea Wrapped ✳</Link>
+            <Link to="/wrapped" className="btn primary">Your Bookie Wrapped ✳</Link>
             <Link to="/wrapped-demo" className="btn">Explore demo</Link>
           </div>
         </section>

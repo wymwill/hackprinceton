@@ -77,8 +77,8 @@ export function RecapPanel({ s }: { s: Series }) {
       const blob = await svgToPng(recapSvg(s, r, name), 1080, 1350);
       const how = await sharePng(blob, `alea-${s.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "series"}-recap.png`, {
         share,
-        title: `${s.name}: Alea recap`,
-        text: r.winnerId ? `${name(r.winnerId)} won ${s.name} on Alea.` : `${s.name} on Alea.`,
+        title: `${s.name}: Bookie recap`,
+        text: r.winnerId ? `${name(r.winnerId)} won ${s.name} on Bookie.` : `${s.name} on Bookie.`,
       });
       if (how === "downloaded") toast("Recap card downloaded.");
     } catch {

@@ -26,7 +26,7 @@ export default function ConnectCallback() {
       return;
     }
     if (params.get("error")) {
-      setProblem(`You didn't give Alea access on ${name}.`);
+      setProblem(`You didn't give Bookie access on ${name}.`);
       return;
     }
     if (!saved || params.get("state") !== saved.state) {

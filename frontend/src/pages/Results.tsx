@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { RecapPanel } from "./Recap.tsx";
 import { StandingsTable } from "../components/Standings.tsx";
-import { OutcomeTag, Panel, Pill, Who } from "../components/ui.tsx";
-import { agreesTo, resultText, standings } from "../lib/rules.ts";
+import { SeriesBets } from "../components/SeriesBets.tsx";
+import { Panel, Pill, Who } from "../components/ui.tsx";
+import { agreesTo, standings } from "../lib/rules.ts";
 import { MODE_LABEL, fmt, ordinal } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Assignment, Series } from "../lib/types.ts";
@@ -55,7 +56,7 @@ function PoolPicks({ s }: { s: Series }) {
   const held = new Set(list.filter((a) => a.status === "pending" || a.status === "accepted").map((a) => a.favorId));
   const nextUp = s.settings.exclusivePool ? list.find((a) => a.status === "picking") : undefined;
   return (
-    <Panel label="Punishment picks" right={s.settings.exclusivePool ? "Each punishment once" : "Punishments reusable"}>
+    <Panel label="Punishment picks">
       <p className="hint">
         1st picks for last place, 2nd for second-to-last, and so on{s.settings.exclusivePool ? ", in that order" : ""}. Only
         punishments the loser agreed to before the series started can be picked. The choice is owed immediately.
@@ -203,25 +204,14 @@ export default function Results({ s }: { s: Series }) {
 
       <Podium s={s} />
 
+      <div style={{ marginBottom: 28 }}><SeriesBets s={s} /></div>
+
       <div className="grid2">
         <div className="col">
           <Panel label="Final standings">
             <StandingsTable s={s} />
           </Panel>
           <RecapPanel s={s} />
-          <Panel label="Bets">
-            <div className="people">
-              {s.bets.map((b, i) => (
-                <Link key={b.id} to={`/s/${s.id}/bets/${b.id}`} className="person">
-                  <span>
-                    <span className="num dim">{String(i + 1).padStart(2, "0")} </span>
-                    <span className="bright">{b.question}</span>
-                  </span>
-                  {b.outcomeId && b.status !== "canceled" ? <OutcomeTag bet={b} id={b.outcomeId} /> : <span className="dim">{resultText(b)}</span>}
-                </Link>
-              ))}
-            </div>
-          </Panel>
         </div>
         <div className="col">
           {s.settings.mode === "pool" && <PoolPicks s={s} />}

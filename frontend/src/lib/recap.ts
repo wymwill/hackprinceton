@@ -3,7 +3,7 @@
  * Worked out only from what the server stored (standings, wagers, results); nothing
  * is estimated or invented.
  *
- * Alea doesn't record odds over time. The only "pre-result" signal it has is how the
+ * Bookie doesn't record odds over time. The only "pre-result" signal it has is how the
  * coins were split when betting closed (no wager is accepted after that). So "upset"
  * and "best call" are measured by the winning side's share of the coins at close,
  * and the recap says so. It's a measure of the crowd's money, not a probability.
@@ -60,7 +60,7 @@ export type Recap = {
 };
 
 export const UPSET_RULE =
-  "The settled bet whose winning side had the smallest share of the coins when betting closed. Alea doesn't record odds over time, so this is the crowd's money, not a probability.";
+  "The settled bet whose winning side had the smallest share of the coins when betting closed. Bookie doesn't record odds over time, so this is the crowd's money, not a probability.";
 export const BEST_CALL_RULE =
   "The winning pick with the smallest share of the coins on its side when betting closed (under half). Ties go to the bigger profit, then the earlier bet.";
 

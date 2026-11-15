@@ -8,54 +8,40 @@ import { fmt } from "../lib/format.ts";
 import { balances, isParticipant } from "../lib/rules.ts";
 import { useStore } from "../lib/store.tsx";
 import type { Bet, Series } from "../lib/types.ts";
-import { BetCard } from "./Dashboard.tsx";
-import { useFirstBetSteps } from "./Tutorial.tsx";
+import { BetCard } from "../components/BetCard.tsx";
+import { useTour } from "../components/NavigationTour.tsx";
+import { useCredits } from "../lib/credits.ts";
 
-type Tab = "bet" | "play" | "done";
 type Item = { s: Series; bet: Bet };
 
-/** Every bet across your series, sorted into what you can bet on, what you have riding, and what just settled. */
-function useMyBets() {
+/** Open predictions the player can still join, newest first. */
+function useOpenBets() {
   const { db, me } = useStore();
   return useMemo(() => {
-    const out: Record<Tab, Item[]> = { bet: [], play: [], done: [] };
+    const bets: Item[] = [];
     for (const s of db.series) {
-      if (s.status === "lobby") continue;
-      const playing = isParticipant(s, me);
+      if (s.status !== "active" || !isParticipant(s, me)) continue;
       for (const bet of s.bets) {
-        const mine = bet.wagers.some((w) => w.userId === me);
-        if (bet.status === "open" && playing && !mine && s.status === "active") out.bet.push({ s, bet });
-        else if ((bet.status === "open" || bet.status === "closed") && (mine || s.hostId === me)) out.play.push({ s, bet });
-        else if (bet.status === "resolved" || bet.status === "canceled") out.done.push({ s, bet });
+        if (bet.status === "open" && !bet.wagers.some((w) => w.userId === me)) bets.push({ s, bet });
       }
     }
-    const when = (i: Item) => i.bet.settledAt ?? i.bet.openedAt ?? i.bet.createdAt;
-    out.bet.sort((a, b) => when(b).localeCompare(when(a)));
-    out.play.sort((a, b) => (a.bet.status === b.bet.status ? when(b).localeCompare(when(a)) : a.bet.status === "closed" ? -1 : 1));
-    out.done.sort((a, b) => when(b).localeCompare(when(a)));
-    out.done = out.done.slice(0, 12);
-    return out;
+    return bets.sort((a, b) => (b.bet.openedAt ?? b.bet.createdAt).localeCompare(a.bet.openedAt ?? a.bet.createdAt));
   }, [db, me]);
 }
 
 function ActionCards({ onJoin }: { onJoin: () => void }) {
-  const steps = useFirstBetSteps(onJoin);
-  const done = steps.filter((s) => s.done).length;
-  const finished = done === steps.length;
+  const { start } = useTour();
+  const { data } = useCredits();
+  const finished = !!data?.tutorialDoneAt;
   return (
     <div className="home-actions">
-      <Link to="/tutorial" className="panel home-action">
+      <button type="button" onClick={start} className="panel home-action">
         <span className="home-action-icon" aria-hidden="true">?</span>
         <b>{finished ? "How it works" : "Get help"}</b>
         <span className="dim">
-          {finished ? "Every feature explained, plus a practice bet." : `New here? The tutorial walks you through your first bet. ${done} of ${steps.length} steps done.`}
+          {finished ? "Replay the quick navigation tour whenever you need a hand." : "Take a quick tour of Bookie and earn 200 credits. Explore at your own pace."}
         </span>
-        {!finished && (
-          <span className="tut-progress" aria-hidden="true">
-            <i style={{ width: `${(done / steps.length) * 100}%` }} />
-          </span>
-        )}
-      </Link>
+      </button>
       <Link to="/new" className="panel home-action primary">
         <span className="home-action-icon" aria-hidden="true">+</span>
         <b>Start a quick game</b>
@@ -70,61 +56,12 @@ function ActionCards({ onJoin }: { onJoin: () => void }) {
   );
 }
 
-const TABS: [Tab, string][] = [
-  ["bet", "Bet now"],
-  ["play", "In play"],
-  ["done", "Settled"],
-];
-
-function YourBets({ onJoin }: { onJoin: () => void }) {
-  const groups = useMyBets();
-  const [picked, setPicked] = useState<Tab | null>(null);
-  // Until someone picks a tab, show the first one that has something in it.
-  const tab = picked ?? TABS.find(([k]) => groups[k].length)?.[0] ?? "bet";
-  const shown = groups[tab];
-  const empty: Record<Tab, string> = {
-    bet: "No open bets waiting for you. When a host opens one, it shows up here.",
-    play: "You don't have coins riding on anything right now.",
-    done: "No results yet. Settled bets show up here with what you won or lost.",
-  };
-  return (
-    <div className="stack" style={{ gap: 16 }}>
-      <div className="tabs" role="tablist" aria-label="Your bets">
-        {TABS.map(([k, label]) => (
-          <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setPicked(k)}>
-            {label}
-            <b>{groups[k].length}</b>
-          </button>
-        ))}
-      </div>
-      {shown.length ? (
-        <div className="bgrid">
-          {shown.map(({ s, bet }) => (
-            <BetCard key={bet.id} s={s} bet={bet} showSeries />
-          ))}
-        </div>
-      ) : (
-        <Panel>
-          <Empty title={tab === "bet" ? "Nothing to bet on" : tab === "play" ? "Nothing in play" : "Nothing settled yet"}>
-            {empty[tab]}{" "}
-            {groups.bet.length + groups.play.length + groups.done.length === 0 && (
-              <span className="row" style={{ justifyContent: "center", marginTop: 12 }}>
-                <Link to="/new" className="btn sm primary">Start a bet</Link>
-                <button type="button" className="btn sm" onClick={onJoin}>Join with a code</button>
-              </span>
-            )}
-          </Empty>
-        </Panel>
-      )}
-    </div>
-  );
-}
-
 export default function Home() {
   const { db, me, meUser } = useStore();
   const [joining, setJoining] = useState(false);
   const join = () => setJoining(true);
   const list = sortSeries(db.series);
+  const openBets = useOpenBets();
   const live = list.filter((s) => s.status === "active");
   const inPlay = live.reduce((n, s) => n + (balances(s).get(me)?.atStake ?? 0), 0);
   const first = meUser.name.split(" ")[0];
@@ -139,7 +76,7 @@ export default function Home() {
           <p>
             {live.length
               ? `${live.length} live series${inPlay ? ` · ${fmt(inPlay)} coins in play` : ""}. Here's everything you're betting on.`
-              : "Bet on YES/NO questions with friends for virtual coins. Whoever ends a series with the fewest coins owes a punishment."}
+              : "Bet on questions with friends for virtual coins. Players at the bottom of the leaderboard owe a punishment."}
           </p>
         </div>
       </section>
@@ -148,8 +85,13 @@ export default function Home() {
 
       <div className="grid2 home-main">
         <div className="col">
-          <Panel label="Your bets" right={`${live.length} live series`} bodyClass="pbody home-bets">
-            <YourBets onJoin={join} />
+          <Panel label="Bet now" right={`${openBets.length} open`} bodyClass="pbody home-bets">
+            {openBets.length ? <>
+              <div className="home-bet-list">
+                {openBets.slice(0, 3).map(({ s, bet }) => <BetCard key={bet.id} s={s} bet={bet} showSeries />)}
+              </div>
+              {openBets.length > 3 && <p className="hint home-bets-footer">Showing 3 of {openBets.length} open bets. <Link to="/series" className="red-t">Browse your series →</Link></p>}
+            </> : <Empty title="All caught up">New predictions will appear here when a host opens betting.</Empty>}
           </Panel>
         </div>
         <div className="col">
@@ -164,7 +106,7 @@ export default function Home() {
             <Link to="/series" className="red-t">See all {list.length} →</Link>
           </div>
           <div className="card-grid">
-            {list.slice(0, 3).map((s) => (
+            {list.map((s) => (
               <SeriesCard key={s.id} s={s} />
             ))}
           </div>

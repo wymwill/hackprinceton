@@ -61,7 +61,7 @@ export default function Wrapped({ forceDemo = false }: { forceDemo?: boolean }) 
     try {
       const svg = shareSvg(summary, payload?.verdict?.comment ?? `${summary.archetype.title}. ${fallbackLines[summary.totalBets % fallbackLines.length]}`);
       const blob = await svgToPng(svg, 1080, 1920);
-      await sharePng(blob, `alea-wrapped-${summary.year}.png`, { share, title: `Alea Wrapped ${summary.year}`, text: `${summary.name}: ${summary.archetype.title}` });
+      await sharePng(blob, `alea-wrapped-${summary.year}.png`, { share, title: `Bookie Wrapped ${summary.year}`, text: `${summary.name}: ${summary.archetype.title}` });
     } catch {
       setError("Image export couldn't finish on this device. Try Download again.");
     } finally { setBusy(false); }
