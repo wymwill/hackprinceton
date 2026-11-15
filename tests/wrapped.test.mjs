@@ -102,3 +102,25 @@ test("empty real histories stay empty while the separate demo mode is clearly la
   assert.ok(demo.totalBets > 0);
   assert.equal(demo.best.seriesId, "demo");
 });
+
+test("share-card quote: curly quotes inside the lines, never a skipped word, an ellipsis when it doesn't fit", async () => {
+  const { posterLines } = await import("../frontend/src/lib/poster.ts");
+  // The demo verdict: quote marks belong to the first and last lines (a separate opening mark was overdrawn by the first line).
+  const demo = posterLines("THE COMEBACK KID. The receipts are in. Your confidence is still under investigation.");
+  assert.deepEqual(demo, ["“THE COMEBACK KID. The receipts are in.", "Your confidence is still under", "investigation.”"]);
+  for (const line of demo) assert.ok(line.length <= 41, line);
+
+  // Too long for four lines: keep the words in order up to the last that fits, then "…". No word from later on sneaks in.
+  const long = Array.from({ length: 40 }, (_, i) => (i === 20 ? "extraordinarilylongwordthatcannotfit" : `w${i}`)).join(" ");
+  const lines = posterLines(long);
+  assert.equal(lines.length, 4);
+  assert.ok(lines.at(-1).endsWith("…”"));
+  const shown = lines.join(" ").replace(/[“”…]/g, "").split(" ");
+  const original = long.split(" ");
+  assert.deepEqual(shown, original.slice(0, shown.length), "words are a prefix of the quote, in order, with none skipped");
+
+  // One enormous word is shortened rather than overflowing the card; control characters are dropped; empty stays empty.
+  assert.ok(posterLines("x".repeat(90))[0].length <= 42);
+  assert.deepEqual(posterLines("Hi\u0007 there​"), ["“Hi there”"]);
+  assert.deepEqual(posterLines("   "), []);
+});
