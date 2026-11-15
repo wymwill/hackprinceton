@@ -24,23 +24,23 @@ function day(iso: string) {
   return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric", ...(d.getFullYear() !== today.getFullYear() ? { year: "numeric" } : {}) });
 }
 
-/** /clans/:clanId/chat: one selected clan's chat. */
+/** /groups/:clanId/chat: one selected group's chat. */
 export default function ClanChat() {
   const { clanId = "" } = useParams();
   const { data, error } = useSocial();
   const clan = data?.clans.find((c) => c.id === clanId);
   return (
-    <Shell crumbs={[{ label: "Clans", to: "/clans" }, { label: clan?.name ?? "Clan", to: `/clans/${clanId}` }, { label: "Chat" }]} clanNav={clan ? { id: clan.id, name: clan.name } : undefined} fill>
+    <Shell crumbs={[{ label: "Groups", to: "/groups" }, { label: clan?.name ?? "Group", to: `/groups/${clanId}` }, { label: "Chat" }]} clanNav={clan ? { id: clan.id, name: clan.name } : undefined} fill>
       {!data ? (
         <Panel>
-          <Empty title={error ? "Couldn't load your clan" : "Loading…"}>{error}</Empty>
+          <Empty title={error ? "Couldn't load your group" : "Loading…"}>{error}</Empty>
         </Panel>
       ) : !clan ? (
         <Panel>
-          <Empty title="Clan not found">
-            Each clan has its own private chat.{" "}
-            <Link to="/clans" className="red-t">
-              Start or join a clan
+          <Empty title="Group not found">
+            Each group has its own private chat.{" "}
+            <Link to="/groups" className="red-t">
+              Start or join a group
             </Link>
           </Empty>
         </Panel>
@@ -140,9 +140,8 @@ function Chat({ clan }: { clan: Clan }) {
         {chat.loading ? (
           <Empty title="Loading messages…" />
         ) : chat.unavailable ? (
-          <Empty title="Clan chat isn't set up yet">
-            This server's database doesn't have clan chat yet. Whoever runs Alea needs to apply the clan chat migration
-            (supabase/migrations/202611140013_clan_chat.sql). The rest of your clan still works.{" "}
+          <Empty title="Group chat isn't available yet">
+            The rest of your group still works.{" "}
             <button type="button" className="btn sm" onClick={chat.reload}>
               Check again
             </button>
@@ -189,7 +188,7 @@ function Chat({ clan }: { clan: Clan }) {
             {chat.messages.filter((m) => m.kind === "text").length === 0 && chat.pending.length === 0 && (
               <div className="chat-empty">
                 <b>No messages yet</b>
-                <span>Say hi to your clan 👋</span>
+                <span>Say hi to your group 👋</span>
               </div>
             )}
           </>
@@ -322,7 +321,7 @@ function Composer({ onSend, disabled }: { onSend: (body: string) => Promise<bool
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKey}
-          placeholder="Message your clan"
+          placeholder="Message your group"
           aria-label="Message"
           enterKeyHint={touch ? "enter" : "send"}
         />

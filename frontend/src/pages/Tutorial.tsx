@@ -89,7 +89,7 @@ function FirstBet({ onJoin }: { onJoin: () => void }) {
           </li>
         ))}
       </ol>
-      {current === -1 && <p className="notice ok tut-complete"><b>You've done it all.</b> Keep betting, or start a series with your clan.</p>}
+      {current === -1 && <p className="notice ok tut-complete"><b>You've done it all.</b> Keep betting, or start a series with your group.</p>}
     </Panel>
   );
 }
@@ -306,7 +306,7 @@ const FEATURES: Feature[] = [
     body: (
       <>
         <p><b>Home</b> lists your series. Open one to see its bets under <b>Bet now</b>, <b>In play</b>, and <b>Settled</b>.</p>
-        <p><b>All series</b> lists every series you're in. Open a clan to find its chat and start a series with that group.</p>
+        <p><b>All series</b> lists every series you're in. Open a group to find its chat and start a series together.</p>
       </>
     ),
   },
@@ -319,11 +319,11 @@ const FEATURES: Feature[] = [
     body: <p>Share your friend code, link or QR code; when a friend opens it, you're connected.</p>,
   },
   {
-    id: "clans", tag: "Social", title: "Clans, chat and series with your clan", to: "/clans", cta: "Open clans",
+    id: "clans", tag: "Social", title: "Groups, chat and series with friends", to: "/groups", cta: "Open groups",
     body: (
       <>
-        <p>A clan is your friend group. Create one or join with a code; clans have a <b>chat</b> and compete on the <b>clan leaderboard</b> by coins wagered. You can be in several.</p>
-        <p>On a clan's page, <b>Start a series with this clan</b> fills in the setup for you and puts every member in the lobby.</p>
+        <p>A group keeps your friends together. Create one or join with a code, chat privately, and start a series together. You can be in several groups.</p>
+        <p>On a group's page, <b>Start a series with this group</b> fills in the setup for you and puts every member in the lobby.</p>
       </>
     ),
   },

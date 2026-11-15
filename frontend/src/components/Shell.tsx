@@ -100,11 +100,11 @@ function Sidebar({ current, clanNav }: { current?: Series; clanNav?: { id: strin
         )}
         <NavLink to="/new">New series</NavLink>
         <NavLink to="/friends">Friends</NavLink>
-        <NavLink to="/clans">Clans</NavLink>
+        <NavLink to="/groups">Groups</NavLink>
         {clanNav && <details className="series-nav clan-nav" open key={clanNav.id}>
           <summary title={clanNav.name}>{clanNav.name}</summary>
-          <NavLink to={`/clans/${clanNav.id}`} end>Overview</NavLink>
-          <NavLink to={`/clans/${clanNav.id}/chat`}>Chat</NavLink>
+          <NavLink to={`/groups/${clanNav.id}`} end>Overview</NavLink>
+          <NavLink to={`/groups/${clanNav.id}/chat`}>Chat</NavLink>
         </details>}
         <NavLink to="/tutorial">Tutorial</NavLink>
         <NavLink to="/profile">Profile</NavLink>

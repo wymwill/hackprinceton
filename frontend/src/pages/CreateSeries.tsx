@@ -82,7 +82,7 @@ export default function CreateSeries() {
   const { api, me, toast, db } = useStore();
   const nav = useNavigate();
   const [params] = useSearchParams();
-  const clanId = params.get("clan");
+  const clanId = params.get("group") ?? params.get("clan");
   // A rematch keeps its own saved draft, so it never picks up (or overwrites) another setup in progress.
   const rematchId = params.get("rematch");
   const key = draftKey(me, rematchId ? `rematch-${rematchId}` : clanId);
@@ -127,7 +127,7 @@ export default function CreateSeries() {
   // Bets with a question must be valid; empty rows are skipped.
   const draftProblem = written.map((d, i) => (d.question.trim().length < 3 ? `Bet ${i + 1}: write at least 3 characters.` : outcomeProblem(d) && `Bet ${i + 1}: ${outcomeProblem(d)}`)).find(Boolean) || null;
 
-  // /new?clan=ID: start a series with a whole clan. The basics fill in from the clan once it loads,
+  // /new?group=ID (or older ?clan=ID): start a series with a whole group. The basics fill in once it loads,
   // and every member joins the lobby when the series is created.
   const social = useSocial();
   const clan = clanId ? social.data?.clans.find((c) => c.id === clanId) : undefined;
@@ -138,7 +138,7 @@ export default function CreateSeries() {
     const n = clan.members.length;
     setName(`${clan.name} series`.slice(0, 60));
     setDescription(`Bets for ${clan.name}. All ${n} members start in the lobby.`);
-    // A shared pool needs twice as many players as losers, so bigger clans can have 2 losers.
+    // A shared pool needs twice as many players as losers, so bigger groups can have 2 losers.
     setSt((s) => ({ ...s, losers: n >= 6 ? 2 : 1, mode: "pool", hostPlays: true }));
   }, [clan, saved]);
 
@@ -250,10 +250,10 @@ export default function CreateSeries() {
             </>
           ) : social.data ? (
             <>
-              <b>That clan wasn't found.</b> You may have left it. You can still create a series and share its invite link.
+              <b>That group wasn't found.</b> You may have left it. You can still create a series and share its invite link.
             </>
           ) : (
-            "Loading your clan…"
+            "Loading your group…"
           )}
         </p>
       )}
@@ -285,7 +285,7 @@ export default function CreateSeries() {
               <div className="stack">
                 <label className="field"><span>Series name</span><input className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} /></label>
                 <label className="field"><span>Description</span><input className="input" value={description} maxLength={280} onChange={(e) => setDescription(e.target.value)} /></label>
-                <p className="hint">Edit these questions, then create the lobby and share its invite link with your friends or clan. Keep It Clean and the last Roommate challenge use Person 1–5 as possible answers; agree on who each placeholder means before betting starts.</p>
+                <p className="hint">Edit these questions, then create the lobby and share its invite link with your friends or group. Keep It Clean and the last Roommate challenge use Person 1–5 as possible answers; agree on who each placeholder means before betting starts.</p>
                 {drafts.map((d, i) => <div className="row quick-question" key={i}>
                   <span className="num dim bet-index">{String(i + 1).padStart(2, "0")}</span>
                   <input className="input text" value={d.question} maxLength={300} onChange={(e) => setDraft(i, { ...d, question: e.target.value })} aria-label={`Question ${i + 1}`} placeholder="Write a prediction" />

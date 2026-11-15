@@ -9,9 +9,9 @@ const POLL_MS = 10_000;
 export const prettyCode = (c: string) => (c.length === 8 ? `${c.slice(0, 4)}-${c.slice(4)}` : c);
 
 export const friendLink = (code: string) => `${window.location.origin}/add/${code}`;
-export const clanLink = (code: string) => `${window.location.origin}/clan/${code}`;
+export const groupLink = (code: string) => `${window.location.origin}/group/${code}`;
 
-/** Friends and clans: loads on mount, refreshes every few seconds, and wraps each action with a toast. */
+/** Friends and groups: loads on mount, refreshes every few seconds, and wraps each action with a toast. */
 export function useSocial() {
   const { toast } = useStore();
   const [data, setData] = useState<SocialState | null>(null);
@@ -55,7 +55,7 @@ export function useSocial() {
     removeFriend: (id: string) => run("DELETE", `/social/friends/${encodeURIComponent(id)}`, undefined, "Friend removed."),
     createClan: (name: string) => run<Pick<Clan, "id" | "name" | "code">>("POST", "/social/clans", { name }),
     joinClan: (code: string) => run<Pick<Clan, "id" | "name" | "code">>("POST", "/social/clans/join", { code }),
-    leaveClan: (clanId: string) => run("POST", "/social/clans/leave", { clanId }, "You left the clan."),
+    leaveClan: (clanId: string) => run("POST", "/social/clans/leave", { clanId }, "You left the group."),
   };
 }
 

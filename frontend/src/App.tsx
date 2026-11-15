@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { StoreProvider } from "./lib/store.tsx";
 import CreateSeries from "./pages/CreateSeries.tsx";
 import AllSeries from "./pages/AllSeries.tsx";
@@ -21,6 +21,10 @@ function WrappedDemoOrStore({ children }: { children: ReactNode }) {
   if (useLocation().pathname === "/wrapped-demo") return <Suspense fallback={<WrappedFallback />}><Wrapped forceDemo /></Suspense>;
   return <StoreProvider>{children}</StoreProvider>;
 }
+function LegacyClanRoute({ chat = false }: { chat?: boolean }) {
+  const { clanId = "" } = useParams();
+  return <Navigate to={`/groups/${encodeURIComponent(clanId)}${chat ? "/chat" : ""}`} replace />;
+}
 
 export default function App() {
   return (
@@ -37,10 +41,14 @@ export default function App() {
           <Route path="/connect/:provider/callback" element={<ConnectCallback />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/add/:code" element={<AddFriendLink />} />
-          <Route path="/clans" element={<Clans />} />
-          <Route path="/clans/chat" element={<Navigate to="/clans" replace />} />
-          <Route path="/clans/:clanId" element={<ClanDetail />} />
-          <Route path="/clans/:clanId/chat" element={<ClanChat />} />
+          <Route path="/groups" element={<Clans />} />
+          <Route path="/groups/:clanId" element={<ClanDetail />} />
+          <Route path="/groups/:clanId/chat" element={<ClanChat />} />
+          <Route path="/group/:code" element={<JoinClanLink />} />
+          <Route path="/clans" element={<Navigate to="/groups" replace />} />
+          <Route path="/clans/chat" element={<Navigate to="/groups" replace />} />
+          <Route path="/clans/:clanId" element={<LegacyClanRoute />} />
+          <Route path="/clans/:clanId/chat" element={<LegacyClanRoute chat />} />
           <Route path="/clan/:code" element={<JoinClanLink />} />
           <Route path="/s/:id" element={<SeriesHome />} />
           <Route path="/s/:id/bets/:betId" element={<SeriesBet />} />
