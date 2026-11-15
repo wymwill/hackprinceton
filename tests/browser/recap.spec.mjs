@@ -178,6 +178,7 @@ test("rematch from a series you're not in shows nothing of it", async ({ page },
   await signIn(page, dee);
   await page.goto(`/new?rematch=${old.id}`);
   await expect(page.getByText("That series wasn't found.")).toBeVisible();
+  await page.getByRole("button", { name: "Detailed setup" }).click();
   await expect(page.locator('input[placeholder="Gym month"]')).toHaveValue("");
   for (const secret of [title, "Ana", "Ben", "Cat"]) await expect(page.locator("main")).not.toContainText(secret);
 });

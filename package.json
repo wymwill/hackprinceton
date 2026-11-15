@@ -10,7 +10,7 @@
     "postinstall": "npm --prefix frontend install --no-audit --no-fund",
     "lint": "eslint",
     "typecheck": "tsc --noEmit && npm --prefix frontend run typecheck",
-    "test:series-sql": "node --test tests/sql/series.test.mjs tests/sql/outcomes.test.mjs tests/sql/ranges.test.mjs tests/sql/upgrade.test.mjs tests/sql/social.test.mjs tests/sql/chat.test.mjs tests/sql/clan-series.test.mjs tests/sql/idempotency.test.mjs tests/sql/deadlines.test.mjs tests/sql/reminders.test.mjs",
+    "test:series-sql": "node --test tests/sql/series.test.mjs tests/sql/outcomes.test.mjs tests/sql/ranges.test.mjs tests/sql/upgrade.test.mjs tests/sql/social.test.mjs tests/sql/chat.test.mjs tests/sql/clan-series.test.mjs tests/sql/idempotency.test.mjs tests/sql/deadlines.test.mjs tests/sql/reminders.test.mjs tests/sql/links.test.mjs",
     "test:series": "node tests/e2e/series.mjs",
     "create:demo-users": "node scripts/create-demo-users.mjs",
     "test:outcomes-local": "node tests/e2e/outcomes-local.mjs",

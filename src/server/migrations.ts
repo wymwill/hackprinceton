@@ -10,6 +10,7 @@ import { AppError } from "./errors";
 const FEATURES: { path: RegExp; feature: string; migration: string }[] = [
   { path: /^\/api\/social\/(chat$|clans\/[^/]+\/(messages|read)(\/|$))/, feature: "Clan chat", migration: "supabase/migrations/202611140013_clan_chat.sql" },
   { path: /^\/api\/social\//, feature: "Friends and clans", migration: "supabase/migrations/202611140012_friends_and_clans.sql" },
+  { path: /^\/api\/links(\/|$)/, feature: "Linked accounts", migration: "supabase/migrations/202611140020_linked_accounts.sql" },
 ];
 
 const MISSING_CODES = new Set(["PGRST202", "PGRST205", "42883", "42P01", "42703"]);

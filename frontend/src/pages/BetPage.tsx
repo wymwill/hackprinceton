@@ -9,6 +9,7 @@ import { fmtValue, parseNum, rangeFor, rangeRule } from "../lib/ranges.ts";
 import { newRequestId } from "../lib/submit.ts";
 import { deadlineState, deadlineText, timeLeft } from "../lib/deadlines.ts";
 import type { Bet, Id, Series, WagerReceipt } from "../lib/types.ts";
+import { LinkedProof } from "../components/LinkedProof.tsx";
 
 /** YES/NO keep their yes/no styling; other outcomes use their own color (--oc). */
 const tone = (bet: Bet, i: number) => (bet.kind === "binary" ? (i === 0 ? "yes" : "no") : "oc");
@@ -559,6 +560,7 @@ export default function BetPage({ s, bet }: { s: Series; bet: Bet }) {
           {bet.status === "open" && !playing && <p className="notice">You're hosting without playing, so you can't wager.</p>}
           {bet.status === "closed" && <p className="notice">Betting is locked. Waiting for {name(s.hostId)} to call it.</p>}
           {s.hostId === me && <HostPanel s={s} bet={bet} />}
+          {bet.status !== "draft" && <LinkedProof s={s} bet={bet} />}
           <Link to={`/s/${s.id}`} className="btn ghost">
             ← Back to all bets
           </Link>

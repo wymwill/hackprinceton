@@ -7,9 +7,23 @@ import { Panel } from "../components/ui.tsx";
 import { DEFAULT_SETTINGS } from "../lib/rules.ts";
 import { MODE_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
+import { QUICK_TEMPLATES, quickSettings, templateDrafts, type QuickTemplate } from "../lib/quickGame.ts";
 import { newRequestId } from "../lib/submit.ts";
 import { rematchInvitees, rematchName } from "../lib/recap.ts";
 import type { BetDraft, Mode, Settings } from "../lib/types.ts";
+
+type SavedDraft = { name: string; description: string; drafts: BetDraft[]; settings: Settings; quick: boolean; templateId: string | null; punishments: string[] };
+const draftKey = (userId: string, clanId: string | null) => `alea:create-draft:v1:${userId}:${clanId ?? "solo"}`;
+function readDraft(key: string): SavedDraft | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const d = JSON.parse(raw) as Partial<SavedDraft>;
+    if (typeof d.name !== "string" || typeof d.description !== "string" || !Array.isArray(d.drafts) || !d.settings || typeof d.settings !== "object") return null;
+    if (!d.drafts.every((b) => b && typeof b.question === "string" && ["binary", "multi", "range"].includes(b.kind))) return null;
+    return { name: d.name, description: d.description, drafts: d.drafts.length ? d.drafts : [newDraft()], settings: { ...DEFAULT_SETTINGS, ...d.settings }, quick: d.quick === true, templateId: typeof d.templateId === "string" ? d.templateId : null, punishments: Array.isArray(d.punishments) ? d.punishments.filter((p): p is string => typeof p === "string") : [] };
+  } catch { return null; }
+}
 
 const MODES: { mode: Mode; letter: string; blurb: string }[] = [
   { mode: "money", letter: "A", blurb: "Real money. Preview only." },
@@ -56,13 +70,46 @@ function savePendingSeries(p: PendingSeries | null) {
 }
 
 export default function CreateSeries() {
-  const { api, toast, db, me } = useStore();
+  const { api, me, toast, db } = useStore();
   const nav = useNavigate();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [drafts, setDrafts] = useState<BetDraft[]>([newDraft()]);
-  const [st, setSt] = useState<Settings>({ ...DEFAULT_SETTINGS });
+  const [params] = useSearchParams();
+  const clanId = params.get("clan");
+  // A rematch keeps its own saved draft, so it never picks up (or overwrites) another setup in progress.
+  const rematchId = params.get("rematch");
+  const key = draftKey(me, rematchId ? `rematch-${rematchId}` : clanId);
+  const saved = useRef(readDraft(key)).current;
+  const [name, setName] = useState(saved?.name ?? "");
+  const [description, setDescription] = useState(saved?.description ?? "");
+  const [drafts, setDrafts] = useState<BetDraft[]>(saved?.drafts ?? [newDraft()]);
+  const [st, setSt] = useState<Settings>(saved?.settings ?? { ...DEFAULT_SETTINGS });
+  const [quick, setQuick] = useState(saved?.quick ?? true);
+  const [templateId, setTemplateId] = useState<string | null>(saved?.templateId ?? null);
+  const [category, setCategory] = useState<QuickTemplate["category"]>(QUICK_TEMPLATES.find((t) => t.id === saved?.templateId)?.category ?? "game");
+  const [punishments, setPunishments] = useState<string[]>(saved?.punishments ?? []);
+  const [gameQuery, setGameQuery] = useState("");
   const set = <K extends keyof Settings>(k: K, v: Settings[K]) => setSt((s) => ({ ...s, [k]: v }));
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try { localStorage.setItem(key, JSON.stringify({ name, description, drafts, settings: st, quick, templateId, punishments } satisfies SavedDraft)); } catch { /* Storage may be unavailable. */ }
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [key, name, description, drafts, st, quick, templateId, punishments]);
+
+  const template = QUICK_TEMPLATES.find((t) => t.id === templateId);
+  const chooseTemplate = (t: QuickTemplate) => {
+    setTemplateId(t.id); setCategory(t.category); setName(t.name); setDescription(t.description);
+    setDrafts(templateDrafts(t)); setSt(quickSettings(3)); setPunishments(t.punishments.slice(0, 1));
+  };
+  const quickAdd = (question = "") => {
+    setDrafts((ds) => [...ds, newDraft(question)]);
+    setSt((s) => ({ ...s, betCount: Math.max(s.betCount, drafts.length + 1) }));
+  };
+  const quickRemove = (index: number) => {
+    if (drafts.length <= 1) return;
+    setDrafts((ds) => ds.filter((_, i) => i !== index));
+    setSt((s) => ({ ...s, betCount: Math.max(1, drafts.length - 1) }));
+  };
 
   const needed = st.mode === "pool" ? 2 * st.losers : st.losers + 1;
   const written = drafts.filter((d) => d.question.trim());
@@ -73,35 +120,39 @@ export default function CreateSeries() {
 
   // /new?clan=ID: start a series with a whole clan. The basics fill in from the clan once it loads,
   // and every member joins the lobby when the series is created.
-  const [params] = useSearchParams();
-  const clanId = params.get("clan");
   const social = useSocial();
   const clan = clanId ? social.data?.clans.find((c) => c.id === clanId) : undefined;
   const filled = useRef(false);
   useEffect(() => {
-    if (!clan || filled.current) return;
+    if (!clan || filled.current || saved) return;
     filled.current = true;
     const n = clan.members.length;
     setName(`${clan.name} series`.slice(0, 60));
     setDescription(`Bets for ${clan.name}. All ${n} members start in the lobby.`);
     // A shared pool needs twice as many players as losers, so bigger clans can have 2 losers.
     setSt((s) => ({ ...s, losers: n >= 6 ? 2 : 1, mode: "pool", hostPlays: true }));
-  }, [clan]);
+  }, [clan, saved]);
 
   // /new?rematch=ID: play again with the same group. Name, description and every setting
   // carry over (all editable); bets, coins, wagers and punishments start fresh. Last time's
   // players are listed to invite; nobody is added until they join themselves.
-  const rematchId = params.get("rematch");
   const rematchFrom = rematchId ? db.series.find((x) => x.id === rematchId) : undefined;
   const invitees = rematchFrom ? rematchInvitees(rematchFrom, me) : [];
   const rematchFilled = useRef(false);
   useEffect(() => {
     if (!rematchFrom || rematchFilled.current) return;
     rematchFilled.current = true;
+    // Coming back to a rematch you were editing restores your edits instead.
+    if (saved) return;
     setName(rematchName(rematchFrom.name));
     setDescription(rematchFrom.description);
     setSt({ ...DEFAULT_SETTINGS, ...rematchFrom.settings });
-  }, [rematchFrom]);
+    // Fresh bets and punishments, in the detailed form (where the carried-over settings show).
+    setDrafts([newDraft()]);
+    setPunishments([]);
+    setTemplateId(null);
+    setQuick(false);
+  }, [rematchFrom, saved]);
 
   // Creating happens at most once per submission id. Submitting the same details again (a double
   // click, or a retry after no answer, even after a reload) reuses the id, so the server returns the
@@ -113,10 +164,10 @@ export default function CreateSeries() {
     inFlight.current = true;
     setPhase("creating");
     const input = { name, description, settings: st, bets: written };
-    const key = JSON.stringify(input);
+    const requestKey = JSON.stringify(input);
     const prior = loadPendingSeries();
-    const requestId = prior?.key === key ? prior.requestId : newRequestId();
-    savePendingSeries({ requestId, key });
+    const requestId = prior?.key === requestKey ? prior.requestId : newRequestId();
+    savePendingSeries({ requestId, key: requestKey });
     const r = await api.createSeries(input, requestId);
     inFlight.current = false;
     if (r.kind === "unknown") {
@@ -124,14 +175,31 @@ export default function CreateSeries() {
       return;
     }
     savePendingSeries(null);
-    setPhase("idle");
     if (r.kind === "refused") {
+      setPhase("idle");
       toast(r.message, "err");
       return;
     }
     const s = r.result;
     if (clan) await api.addClan(s.id, clan.id, `Series created. Everyone in ${clan.name} is in the lobby.`);
     else toast(s.replayed ? "That series was already created. Here it is." : "Series created. Share the invite link to fill the lobby.");
+    if (st.mode === "pool" && st.hostPlays) {
+      const addedKey = `alea:quick-punishments:${s.id}`;
+      let added: string[] = [];
+      try {
+        const priorAdded: unknown = JSON.parse(localStorage.getItem(addedKey) ?? "[]");
+        if (Array.isArray(priorAdded)) added = priorAdded.filter((p): p is string => typeof p === "string");
+      } catch { /* Storage may be unavailable. */ }
+      for (const p of punishments.slice(0, st.favorsPerPlayer)) {
+        if (added.includes(p)) continue;
+        if (await api.submitFavor(s.id, p)) {
+          added = [...added, p];
+          try { localStorage.setItem(addedKey, JSON.stringify(added)); } catch { /* Storage may be unavailable. */ }
+        }
+      }
+    }
+    try { localStorage.removeItem(key); } catch { /* Storage may be unavailable. */ }
+    setPhase("idle");
     nav(`/s/${s.id}${rematchFrom ? `?rematchOf=${encodeURIComponent(rematchFrom.id)}` : ""}`);
   };
 
@@ -181,7 +249,68 @@ export default function CreateSeries() {
         </p>
       )}
 
-      <div className="grid2">
+      <div className="row" style={{ marginBottom: 18 }}>
+        <button type="button" className={`btn ${quick ? "primary" : ""}`} onClick={() => setQuick(true)}>Quick game</button>
+        <button type="button" className={`btn ${quick ? "" : "primary"}`} onClick={() => setQuick(false)}>Detailed setup</button>
+        <span className="hint">Draft saves automatically on this device.</span>
+      </div>
+
+      {quick && <div className="grid2 quick-setup">
+        <div className="col">
+          <Panel label="01 · Pick a starting point">
+            <div className="quick-categories">
+              <button type="button" className={`quick-tile ${category === "game" ? "on" : ""}`} onClick={() => setCategory("game")}><b>Game night</b><span>Game-specific bets for your group</span></button>
+              {QUICK_TEMPLATES.filter((t) => t.category !== "game").map((t) => <button key={t.id} type="button" className={`quick-tile ${templateId === t.id && category === t.category ? "on" : ""}`} onClick={() => chooseTemplate(t)}><b>{t.label}</b><span>{t.description}</span></button>)}
+            </div>
+            {category === "game" && <div className="stack" style={{ marginTop: 18 }}>
+              <label className="field"><span>Choose a game</span><input className="input" value={gameQuery} onChange={(e) => setGameQuery(e.target.value)} placeholder="Search games" aria-label="Search games" /></label>
+              <div className="quick-games">
+                {QUICK_TEMPLATES.filter((t) => t.category === "game" && t.label.toLowerCase().includes(gameQuery.toLowerCase().trim())).map((t) => <button key={t.id} type="button" className={`quick-game ${templateId === t.id ? "on" : ""}`} onClick={() => chooseTemplate(t)}>{t.label}</button>)}
+              </div>
+              {QUICK_TEMPLATES.filter((t) => t.category === "game" && t.label.toLowerCase().includes(gameQuery.toLowerCase().trim())).length === 0 && <p className="hint">No match yet. Use Detailed setup to write bets for any game.</p>}
+            </div>}
+          </Panel>
+
+          {template && template.category === category && <>
+            <Panel label="02 · Make it yours">
+              <div className="stack">
+                <label className="field"><span>Series name</span><input className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} /></label>
+                <label className="field"><span>Description</span><input className="input" value={description} maxLength={280} onChange={(e) => setDescription(e.target.value)} /></label>
+                <p className="hint">Edit or remove any question. Template bets start as Yes / No; Detailed setup lets you change their outcomes. Lock each bet before the moment it predicts.</p>
+                {drafts.map((d, i) => <div className="row quick-question" key={i}>
+                  <span className="num dim">{String(i + 1).padStart(2, "0")}</span>
+                  <input className="input text" value={d.question} maxLength={300} onChange={(e) => setDraft(i, { ...d, question: e.target.value })} aria-label={`Question ${i + 1}`} placeholder="Write a prediction" />
+                  <button type="button" className="btn ghost sm" disabled={drafts.length === 1} onClick={() => quickRemove(i)} aria-label={`Remove question ${i + 1}`}>Remove</button>
+                </div>)}
+                {drafts.length < 10 && <button type="button" className="btn" onClick={() => quickAdd()}>+ Write your own question</button>}
+                {template.questions.some((q) => !drafts.some((d) => d.question === q)) && <div className="stack"><span className="cap">More ideas</span><div className="quick-ideas">{template.questions.filter((q) => !drafts.some((d) => d.question === q)).map((q) => <button key={q} type="button" className="btn ghost sm" disabled={drafts.length >= 10} onClick={() => quickAdd(q)}>+ {q}</button>)}</div></div>}
+              </div>
+            </Panel>
+            {st.mode === "pool" && st.hostPlays && <Panel label="03 · Punishments" right={`${punishments.length}/${st.favorsPerPlayer} selected`}>
+              <div className="stack"><p className="hint">Choose up to {st.favorsPerPlayer} for your contribution to the shared pool. Friends can add their own and everyone reviews the pool before play.</p>
+                <div className="quick-ideas">{template.punishments.map((p) => <button key={p} type="button" className={`btn sm ${punishments.includes(p) ? "primary" : ""}`} onClick={() => setPunishments((xs) => xs.includes(p) ? xs.filter((x) => x !== p) : xs.length < st.favorsPerPlayer ? [...xs, p] : xs)} aria-pressed={punishments.includes(p)}>{punishments.includes(p) ? "✓ " : "+ "}{p}</button>)}</div>
+              </div>
+            </Panel>}
+          </>}
+        </div>
+        <div className="col quick-summary">
+          <Panel label="Ready to invite">
+            {template && template.category === category ? <div className="stack">
+              <h2>{name || "Your series"}</h2>
+              <p className="hint">{written.length} bets · {fmt(st.startingCoins)} starting coins · bottom {st.losers} loses{st.mode === "pool" && st.hostPlays ? ` · ${punishments.length} punishments selected` : ""}</p>
+              <p className="hint">Create the lobby, then share its invite link. Friends can review the rules and get ready before play starts.</p>
+              {draftProblem && <p className="hint warn">{draftProblem}</p>}
+              {phase === "unknown" && <p className="notice" role="alert">We couldn't confirm creation. Retry with the same details to avoid a duplicate series.</p>}
+              <button type="button" className="btn primary block" onClick={submit} aria-busy={phase === "creating"} disabled={phase === "creating" || !name.trim() || drafts.some((d) => d.question.trim().length < 3) || tooMany || !!draftProblem}>
+                {phase === "creating" ? "Creating…" : phase === "unknown" ? "Retry safely" : "Create series & invite"}
+              </button>
+              <button type="button" className="btn ghost block" onClick={() => setQuick(false)}>Customize rules →</button>
+            </div> : <p className="hint">Choose a template to get an editable series ready in seconds.</p>}
+          </Panel>
+        </div>
+      </div>}
+
+      {!quick && <div className="grid2">
         <div className="col">
           <Panel label="01 · Basics">
             <div className="stack">
@@ -411,7 +540,7 @@ export default function CreateSeries() {
             </button>
           </Panel>
         </div>
-      </div>
+      </div>}
       </div>
     </Shell>
   );
