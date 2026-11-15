@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from "../lib/rules.ts";
 import { MODE_LABEL, fmt } from "../lib/format.ts";
 import { useStore } from "../lib/store.tsx";
 import { newRequestId } from "../lib/submit.ts";
+import { rematchInvitees, rematchName } from "../lib/recap.ts";
 import type { BetDraft, Mode, Settings } from "../lib/types.ts";
 
 const MODES: { mode: Mode; letter: string; blurb: string }[] = [
@@ -55,7 +56,7 @@ function savePendingSeries(p: PendingSeries | null) {
 }
 
 export default function CreateSeries() {
-  const { api, toast } = useStore();
+  const { api, toast, db, me } = useStore();
   const nav = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -87,6 +88,21 @@ export default function CreateSeries() {
     setSt((s) => ({ ...s, losers: n >= 6 ? 2 : 1, mode: "pool", hostPlays: true }));
   }, [clan]);
 
+  // /new?rematch=ID: play again with the same group. Name, description and every setting
+  // carry over (all editable); bets, coins, wagers and punishments start fresh. Last time's
+  // players are listed to invite; nobody is added until they join themselves.
+  const rematchId = params.get("rematch");
+  const rematchFrom = rematchId ? db.series.find((x) => x.id === rematchId) : undefined;
+  const invitees = rematchFrom ? rematchInvitees(rematchFrom, me) : [];
+  const rematchFilled = useRef(false);
+  useEffect(() => {
+    if (!rematchFrom || rematchFilled.current) return;
+    rematchFilled.current = true;
+    setName(rematchName(rematchFrom.name));
+    setDescription(rematchFrom.description);
+    setSt({ ...DEFAULT_SETTINGS, ...rematchFrom.settings });
+  }, [rematchFrom]);
+
   // Creating happens at most once per submission id. Submitting the same details again (a double
   // click, or a retry after no answer, even after a reload) reuses the id, so the server returns the
   // series it already made instead of making another. Different details are a different series.
@@ -116,7 +132,7 @@ export default function CreateSeries() {
     const s = r.result;
     if (clan) await api.addClan(s.id, clan.id, `Series created. Everyone in ${clan.name} is in the lobby.`);
     else toast(s.replayed ? "That series was already created. Here it is." : "Series created. Share the invite link to fill the lobby.");
-    nav(`/s/${s.id}`);
+    nav(`/s/${s.id}${rematchFrom ? `?rematchOf=${encodeURIComponent(rematchFrom.id)}` : ""}`);
   };
 
   return (
@@ -130,6 +146,23 @@ export default function CreateSeries() {
           <p>Rules lock when betting starts.</p>
         </div>
       </section>
+
+      {rematchId && (
+        <p className={`notice ${rematchFrom ? "ok" : ""}`} style={{ marginBottom: 20 }}>
+          {rematchFrom ? (
+            <>
+              <b>Rematch of {rematchFrom.name}.</b> The settings carry over; change anything you like. Bets, coins and
+              punishments start fresh. After you create it, invite{" "}
+              {invitees.length ? invitees.map((m) => m.name).join(", ") : "your friends"} with the invite link or QR code.
+              Nobody joins until they accept.
+            </>
+          ) : (
+            <>
+              <b>That series wasn't found.</b> You may not be in it. You can still create a new series.
+            </>
+          )}
+        </p>
+      )}
 
       {clanId && (
         <p className={`notice ${clan ? "ok" : ""}`} style={{ marginBottom: 20 }}>
