@@ -61,6 +61,7 @@ const STATUS: Record<string, number> = {
   not_message_author: 403,
   message_not_found: 404,
   slow_down: 429,
+  request_id_reused: 409,
 };
 
 type PgError = { message: string; hint?: string | null; code?: string | null; details?: string | null };
@@ -144,6 +145,17 @@ export const outcomeRef = (body: Record<string, unknown>) => {
   return typeof v === "string" ? v : null;
 };
 export const text = (v: unknown) => (typeof v === "string" ? v : "");
+/**
+ * The client's submission id (a UUID), which makes a wager or a new series happen at
+ * most once however often the request is repeated. Null when the request has none
+ * (older callers); a value that isn't a UUID is refused rather than ignored.
+ */
+export function requestIdOf(body: Record<string, unknown>): string | null {
+  const v = body.requestId;
+  if (v === undefined || v === null) return null;
+  if (typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)) return v.toLowerCase();
+  throw new AppError(400, "invalid_request", "That submission id isn't valid.");
+}
 /** A list of strings, or undefined when the field is missing (so the SQL default applies). */
 export const texts = (v: unknown) => (Array.isArray(v) ? v.map(text) : undefined);
 /** A JSON number as-is; anything else (including numeric strings) as null, so the SQL decides. */
