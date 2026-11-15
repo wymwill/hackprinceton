@@ -48,9 +48,6 @@ export default function SignIn() {
   return (
     <div className="boot">
       <span className="brand-name">Bookie</span>
-      <p className="hint" style={{ maxWidth: 380 }}>
-        YES/NO bets with friends, played for virtual coins across a whole series. Sign in to see your series.
-      </p>
       <section className="panel tagged" style={{ width: "min(400px, 100%)", textAlign: "left" }}>
         <span className="plabel">{mode === "in" ? "Sign in" : "Create account"}</span>
         <div className="pbody stack">
