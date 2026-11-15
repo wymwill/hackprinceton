@@ -4,6 +4,7 @@ import { Shell } from "../components/Shell.tsx";
 import { ReminderSettings } from "../components/ReminderSettings.tsx";
 import { Panel, initialsOf } from "../components/ui.tsx";
 import { LinkedAccounts } from "../components/LinkedAccounts.tsx";
+import { TextBookie } from "../components/TextBookie.tsx";
 import { AVATAR_STYLES, avatarUrl, parseAvatar, randomSeed, uploadAvatar, type AvatarStyle } from "../lib/avatars.ts";
 import { fmt } from "../lib/format.ts";
 import { supabase } from "../lib/supabase.ts";
@@ -177,6 +178,8 @@ export default function Profile() {
                 </div>
               </div>
             </Panel>
+
+            <TextBookie />
 
             <LinkedAccounts />
 

@@ -462,3 +462,65 @@ html, body {
 .planner-empty h2 { margin: 16px 0 10px; color: var(--bright); font-family: var(--display); }
 .planner-layout .input { width: 100%; }
 @media (max-width: 1050px) { .planner-layout { grid-template-columns: minmax(0, 1fr); } .planner-empty { padding: 20px; } }
+
+/* ── phones: compact header, Menu button and bottom tabs ─────────────────── */
+/* On wide screens the Menu button and tabs don't exist, and the wrapper is invisible to layout. */
+.side-more { display: contents; }
+.menu-btn, .bottom-tabs { display: none; }
+
+@media (max-width: 820px) {
+  .sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: max(10px, env(safe-area-inset-top)) 14px 10px;
+    overflow: visible;
+  }
+  .sidebar .brand { padding: 0; }
+  .menu-btn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--line);
+    border-radius: 13px;
+    background: var(--panel);
+    color: var(--fg);
+  }
+  .menu-btn[aria-expanded="true"] { border-color: var(--red); color: var(--bright); }
+  .side-more { display: none; flex-basis: 100%; flex-direction: column; gap: 14px; padding-bottom: 4px; }
+  .sidebar.open .side-more { display: flex; }
+  .nav a, .nav > button { min-height: 44px; }
+
+  .bottom-tabs {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    padding: 4px 4px max(4px, env(safe-area-inset-bottom));
+    background: var(--side);
+    border-top: 2px solid var(--line);
+  }
+  .bottom-tabs a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 52px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--dim);
+  }
+  .bottom-tabs a.active { color: var(--bright); background: var(--red-soft); }
+  .page:not(.fill) { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .toasts { bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .tour-card:not(.at-top) { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}

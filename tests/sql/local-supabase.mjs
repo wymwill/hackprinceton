@@ -23,6 +23,8 @@ const PORT = Number(process.env.PORT ?? 54399);
 const SECRET = randomBytes(32);
 // MIGRATIONS_UP_TO=202611140013 stops before that migration, to see how the app behaves on a database that's behind.
 const t = await createDb({ upTo: process.env.MIGRATIONS_UP_TO || undefined });
+// BOOKIE_AGENT_SECRET=… lets a local `npm run agent` talk to this stand-in (migration 0023).
+if (process.env.BOOKIE_AGENT_SECRET) await t.db.query("select public.set_bookie_agent_secret($1)", [process.env.BOOKIE_AGENT_SECRET]);
 const accounts = new Map(); // email -> { id, password, meta }
 const refreshTokens = new Map(); // token -> user id
 
