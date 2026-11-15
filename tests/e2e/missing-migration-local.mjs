@@ -42,5 +42,6 @@ for (const [method, path, fn] of [
 assert.equal((await api("GET", "/social/state")).status, 200);
 assert.equal((await api("GET", "/series/state")).status, 200);
 console.log("  ✓ friends, clans and Bet Series still answer 200");
-console.log("\nAll checks passed.");
+console.log("\nAll checks passed."); 
+
 
