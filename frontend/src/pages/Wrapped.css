@@ -66,7 +66,7 @@
 .stat-ribbon { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; padding: 20px 0 0; border-top: 1px solid rgba(255,255,255,.23); }
 .wrapped-stat { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .wrapped-stat b { color: white; font-size: clamp(19px, 3.5vw, 29px); font-weight: 800; letter-spacing: 0; overflow-wrap: anywhere; }
-.wrapped-stat span { color: rgba(255,255,255,.67); font-size: 9px; line-height: 1.35; font-weight: 800; letter-spacing: .1em; }
+.wrapped-stat > span { color: rgba(255,255,255,.67); font-size: 9px; line-height: 1.35; font-weight: 800; letter-spacing: .1em; }
 .personality-burst { position: absolute; top: 17%; right: 13%; color: rgba(255,215,110,.88); font-size: clamp(82px, 17vw, 145px); text-shadow: 0 0 48px rgba(255,215,110,.26); animation: wrapped-spin 28s linear infinite; }
 .archetype-title { max-width: 590px; padding-right: 25%; font-size: clamp(43px, 8.8vw, 92px) !important; letter-spacing: .025em !important; line-height: 1 !important; }
 .archetype-subtitle { margin: 0 0 16px; color: var(--ww-gold); font-size: clamp(19px, 3.3vw, 30px); line-height: 1.15; font-weight: 800; }
@@ -121,7 +121,7 @@
 .wrapped-scene h2.poster-archetype { margin: 0 0 18px; color: var(--ww-gold); font-size: clamp(23px, 5.7vw, 42px); line-height: 1; font-weight: 700; letter-spacing: .015em; overflow-wrap: anywhere; }
 .poster-stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; padding: 18px 0; border-top: 1px solid rgba(255,255,255,.24); border-bottom: 1px solid rgba(255,255,255,.24); }
 .poster-stats .wrapped-stat b { font-size: clamp(23px, 6vw, 38px); }
-.poster-stats .wrapped-stat span { font-size: 8px; }
+.poster-stats .wrapped-stat > span { font-size: 8px; }
 .poster-moments { display: flex; justify-content: space-between; gap: 8px; margin: 16px 0; color: rgba(255,255,255,.83); font-size: 9px; font-weight: 900; letter-spacing: .1em; }
 .poster-quote { max-width: 420px; margin: 0; color: white; font-family: Georgia,serif; font-size: 16px; font-style: italic; }
 .poster-foot { display: block; margin-top: 24px; color: rgba(255,255,255,.57); font-size: 8px; font-weight: 900; letter-spacing: .17em; }
@@ -171,7 +171,7 @@
   .number-roast { font-size: 13px; margin-bottom: 18px; }
   .stat-ribbon { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px 9px; padding-top: 15px; }
   .wrapped-stat b { font-size: 23px; }
-  .wrapped-stat span { font-size: 8px; }
+  .wrapped-stat > span { font-size: 8px; }
   .personality-burst { top: 19%; right: 7%; font-size: 85px; }
   .archetype-title { padding-right: 10%; font-size: clamp(42px, 13vw, 72px) !important; }
   .archetype-subtitle { max-width: 90%; font-size: 21px; }
@@ -208,4 +208,17 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .wrapped *, .wrapped *::before, .wrapped *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* The share slide carries the card plus its buttons, so it uses less padding than the story
+   slides; otherwise the sticky controls bar sits over the buttons on laptop-height screens. */
+.wrapped-scene.scene-legacy { padding-top: clamp(18px, 3vw, 24px); padding-bottom: clamp(18px, 3vw, 24px); }
+.scene-legacy .poster-foot { margin-top: 16px; }
+@media (max-height: 760px) {
+  .scene-legacy .legacy-poster { padding: 18px 22px; }
+  .scene-legacy .poster-name { margin: 10px 0 4px; }
+  .wrapped-scene.scene-legacy h2.poster-archetype { margin-bottom: 12px; }
+  .scene-legacy .poster-stats { padding: 12px 0; gap: 10px; }
+  .scene-legacy .poster-moments { margin: 12px 0; }
+  .scene-legacy .poster-foot { margin-top: 10px; }
 }

@@ -159,7 +159,7 @@ export default function Wrapped({ forceDemo = false }: { forceDemo?: boolean }) 
           <Foot slide={8} />
         </>}
         {item === "legacy" && <>
-          <span className="eyebrow">BOOKIE WRAPPED · {summary!.year}{summary!.demo ? " · DEMO MODE" : ""}</span>
+          {/* The card says BOOKIE ✳ WRAPPED and the header shows the year and DEMO MODE, so no eyebrow here. */}
           <div className="legacy-poster" id="wrapped-poster">
             <div className="poster-glow" />
             <div className="poster-brand">BOOKIE <span>✳</span> WRAPPED</div>
