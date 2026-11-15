@@ -2668,3 +2668,36 @@ img.avatar {
   align-items: flex-start;
   min-width: 0;
 }
+
+/* At-most-once submissions: a small spinner while a wager or series is being sent, and the wager receipt. */
+.spinner {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 6px;
+  vertical-align: -0.1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
+}
+.wager-receipt {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  text-align: left;
+}
+.wager-receipt .linkish {
+  align-self: flex-start;
+}

@@ -4,7 +4,8 @@ import SignIn from "../pages/SignIn.tsx";
 import { punishmentCopy } from "./format.ts";
 import { rangesOf } from "./ranges.ts";
 import { supabase } from "./supabase.ts";
-import type { AppState, BetDraft, Db, Id, Me, Series, Settings } from "./types.ts";
+import { submitOnce, type Submitted } from "./submit.ts";
+import type { AppState, BetDraft, Db, Id, Me, Series, Settings, WagerReceipt } from "./types.ts";
 
 /**
  * Talks to the Bet Series API (src/app/api/series in the Next app, rules in
@@ -31,13 +32,14 @@ async function token() {
 }
 
 /** Call the API as the signed-in player. Throws ApiError with the server's message. */
-export async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+export async function request<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {
       method,
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token()}` },
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal,
     });
   } catch {
     throw new ApiError(0, "Can't reach the server.");
@@ -48,6 +50,8 @@ export async function request<T>(method: string, path: string, body?: unknown): 
 }
 
 type Act = <T = unknown>(method: "POST" | "PATCH" | "DELETE", path: string, body?: unknown, okText?: string) => Promise<T | undefined>;
+/** An at-most-once submission (see lib/submit.ts): never a toast; the screen shows what happened. */
+type Once = <T>(path: string, body: Record<string, unknown>) => Promise<Submitted<T>>;
 
 export type CreateSeriesInput = { name: string; description: string; settings: Settings; bets: BetDraft[] };
 
@@ -65,34 +69,31 @@ const betBody = (d: BetDraft) =>
 const STAKE_MODE: Record<Settings["mode"], string> = { pool: "SHARED_FAVOR_POOL", pledge: "PLEDGE", money: "MONEY" };
 
 /** One function per server action. Each resolves to the result, or undefined if a rule said no (already shown as a toast). */
-function makeApi(act: Act) {
+function makeApi(act: Act, once: Once) {
   const s = (id: Id) => `/series/${encodeURIComponent(id)}`;
   const b = (id: Id, betId: Id) => `${s(id)}/bets/${encodeURIComponent(betId)}`;
   return {
-    createSeries: ({ name, description, settings: st, bets }: CreateSeriesInput, ok?: string) =>
-      act<{ id: Id }>(
-        "POST",
-        "/series",
-        {
-          title: name,
-          description,
-          plannedBetCount: st.betCount,
-          initialBankroll: st.startingCoins,
-          loserCount: st.losers,
-          stakeMode: STAKE_MODE[st.mode],
-          bets: bets.map(betBody),
-          settings: {
-            minContribution: st.minContribution,
-            favorsPerPlayer: st.favorsPerPlayer,
-            exclusivePool: st.exclusivePool,
-            tiebreak: st.tiebreak,
-            betCreation: st.betCreation,
-            withdrawMinutes: st.withdrawMinutes,
-            hostPlays: st.hostPlays,
-          },
+    /** Create a series at most once per requestId: a repeat returns the series already made (replayed: true). */
+    createSeries: ({ name, description, settings: st, bets }: CreateSeriesInput, requestId: string) =>
+      once<{ id: Id; invite_code: string; replayed?: boolean }>("/series", {
+        requestId,
+        title: name,
+        description,
+        plannedBetCount: st.betCount,
+        initialBankroll: st.startingCoins,
+        loserCount: st.losers,
+        stakeMode: STAKE_MODE[st.mode],
+        bets: bets.map(betBody),
+        settings: {
+          minContribution: st.minContribution,
+          favorsPerPlayer: st.favorsPerPlayer,
+          exclusivePool: st.exclusivePool,
+          tiebreak: st.tiebreak,
+          betCreation: st.betCreation,
+          withdrawMinutes: st.withdrawMinutes,
+          hostPlays: st.hostPlays,
         },
-        ok
-      ),
+      }),
     joinByCode: (code: string, ok?: string) => act<{ id: Id }>("POST", "/series/join", { code }, ok),
     joinSeries: (id: Id, ok?: string) => act("POST", `${s(id)}/join`, undefined, ok),
     leaveSeries: (id: Id, ok?: string) => act("POST", `${s(id)}/leave`, undefined, ok),
@@ -119,8 +120,9 @@ function makeApi(act: Act) {
         ok
       ),
     removeDraftBet: (id: Id, betId: Id, ok?: string) => act("DELETE", b(id, betId), undefined, ok),
-    wager: (id: Id, betId: Id, outcomeId: Id, amount: number, ok?: string) =>
-      act("POST", `${b(id, betId)}/wagers`, { outcomeId, amount }, ok),
+    /** Place a wager at most once per requestId. Resolves to the server's receipt, a refusal, or "unknown". */
+    wager: (id: Id, betId: Id, outcomeId: Id, amount: number, requestId: string) =>
+      once<WagerReceipt>(`${b(id, betId)}/wagers`, { outcomeId, amount, requestId }),
     withdraw: (id: Id, betId: Id, ok?: string) => act("POST", `${b(id, betId)}/withdraw`, undefined, ok),
     lockBet: (id: Id, betId: Id, ok?: string) => act("POST", `${b(id, betId)}/lock`, undefined, ok),
     resolveBet: (id: Id, betId: Id, outcomeId: Id, ok?: string) => act("POST", `${b(id, betId)}/resolve`, { outcomeId }, ok),
@@ -246,7 +248,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [refresh, toast]
   );
 
-  const api = useMemo(() => makeApi(act), [act]);
+  const once = useCallback<Once>(
+    async (path, body) => {
+      const r = await submitOnce(request, path, body);
+      // Done: show the new balances. Unknown: it may have gone through, so look.
+      if (r.kind !== "refused") await refresh();
+      return r as never;
+    },
+    [refresh]
+  );
+
+  const api = useMemo(() => makeApi(act, once), [act, once]);
   const signOut = useCallback(() => {
     supabase?.auth.signOut();
   }, []);
