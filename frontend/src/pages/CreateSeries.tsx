@@ -287,7 +287,7 @@ export default function CreateSeries() {
                 <label className="field"><span>Description</span><input className="input" value={description} maxLength={280} onChange={(e) => setDescription(e.target.value)} /></label>
                 <p className="hint">Edit these questions, then create the lobby and share its invite link with your friends or clan. Keep It Clean and the last Roommate challenge use Person 1–5 as possible answers; agree on who each placeholder means before betting starts.</p>
                 {drafts.map((d, i) => <div className="row quick-question" key={i}>
-                  <span className="num dim">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="num dim bet-index">{String(i + 1).padStart(2, "0")}</span>
                   <input className="input text" value={d.question} maxLength={300} onChange={(e) => setDraft(i, { ...d, question: e.target.value })} aria-label={`Question ${i + 1}`} placeholder="Write a prediction" />
                   <button type="button" className="btn ghost sm" disabled={drafts.length === 1} onClick={() => quickRemove(i)} aria-label={`Remove question ${i + 1}`}>Remove</button>
                 </div>)}
@@ -357,8 +357,8 @@ export default function CreateSeries() {
               <p className="hint">Write them now or in the lobby.</p>
               {drafts.map((d, i) => (
                 <div key={i} className="draft-bet stack">
-                  <div className="row">
-                    <span className="num dim" style={{ width: 22 }}>
+                  <div className="row draft-question">
+                    <span className="num dim bet-index">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <input
@@ -523,7 +523,7 @@ export default function CreateSeries() {
               Questions written <b>{written.length}</b>
             </div>
             <div className="rule" />
-            <p className="notice">
+            <p className="notice summary-requirement">
               <b>Needs {needed}+ players</b>
               {st.hostPlays ? ", counting you" : ""}.
             </p>

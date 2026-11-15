@@ -27,7 +27,11 @@ function ActionCards({ onJoin }: { onJoin: () => void }) {
         )}
       </Link>
       <Link to="/new" className="panel home-action primary">
-        <span className="home-action-icon" aria-hidden="true">+</span>
+        <span className="home-action-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" focusable="false">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+          </svg>
+        </span>
         <b>Start a quick game</b>
         <span className="dim">Pick a game, edit a few predictions, and invite friends in under a minute.</span>
       </Link>
@@ -59,7 +63,7 @@ export default function Home() {
           <p>
             {live.length
               ? `${live.length} live series${inPlay ? ` · ${fmt(inPlay)} coins in play` : ""}. Pick a series to see its bets.`
-              : "Bet on YES/NO questions with friends for virtual coins. Whoever ends a series with the fewest coins owes a punishment."}
+              : "Bet on questions with friends for virtual coins. Players at the bottom of the leaderboard owe a punishment."}
           </p>
         </div>
       </section>

@@ -575,6 +575,9 @@ textarea.input {
   font-size: 14px;
   line-height: 1.5;
 }
+.notice.summary-requirement {
+  border-left: 0;
+}
 .notice b {
   color: var(--amber);
   font-weight: 600;
